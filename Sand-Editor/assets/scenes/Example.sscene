@@ -1,0 +1,47 @@
+Scene: Example Scene
+Entities:
+  - Entity: 123456789
+    TagComponent:
+      Tag: Camera
+    TransformComponent:
+      Position: [0, 0, 25]
+      Rotation: [0, 0, 0]
+      Size: [1, 1, 1]
+    CameraComponent:
+      Camera:
+        ProjectionType: 0
+        PerspectiveFOV: 0.785398185
+        PerspectiveNear: 0.00999999978
+        PerspectiveFar: 1000
+        OrthographicSize: 10
+        OrthographicNear: -1
+        OrthographicFar: 1
+      Primary: true
+      FixedAspectRatio: false
+  - Entity: 123456789
+    TagComponent:
+      Tag: ground
+    TransformComponent:
+      Position: [0.285622358, -4.26367569, 0]
+      Rotation: [0, 0, 0]
+      Size: [8.34942245, 0.956382334, 0.999999702]
+    SpriteRendererComponent:
+      Color: [1, 0.960854053, 0, 1]
+  - Entity: 123456789
+    TagComponent:
+      Tag: otherSquare
+    TransformComponent:
+      Position: [-0.0219097137, 0, 0]
+      Rotation: [0, 0, 0]
+      Size: [1, 1, 1]
+    SpriteRendererComponent:
+      Color: [1, 0, 0, 1]
+  - Entity: 123456789
+    TagComponent:
+      Tag: otherotherSquare
+    TransformComponent:
+      Position: [-2.97984457, 2.43091846, 0]
+      Rotation: [0, 0, 0]
+      Size: [1, 1, 1]
+    SpriteRendererComponent:
+      Color: [1, 1, 1, 1]

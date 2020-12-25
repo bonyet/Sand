@@ -1,0 +1,29 @@
+Scene: Unnamed Scene
+Entities:
+  - Entity: 123456789
+    TagComponent:
+      Tag: Camera
+    TransformComponent:
+      Position: [0, 0, 15.3999996]
+      Rotation: [0, 0, 0]
+      Size: [1, 1, 1]
+    CameraComponent:
+      Camera:
+        ProjectionType: 0
+        PerspectiveFOV: 0.785398185
+        PerspectiveNear: 0.00999999978
+        PerspectiveFar: 1000
+        OrthographicSize: 10
+        OrthographicNear: -1
+        OrthographicFar: 1
+      Primary: true
+      FixedAspectRatio: false
+  - Entity: 123456789
+    TagComponent:
+      Tag: Dude
+    TransformComponent:
+      Position: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Size: [1, 1, 1]
+    SpriteRendererComponent:
+      Color: [1, 0, 0, 1]
