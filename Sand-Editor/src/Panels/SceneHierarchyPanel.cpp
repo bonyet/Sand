@@ -10,7 +10,7 @@ namespace Sand
 	template<typename T, typename UIFunction>
 	static void DrawComponent(const std::string& name, Entity entity, UIFunction uiFunction)
 	{
-		const ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_FramePadding;
+		constexpr ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_FramePadding;
 		if (!entity.HasComponent<T>())
 			return;
 
@@ -115,6 +115,10 @@ namespace Sand
 
 		ImGuiTreeNodeFlags flags = ((m_SelectionContext == entity) ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
 		bool opened = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)entity, flags, tag.c_str());
+		bool rename = ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0);
+		if (rename) {
+			SAND_CORE_INFO("Double clicked entity node - time 2 rename");
+		}
 
 		if (ImGui::IsItemClicked())
 			m_SelectionContext = entity;
@@ -341,14 +345,34 @@ namespace Sand
 			ImGui::ColorEdit4("Color", glm::value_ptr(component.Material->Color));
 
 			{
-				auto& filepath = component.Material->GetShader()->GetFilepath();
+				constexpr ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_FramePadding;
 
-				char buffer[256];
-				memset(buffer, 0, sizeof(buffer));
-				strcpy_s(buffer, sizeof(buffer), filepath.c_str());
-				if (ImGui::InputText("Shader Filepath", buffer, sizeof(buffer), ImGuiInputTextFlags_EnterReturnsTrue))
+				ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
+
+				bool open = ImGui::TreeNodeEx((void*)typeid(Material).hash_code(), treeNodeFlags, "Material");
+
+				if (open)
 				{
-					component.Material->SetShader(Shader::Create(std::string(buffer)));
+					ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
+					ImGui::PushStyleColor(ImGuiCol_FrameBg, { 0.25f, 0.25f, 0.25f, 1.0f });
+					ImGui::BeginChildFrame((ImGuiID)"Material_ChildFrame", { ImGui::GetContentRegionAvailWidth() - ImGui::GetCursorPosX(), 200 });
+					ImGui::PopStyleColor();
+					ImGui::PopStyleVar();
+
+					std::string shaderFilepath = component.Material->GetShader()->GetFilepath();
+
+					// MATERIAL STUFF GOES HERE
+					char buffer[256];
+					memset(buffer, 0, sizeof(buffer));
+					strcpy_s(buffer, sizeof(buffer), shaderFilepath.c_str());
+					ImGui::SetNextItemWidth(225);
+					if (ImGui::InputText("Shader Filepath", buffer, sizeof(buffer), ImGuiInputTextFlags_EnterReturnsTrue))
+					{
+						component.Material->SetShader(Shader::Create(std::string(buffer)));
+					}
+
+					ImGui::EndChildFrame();
+					ImGui::TreePop();
 				}
 			}
 		});

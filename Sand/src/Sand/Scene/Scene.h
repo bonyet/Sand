@@ -6,6 +6,7 @@
 #include "Sand/Events/ApplicationEvent.h"
 
 #include "Sand/Core/Application.h"
+#include "Sand/Renderer/EditorCamera.h"
 
 namespace Sand
 {
@@ -22,12 +23,12 @@ namespace Sand
 		void DestroyEntity(Entity& entity);
 
 		void OnViewportResize(float x, float y);
-		glm::vec2 GetViewportScale() const { return glm::vec2(m_ViewportWidth, m_ViewportHeight); }
 
 		const std::string& GetName() const { return m_Name; }
 		void SetName(const std::string& name) { m_Name = name; }
 
-		void OnUpdate(Timestep ts);
+		void OnUpdateEditor(Timestep ts, EditorCamera& camera);
+		void OnUpdateRuntime(Timestep ts);
 
 		Entity GetPrimaryCameraEntity();
 

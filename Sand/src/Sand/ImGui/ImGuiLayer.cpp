@@ -24,10 +24,10 @@ namespace Sand
 	{
 		SAND_PROFILE_FUNCTION();
 
-		// Setup ImGui context
+		// setup imgui context
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
-		ImGuiIO& io = ImGui::GetIO(); (void)io;
+		ImGuiIO& io = ImGui::GetIO();
 		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;    
 		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;  
@@ -40,7 +40,6 @@ namespace Sand
 			style.WindowPadding = ImVec2(2.0f, 2.0f);
 
 			io.Fonts->AddFontFromFileTTF("assets/fonts/Mulish-SemiBold.ttf", 20);
-			io.Fonts->AddFontFromFileTTF("assets/fonts/Mulish-Bold.ttf", 20);
 			io.Fonts->AddFontFromFileTTF("assets/fonts/Mulish-Bold.ttf", 20);
 			io.Fonts->AddFontFromFileTTF("assets/fonts/Roboto-Regular.ttf", 20);
 		}
@@ -99,6 +98,12 @@ namespace Sand
 			ImGui::RenderPlatformWindowsDefault();
 			glfwMakeContextCurrent(backup_current_context);
 		}
+	}
+
+	void ImGuiLayer::SetFontScale(float scale)
+	{
+		ImGuiIO& io = ImGui::GetIO();
+		io.FontGlobalScale = scale;
 	}
 
 }

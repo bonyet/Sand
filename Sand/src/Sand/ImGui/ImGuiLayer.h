@@ -22,6 +22,8 @@ namespace Sand
 		void Begin();
 		void End();
 
+		void SetFontScale(float scale);
+
 		void BlockEvents(bool block) { m_BlockEvents = block; }
 	private:
 		bool m_BlockEvents = false;

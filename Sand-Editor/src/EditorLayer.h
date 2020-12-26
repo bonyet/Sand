@@ -3,7 +3,7 @@
 #include "Sand.h"
 
 #include "Panels/SceneHierarchyPanel.h"
-#include "Panels/AssetManagerPanel.h"
+#include "Sand/Renderer/EditorCamera.h"
 
 namespace Sand
 {
@@ -23,7 +23,8 @@ namespace Sand
 
 		void CheckToResizeFramebuffer();
 	private:
-		void SetupImGuiStyle();
+		void SetDarkTheme();
+		void SetLightTheme();
 		bool OnKeyPressed(KeyPressedEvent& e);
 
 		void NewScene();
@@ -37,7 +38,8 @@ namespace Sand
 		Ref<Scene> m_ActiveScene;
 
 		SceneHierarchyPanel m_SceneHierarchyPanel;
-		AssetManagerPanel m_AssetManagerPanel;
+
+		EditorCamera m_EditorCamera;
 
 		int m_GizmoType = -1;
 		bool m_ViewportFocused = false, m_ViewportHovered = false;

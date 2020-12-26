@@ -4,6 +4,7 @@
 #include "Sand/Renderer/Camera.h"
 #include "Platform/OpenGL/OpenGLShader.h"
 #include "Sand/Renderer/Material.h"
+#include "Sand/Renderer/EditorCamera.h"
 
 namespace Sand 
 {
@@ -14,6 +15,7 @@ namespace Sand
 		static void Shutdown();
 
 		static void BeginScene(const Camera& camera, const glm::mat4& transform);
+		static void BeginScene(const EditorCamera& camera);
 		static void EndScene();
 		static void Flush();
 

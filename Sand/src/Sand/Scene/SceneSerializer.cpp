@@ -104,7 +104,7 @@ namespace Sand
 			auto& transform = entity.GetComponent<TransformComponent>();
 			out << YAML::Key << "Position" << YAML::Value << transform.Position;
 			out << YAML::Key << "Rotation" << YAML::Value << transform.Rotation;
-			out << YAML::Key << "Size" << YAML::Value << transform.Scale;
+			out << YAML::Key << "Scale" << YAML::Value << transform.Scale;
 
 			out << YAML::EndMap; // TransformComponent
 		}
@@ -221,7 +221,7 @@ namespace Sand
 					auto& tc = deserializedEntity.GetComponent<TransformComponent>(); // always has transform
 					tc.Position = transformComponent["Position"].as<glm::vec3>();
 					tc.Rotation = transformComponent["Rotation"].as<glm::vec3>();
-					tc.Scale = transformComponent["Size"].as<glm::vec3>();
+					tc.Scale = transformComponent["Scale"].as<glm::vec3>();
 				}
 				auto cameraComponent = entity["CameraComponent"];
 				if (cameraComponent)

@@ -7,4 +7,6 @@ namespace Sand
 
 	bool DecomposeTransform(const glm::mat4& transform, glm::vec3& outTranslation, glm::vec3& outScale, glm::vec3& outRotation);
 
+	float Clamp(float value, float min, float max);
+
 } }

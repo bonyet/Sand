@@ -77,6 +77,11 @@ namespace Sand
 
 
 		return true;
-}
+	}
+
+	float Math::Clamp(float value, float min, float max)
+	{
+		return glm::clamp(value, min, max);
+	}
 
 }

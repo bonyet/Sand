@@ -10,6 +10,8 @@
 
 namespace Sand
 {
+	static ImGuiStyle s_DefaultImGuiStyle = {};
+	static bool s_ThemeInitialized = false;
 
 	EditorLayer::EditorLayer()
 		: Layer("Editor")
@@ -26,15 +28,32 @@ namespace Sand
 		m_ActiveScene = CreateRef<Scene>("Unnamed Scene");
 		Scene::SetActiveScene(m_ActiveScene);
 
+		m_EditorCamera = EditorCamera(30.0f, 1.778f, 0.1f, 1000.0f);
+
 		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
 
-		SetupImGuiStyle();
+		SetDarkTheme();
+
+		ImGuizmo::SetOrthographic(false);
 	}
 
-	void EditorLayer::SetupImGuiStyle()
+	void EditorLayer::SetLightTheme()
 	{
+		// TODO: better light theme
+		ImGui::StyleColorsLight();
+	}
+	void EditorLayer::SetDarkTheme()
+	{
+		if (s_ThemeInitialized) {
+			auto& style = ImGui::GetStyle();
+			style = s_DefaultImGuiStyle;
+			return;
+		}
+
+		s_ThemeInitialized = true;
+
 		auto& style = ImGui::GetStyle();
-		style.FrameRounding = 10.0f;		
+		style.FrameRounding = 10.0f;	
 
 		auto& colors = style.Colors;
 		colors[ImGuiCol_WindowBg] = ImVec4{ 0.15f, 0.15f, 0.15f, 1.0f };
@@ -71,7 +90,10 @@ namespace Sand
 		colors[ImGuiCol_ResizeGripHovered]     = ImVec4{ 0.35, 0.35, 0.35, 1.0f };
 		colors[ImGuiCol_ResizeGripActive]      = ImVec4{ 0.30, 0.30, 0.30, 1.0f };
 
+		colors[ImGuiCol_ModalWindowDarkening] = ImVec4{ 0.2f, 0.2f, 0.2f, 0.5f };
 		colors[ImGuiCol_DockingPreview] = ImVec4{ 0.45f, 0.45f, 0.45f, 1.0f };
+
+		s_DefaultImGuiStyle = style;
 	}
 
 	void EditorLayer::OnDetach() {}
@@ -82,15 +104,19 @@ namespace Sand
 			m_ViewportSize.x > 0 && m_ViewportSize.y > 0 && // zero sized framebuffer is invalid
 			(spec.Width != m_ViewportSize.x || spec.Height != m_ViewportSize.y))
 		{
-			glm::vec2 size = m_ViewportSize;
-			m_Framebuffer->Resize((uint32_t)size.x, (uint32_t)size.y);
-			m_ActiveScene->OnViewportResize(size.x, size.y);
+			m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+			m_EditorCamera.SetViewportSize(m_ViewportSize.x, m_ViewportSize.y);
+			m_ActiveScene->OnViewportResize(m_ViewportSize.x, m_ViewportSize.y);
 		}
 	}
 
 	void EditorLayer::OnUpdate(Timestep ts)
 	{
 		SAND_PROFILE_FUNCTION();
+
+		if (m_ViewportHovered) {
+			m_EditorCamera.OnUpdate(ts);
+		}
 
 		Renderer2D::ResetStats();
 
@@ -101,7 +127,7 @@ namespace Sand
 		RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.12f, 1.0f });
 		RenderCommand::Clear();
 
-		m_ActiveScene->OnUpdate(ts);
+		m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);
 
 		m_Framebuffer->Unbind();
 	}
@@ -158,10 +184,95 @@ namespace Sand
 				{
 					SaveSceneAs();
 				}
-		
+
 				ImGui::EndMenu();
 			}
-		
+			static bool customization = false;
+			if (ImGui::BeginMenu("Help"))
+			{
+				if (ImGui::MenuItem("Customize"))
+				{
+					customization = true;
+				}
+				ImGui::EndMenu();
+			}
+					
+			if (customization)
+			{
+				ImGui::OpenPopup("Customizations");
+				
+				ImGui::SetNextWindowPosCenter(ImGuiCond_Appearing);
+				ImGui::SetNextWindowSize({ static_cast<float>(Application::Get().GetWindow().GetWidth()) / 2, static_cast<float>(Application::Get().GetWindow().GetHeight()) / 2 }, ImGuiCond_Appearing);
+				if (ImGui::BeginPopupModal("Customizations", &customization, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse))
+				{
+					static bool appearanceSelected = false;
+					static bool darkMode = true;
+
+					// SCROLL
+					{
+						ImGui::BeginChild("Scroll_View", { ImGui::GetWindowContentRegionWidth() / 3, ImGui::GetWindowContentRegionMax().y }, true);
+
+						ImGui::Selectable("Appearance", &appearanceSelected);
+
+						ImGui::EndChild();
+					}
+					ImGui::SameLine();
+					// INFO
+					{
+						ImGui::BeginChild("Info_View", { ImGui::GetContentRegionAvailWidth(), ImGui::GetContentRegionAvail().y }, true);
+
+						if (appearanceSelected) 
+						{
+							// APPEARANCE CUSTOMIZATIONS GO HERE
+
+							// THEME SELECTION
+							{
+								if (ImGui::Checkbox("Dark Mode", &darkMode))
+								{
+									if (!darkMode) {
+										SetLightTheme();
+									}
+									else if (darkMode) {
+										SetDarkTheme();
+									}
+								}
+							}
+							// FONT SELECTION
+							{
+								ImGuiIO& io = ImGui::GetIO();
+								ImFont* font_current = ImGui::GetFont();
+								ImGui::SetNextItemWidth(250.0);
+								if (ImGui::BeginCombo("Font", font_current->GetDebugName()))
+								{
+									for (int n = 0; n < io.Fonts->Fonts.Size; n++)
+									{
+										ImFont* font = io.Fonts->Fonts[n];
+										ImGui::PushID((void*)font);
+										if (ImGui::Selectable(font->GetDebugName(), font == font_current))
+											io.FontDefault = font;
+										ImGui::PopID();
+									}
+									ImGui::EndCombo();
+								}
+							}
+							// FONT SIZE
+							{
+								ImGui::SetNextItemWidth(150);
+								static float fontSize = 1.0f;
+								if (ImGui::SliderFloat("Font Size", &fontSize, 0.5f, 1.5f, "%.2f", 1.0f)) {
+									fontSize = Math::Clamp(fontSize, 0.5f, 1.5f);
+									Application::Get().GetImGuiLayer()->SetFontScale(fontSize);
+								}
+							}
+						}
+
+						ImGui::EndChild();
+					}
+
+					ImGui::EndPopup();
+				}
+			}
+
 			ImGui::EndMainMenuBar();
 		}
 
@@ -189,7 +300,6 @@ namespace Sand
 		}
 
 		m_SceneHierarchyPanel.OnGuiRender();
-		m_AssetManagerPanel.OnGuiRender();
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
 		ImGui::Begin("Viewport", false, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoCollapse);
@@ -211,17 +321,21 @@ namespace Sand
 
 		if (selectedEntity && m_GizmoType != -1)
 		{
-			ImGuizmo::SetOrthographic(false);
 			ImGuizmo::SetDrawlist();
 			float windowWidth = (float)ImGui::GetWindowWidth(), windowHeight = (float)ImGui::GetWindowHeight();
 			ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
 
-			// Get camera
+			// Runtime camera
+#if 0
 			auto cameraEntity = m_ActiveScene->GetPrimaryCameraEntity();
 			const auto& camera = cameraEntity.GetComponent<CameraComponent>().Camera;
 			const glm::mat4& cameraProjection = camera.GetProjection();
 			glm::mat4 cameraView = glm::inverse(cameraEntity.GetComponent<TransformComponent>().GetTransform());
-			
+#endif
+			// Editor camera
+			const glm::mat4& cameraProjection = m_EditorCamera.GetProjection();
+			glm::mat4 cameraView = m_EditorCamera.GetViewMatrix();
+
 			// Entity transform
 			auto& transformComponent = selectedEntity.GetComponent<TransformComponent>();
 			glm::mat4 transform = transformComponent.GetTransform();
@@ -238,7 +352,7 @@ namespace Sand
 				(ImGuizmo::OPERATION)m_GizmoType, ImGuizmo::MODE::LOCAL, glm::value_ptr(transform), 
 				nullptr, snap ? snapValues : nullptr);
 
-			if (ImGuizmo::IsUsing()) 
+			if (ImGuizmo::IsUsing())
 			{
 				glm::vec3 translation, rotation, scale;
 				Math::DecomposeTransform(transform, translation, rotation, scale);
@@ -260,6 +374,7 @@ namespace Sand
 	void EditorLayer::OnEvent(Event& e)
 	{
 		EventDispatcher dispatcher(e);
+		m_EditorCamera.OnEvent(e);
 
 		dispatcher.Dispatch<KeyPressedEvent>(SAND_BIND_EVENT_FN(EditorLayer::OnKeyPressed));
 	}
@@ -269,7 +384,7 @@ namespace Sand
 		SAND_PROFILE_FUNCTION();
 
 		// Shortcuts
-        if (e.GetRepeatCount() > 0)
+		if (e.GetRepeatCount() > 0)
 			return false;
 
 		bool controlPressed = Input::IsKeyPressed(Keycode::LeftControl);
