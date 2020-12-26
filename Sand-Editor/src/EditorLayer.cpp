@@ -201,7 +201,6 @@ namespace Sand
 			{
 				ImGui::OpenPopup("Customizations");
 				
-				ImGui::SetNextWindowPosCenter(ImGuiCond_Appearing);
 				ImGui::SetNextWindowSize({ static_cast<float>(Application::Get().GetWindow().GetWidth()) / 2, static_cast<float>(Application::Get().GetWindow().GetHeight()) / 2 }, ImGuiCond_Appearing);
 				if (ImGui::BeginPopupModal("Customizations", &customization, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse))
 				{
@@ -303,6 +302,7 @@ namespace Sand
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
 		ImGui::Begin("Viewport", false, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoCollapse);
+		auto viewportScreenPos = ImGui::GetCursorScreenPos();
 
 		m_ViewportFocused = ImGui::IsWindowFocused(), m_ViewportHovered = ImGui::IsWindowHovered();
 		Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportFocused && !m_ViewportHovered);
@@ -323,7 +323,7 @@ namespace Sand
 		{
 			ImGuizmo::SetDrawlist();
 			float windowWidth = (float)ImGui::GetWindowWidth(), windowHeight = (float)ImGui::GetWindowHeight();
-			ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
+			ImGuizmo::SetRect(viewportScreenPos.x, viewportScreenPos.y, windowWidth, windowHeight);
 
 			// Runtime camera
 #if 0
@@ -427,6 +427,8 @@ namespace Sand
 				m_GizmoType = ImGuizmo::OPERATION::SCALE;
 				break;
 		}
+
+		return false;
 	}
 
 	void EditorLayer::NewScene()

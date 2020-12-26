@@ -67,13 +67,15 @@ namespace Sand
 		ImGui::Begin(std::string("Hierarchy - " + m_Context->GetName() + "###").c_str());
 
 		m_Context->m_Registry.each([&](auto entityID)
-			{
-				Entity entity{ entityID, m_Context.get() };
-				DrawEntityNode(entity);
-			});
+		{
+			Entity entity{ entityID, m_Context.get() };
+			DrawEntityNode(entity);
+		});
 
-		if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered())
+		if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered() && ImGui::GetIO().WantCaptureMouse) {
+			SAND_CORE_INFO("reset");
 			m_SelectionContext = {};
+		}
 
 		if (ImGui::BeginPopupContextWindow(0, 1, false))
 		{
@@ -92,18 +94,20 @@ namespace Sand
 		{
 			DrawComponents(m_SelectionContext);
 
+#if 0
 			if (m_SelectionContext.HasComponent<SpriteRendererComponent>())
 			{
 				ImGui::Begin("Shader Information");
-
+			
 				Ref<Shader> shader = m_SelectionContext.GetComponent<SpriteRendererComponent>().Material->GetShader();
 				for (auto uniform : std::dynamic_pointer_cast<OpenGLShader>(shader)->GetUniforms())
 				{
 					ImGui::Text((uniform.m_Name + " - " + uniform.m_Type).c_str());
 				}
-
+			
 				ImGui::End();
 			}
+#endif
 		}
 
 		ImGui::End();
@@ -114,14 +118,13 @@ namespace Sand
 		auto& tag = entity.GetComponent<TagComponent>().Name;
 
 		ImGuiTreeNodeFlags flags = ((m_SelectionContext == entity) ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
+		flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
 		bool opened = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)entity, flags, tag.c_str());
-		bool rename = ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0);
-		if (rename) {
-			SAND_CORE_INFO("Double clicked entity node - time 2 rename");
-		}
-
 		if (ImGui::IsItemClicked())
+		{
+			SAND_CORE_INFO("Item clicked");
 			m_SelectionContext = entity;
+		}
 
 		bool entityDeleted = false;
 		if (ImGui::BeginPopupContextItem())
