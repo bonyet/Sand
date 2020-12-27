@@ -7,21 +7,6 @@ namespace Sand
 {
 	Scope<Renderer::SceneData> Renderer::s_SceneData = CreateScope<Renderer::SceneData>();
 
-	struct RendererData
-	{
-		Ref<VertexArray> VertexArray;
-		Ref<VertexBuffer> VertexBuffer;
-		Ref<Material> Material;		
-	};
-
-	static RendererData s_Data;
-
-	struct Vertex
-	{
-		glm::vec3 Position;
-		glm::vec4 Color;
-	};
-
 	void Renderer::Init()
 	{
 		SAND_PROFILE_FUNCTION();
@@ -91,17 +76,6 @@ namespace Sand
 
 	void Renderer::EndScene()
 	{
-	}
-
-	void Renderer::DrawCube()
-	{
-		s_Data.Material->GetShader()->Bind();
-		s_Data.Material->GetShader()->SetMat4("u_ViewProjection", s_SceneData->ViewProj);
-		
-		s_Data.VertexArray->Bind();
-		s_Data.VertexBuffer->Bind();
-		s_Data.VertexArray->GetIndexBuffer()->Bind();
-		RenderCommand::DrawIndexed(s_Data.VertexArray);
 	}
 
 }

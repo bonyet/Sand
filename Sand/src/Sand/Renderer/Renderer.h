@@ -19,8 +19,6 @@ namespace Sand
 		static void BeginScene(const Camera& camera, const glm::mat4& transform);
 		static void EndScene();
 
-		static void DrawCube();
-
 		static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
 
 		struct SceneData

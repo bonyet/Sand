@@ -147,7 +147,6 @@
     <ClInclude Include="src\Platform\OpenGL\OpenGLBuffer.h" />
     <ClInclude Include="src\Platform\OpenGL\OpenGLContext.h" />
     <ClInclude Include="src\Platform\OpenGL\OpenGLFramebuffer.h" />
-    <ClInclude Include="src\Platform\OpenGL\OpenGLMaterial.h" />
     <ClInclude Include="src\Platform\OpenGL\OpenGLRendererAPI.h" />
     <ClInclude Include="src\Platform\OpenGL\OpenGLShader.h" />
     <ClInclude Include="src\Platform\OpenGL\OpenGLTexture.h" />
@@ -166,19 +165,20 @@
     <ClInclude Include="src\Sand\Core\Random.h" />
     <ClInclude Include="src\Sand\Core\Time.h" />
     <ClInclude Include="src\Sand\Core\Window.h" />
+    <ClInclude Include="src\Sand\Debug\Debug.h" />
     <ClInclude Include="src\Sand\Debug\Profiler.h" />
     <ClInclude Include="src\Sand\Events\ApplicationEvent.h" />
     <ClInclude Include="src\Sand\Events\Event.h" />
     <ClInclude Include="src\Sand\Events\KeyEvent.h" />
     <ClInclude Include="src\Sand\Events\MouseEvent.h" />
     <ClInclude Include="src\Sand\ImGui\ImGuiLayer.h" />
+    <ClInclude Include="src\Sand\ImGui\imgui_custom.h" />
     <ClInclude Include="src\Sand\Math\Math.h" />
     <ClInclude Include="src\Sand\Renderer\Buffer.h" />
     <ClInclude Include="src\Sand\Renderer\Camera.h" />
     <ClInclude Include="src\Sand\Renderer\EditorCamera.h" />
     <ClInclude Include="src\Sand\Renderer\Framebuffer.h" />
     <ClInclude Include="src\Sand\Renderer\GraphicsContext.h" />
-    <ClInclude Include="src\Sand\Renderer\Material.h" />
     <ClInclude Include="src\Sand\Renderer\RenderCommand.h" />
     <ClInclude Include="src\Sand\Renderer\Renderer.h" />
     <ClInclude Include="src\Sand\Renderer\Renderer2D.h" />
@@ -618,7 +618,6 @@
     <ClCompile Include="src\Platform\OpenGL\OpenGLBuffer.cpp" />
     <ClCompile Include="src\Platform\OpenGL\OpenGLContext.cpp" />
     <ClCompile Include="src\Platform\OpenGL\OpenGLFramebuffer.cpp" />
-    <ClCompile Include="src\Platform\OpenGL\OpenGLMaterial.cpp" />
     <ClCompile Include="src\Platform\OpenGL\OpenGLRendererAPI.cpp" />
     <ClCompile Include="src\Platform\OpenGL\OpenGLShader.cpp" />
     <ClCompile Include="src\Platform\OpenGL\OpenGLTexture.cpp" />
@@ -633,12 +632,12 @@
     <ClCompile Include="src\Sand\Core\Window.cpp" />
     <ClCompile Include="src\Sand\ImGui\ImGuiBuild.cpp" />
     <ClCompile Include="src\Sand\ImGui\ImGuiLayer.cpp" />
+    <ClCompile Include="src\Sand\ImGui\imgui_custom.cpp" />
     <ClCompile Include="src\Sand\Math\Math.cpp" />
     <ClCompile Include="src\Sand\Renderer\Buffer.cpp" />
     <ClCompile Include="src\Sand\Renderer\EditorCamera.cpp" />
     <ClCompile Include="src\Sand\Renderer\Framebuffer.cpp" />
     <ClCompile Include="src\Sand\Renderer\GraphicsContext.cpp" />
-    <ClCompile Include="src\Sand\Renderer\Material.cpp" />
     <ClCompile Include="src\Sand\Renderer\RenderCommand.cpp" />
     <ClCompile Include="src\Sand\Renderer\Renderer.cpp" />
     <ClCompile Include="src\Sand\Renderer\Renderer2D.cpp" />
@@ -676,4 +675,4 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
-</Project> 
+</Project>

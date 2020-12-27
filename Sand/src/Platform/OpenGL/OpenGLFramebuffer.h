@@ -24,6 +24,7 @@ namespace Sand
 	private:
 		uint32_t m_RendererID;
 		uint32_t m_ColorAttachment, m_DepthAttachment;
+		uint32_t m_IDAttachment;
 		FramebufferSpecification m_Specification;
 	};
 

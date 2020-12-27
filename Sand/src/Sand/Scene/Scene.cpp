@@ -1,12 +1,12 @@
 #include "sandpch.h"
 #include "Scene.h"
 
-#include "Components.h"
-
 #include "Sand/Renderer/Renderer2D.h"
-
 #include "Sand/Core/Application.h"
 
+#include "Components.h"
+
+#include <glad\glad.h>
 
 namespace Sand
 {
@@ -27,6 +27,10 @@ namespace Sand
 		return entity;
 	}
 
+	Entity Scene::DuplicateEntity(Entity original)
+	{
+	}
+
 	void Scene::DestroyEntity(Entity& entity)
 	{
 		SAND_PROFILE_FUNCTION();
@@ -36,17 +40,21 @@ namespace Sand
 
 	void Scene::OnUpdateEditor(Timestep ts, EditorCamera& camera)
 	{
-		Renderer2D::BeginScene(camera);
-
-		auto group = m_Registry.group<SpriteRendererComponent>(entt::get<TransformComponent>);
-		for (auto entity : group)
+		// Render geometry
 		{
-			auto [sprite, transform] = group.get<SpriteRendererComponent, TransformComponent>(entity);
+			Renderer2D::BeginScene(camera);
 
-			Renderer2D::DrawQuad(transform.GetTransform(), sprite.Material->Color);
+			auto group = m_Registry.group<SpriteRendererComponent>(entt::get<TransformComponent>);
+			for (auto entity : group)
+			{
+				auto [sprite, transform] = group.get<SpriteRendererComponent, TransformComponent>(entity);
+
+				Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color, (uint32_t)entity);
+			}
+
+			Renderer2D::EndScene();
 		}
 
-		Renderer2D::EndScene();
 	}
 
 	void Scene::OnUpdateRuntime(Timestep ts)
@@ -90,11 +98,39 @@ namespace Sand
 			{
 				auto [sprite, transform] = group.get<SpriteRendererComponent, TransformComponent>(entity);
 				
-				Renderer2D::DrawQuad(transform.GetTransform(), sprite.Material->Color);
+				Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color, (uint32_t)entity);
 			}
 
 			Renderer2D::EndScene();
 		}
+	}
+
+	void Scene::DrawIDBuffer(Ref<Framebuffer> target, EditorCamera& camera)
+	{
+		target->Bind();
+		// Render to ID buffer
+		{
+			Renderer2D::BeginScene(camera);
+
+			auto group = m_Registry.group<SpriteRendererComponent>(entt::get<TransformComponent>);
+			for (auto entity : group)
+			{
+				auto [sprite, transform] = group.get<SpriteRendererComponent, TransformComponent>(entity);
+
+				Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color, (uint32_t)entity);
+			}
+
+			Renderer2D::EndScene();
+		}
+	}
+
+	int Scene::Pixel(int x, int y)
+	{
+		glReadBuffer(GL_COLOR_ATTACHMENT1);
+
+		int pixelData;
+		glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_INT, &pixelData);
+		return pixelData;
 	}
 
 	Entity Scene::GetPrimaryCameraEntity()

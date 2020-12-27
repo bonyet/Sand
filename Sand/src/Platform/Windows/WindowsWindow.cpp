@@ -92,37 +92,38 @@ namespace Sand
 		{
 			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
+			Keycode keycode = (Keycode)key;
 			switch (action)
 			{
 				case GLFW_PRESS:
 				{
-					KeyPressedEvent event(key, 0);
+					KeyPressedEvent event(keycode, 0);
 					data.EventCallback(event);
-					Input::OnKeyPressed(static_cast<Keycode>(key));
+					Input::OnKeyPressed(keycode);
 
 					break;
 				}
 				case GLFW_RELEASE:
 				{
-					KeyReleasedEvent event(key);
+					KeyReleasedEvent event(keycode);
 					data.EventCallback(event);
-					Input::OnKeyReleased(static_cast<Keycode>(key));
+					Input::OnKeyReleased(keycode);
 					break;
 				}
 				case GLFW_REPEAT:
 				{
-					KeyPressedEvent event(key, 1);
+					KeyPressedEvent event(keycode, 1);
 					data.EventCallback(event);
 					break;
 				}
 			}
 		});
 
-		glfwSetCharCallback(m_Window, [](GLFWwindow* window, unsigned int Keycode)
+		glfwSetCharCallback(m_Window, [](GLFWwindow* window, unsigned int key)
 		{
 			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
-			KeyTypedEvent event(Keycode);
+			KeyTypedEvent event((Keycode)key);
 			data.EventCallback(event);
 		});
 
@@ -134,14 +135,14 @@ namespace Sand
 			{
 				case GLFW_PRESS:
 				{
-					MouseButtonPressedEvent event(button);
+					MouseButtonPressedEvent event((Mousecode)button);
 					data.EventCallback(event);
 					Input::OnMouseButtonPressed(static_cast<Mousecode>(button));
 					break;
 				}
 				case GLFW_RELEASE:
 				{
-					MouseButtonReleasedEvent event(button);
+					MouseButtonReleasedEvent event((Mousecode)button);
 					data.EventCallback(event);
 					Input::OnMouseButtonReleased(static_cast<Mousecode>(button));
 					break;

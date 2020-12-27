@@ -78,9 +78,6 @@
     <ClInclude Include="src\Platform\OpenGL\OpenGLFramebuffer.h">
       <Filter>src\Platform\OpenGL</Filter>
     </ClInclude>
-    <ClInclude Include="src\Platform\OpenGL\OpenGLMaterial.h">
-      <Filter>src\Platform\OpenGL</Filter>
-    </ClInclude>
     <ClInclude Include="src\Platform\OpenGL\OpenGLRendererAPI.h">
       <Filter>src\Platform\OpenGL</Filter>
     </ClInclude>
@@ -135,6 +132,9 @@
     <ClInclude Include="src\Sand\Core\Window.h">
       <Filter>src\Sand\Core</Filter>
     </ClInclude>
+    <ClInclude Include="src\Sand\Debug\Debug.h">
+      <Filter>src\Sand\Debug</Filter>
+    </ClInclude>
     <ClInclude Include="src\Sand\Debug\Profiler.h">
       <Filter>src\Sand\Debug</Filter>
     </ClInclude>
@@ -169,9 +169,6 @@
       <Filter>src\Sand\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Sand\Renderer\GraphicsContext.h">
-      <Filter>src\Sand\Renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Sand\Renderer\Material.h">
       <Filter>src\Sand\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Sand\Renderer\RenderCommand.h">
@@ -1476,6 +1473,7 @@
     <ClInclude Include="vendor\stb_image\stb_image.h">
       <Filter>vendor\stb_image</Filter>
     </ClInclude>
+    <ClInclude Include="src\Sand\ImGui\imgui_custom.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Platform\OpenGL\OpenGLBuffer.cpp">
@@ -1485,9 +1483,6 @@
       <Filter>src\Platform\OpenGL</Filter>
     </ClCompile>
     <ClCompile Include="src\Platform\OpenGL\OpenGLFramebuffer.cpp">
-      <Filter>src\Platform\OpenGL</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Platform\OpenGL\OpenGLMaterial.cpp">
       <Filter>src\Platform\OpenGL</Filter>
     </ClCompile>
     <ClCompile Include="src\Platform\OpenGL\OpenGLRendererAPI.cpp">
@@ -1547,9 +1542,6 @@
     <ClCompile Include="src\Sand\Renderer\GraphicsContext.cpp">
       <Filter>src\Sand\Renderer</Filter>
     </ClCompile>
-    <ClCompile Include="src\Sand\Renderer\Material.cpp">
-      <Filter>src\Sand\Renderer</Filter>
-    </ClCompile>
     <ClCompile Include="src\Sand\Renderer\RenderCommand.cpp">
       <Filter>src\Sand\Renderer</Filter>
     </ClCompile>
@@ -1595,5 +1587,6 @@
     <ClCompile Include="vendor\stb_image\stb_image.cpp">
       <Filter>vendor\stb_image</Filter>
     </ClCompile>
+    <ClCompile Include="src\Sand\ImGui\imgui_custom.cpp" />
   </ItemGroup>
 </Project>

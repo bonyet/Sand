@@ -1,5 +1,7 @@
 #pragma once
 
+#include <spdlog/sinks/base_sink.h>
+
 namespace Sand
 {
 
@@ -10,8 +12,8 @@ namespace Sand
 
 		virtual void OnGuiRender() = 0 {}
 		
-		void ShowWindow() { m_ShowWindow = true; }
-		void HideWindow() { m_ShowWindow = false; }
+		void Show() { m_ShowWindow = true; }
+		void Hide() { m_ShowWindow = false; }
 	protected:
 		bool m_ShowWindow = true;
 	};

@@ -9,28 +9,28 @@ namespace Sand
 	class KeyEvent : public Event
 	{
 	public:
-		Keycode GetKey() const { return static_cast<Sand::Keycode>(Keycode); }
+		inline Keycode GetKey() const { return m_Keycode; }
 
 		EVENT_CLASS_CATEGORY(EventCategoryKeyboard | EventCategoryInput)
 	protected:
-		KeyEvent(uint32_t Keycode)
-			: Keycode(Keycode) {}
+		KeyEvent(Keycode keycode)
+			: m_Keycode(keycode) {}
 
-		uint32_t Keycode;
+		Keycode m_Keycode;
 	};
 
 	class KeyPressedEvent : public KeyEvent
 	{
 	public:
-		KeyPressedEvent(uint32_t Keycode, int repeatCount)
-			: KeyEvent(Keycode), m_RepeatCount(repeatCount) {}
+		KeyPressedEvent(Keycode keycode, int repeatCount)
+			: KeyEvent(keycode), m_RepeatCount(repeatCount) {}
 
 		int GetRepeatCount() const { return m_RepeatCount; }
 
 		std::string ToString() const override
 		{
 			std::stringstream ss;
-			ss << "KeyPressedEvent: " << Keycode << " (" << m_RepeatCount << " repeats)";
+			ss << "KeyPressedEvent: " << m_Keycode << " (" << m_RepeatCount << " repeats)";
 			return ss.str();
 		}
 
@@ -42,13 +42,13 @@ namespace Sand
 	class KeyReleasedEvent : public KeyEvent
 	{
 	public:
-		KeyReleasedEvent(uint32_t Keycode)
-			: KeyEvent(Keycode) {}
+		KeyReleasedEvent(Keycode keycode)
+			: KeyEvent(keycode) {}
 
 		std::string ToString() const override
 		{
 			std::stringstream ss;
-			ss << "KeyReleasedEvent: " << Keycode;
+			ss << "KeyReleasedEvent: " << m_Keycode;
 			return ss.str();
 		}
 
@@ -58,13 +58,13 @@ namespace Sand
 	class KeyTypedEvent : public KeyEvent
 	{
 	public:
-		KeyTypedEvent(uint32_t Keycode)
-			: KeyEvent(Keycode) {}
+		KeyTypedEvent(Keycode keycode)
+			: KeyEvent(keycode) {}
 
 		std::string ToString() const override
 		{
 			std::stringstream ss;
-			ss << "KeyTypedEvent: " << Keycode;
+			ss << "KeyTypedEvent: " << m_Keycode;
 			return ss.str();
 		}
 

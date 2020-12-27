@@ -140,7 +140,7 @@ namespace Sand
 
 			auto& spriteRenderer = entity.GetComponent<SpriteRendererComponent>();
 
-			out << YAML::Key << "Color" << YAML::Value << spriteRenderer.Material->Color;
+			out << YAML::Key << "Color" << YAML::Value << spriteRenderer.Color;
 
 			out << YAML::EndMap; // SpriteRendererComponent
 		}
@@ -152,7 +152,7 @@ namespace Sand
 	{
 		YAML::Emitter out;
 		out << YAML::BeginMap;
-		out << YAML::Key << "Scene" << YAML::Value << Scene::GetActiveScene()->GetName();
+		out << YAML::Key << "Scene" << YAML::Value << "Unnamed Scene";
 		out << YAML::Key << "Entities" << YAML::Value << YAML::BeginSeq;
 		m_Scene->m_Registry.each([&](auto entityID)
 		{
@@ -196,7 +196,6 @@ namespace Sand
 			return false;
 
 		std::string sceneName = data["Scene"].as<std::string>();
-		Scene::GetActiveScene()->SetName(sceneName);
 		SAND_CORE_TRACE("Deserializing Scene '{0}'", sceneName);
 
 		auto entities = data["Entities"];
@@ -248,7 +247,7 @@ namespace Sand
 				{
 					auto& src = deserializedEntity.AddComponent<SpriteRendererComponent>();
 
-					src.Material->Color = spriteRendererComponent["Color"].as<glm::vec4>();
+					src.Color = spriteRendererComponent["Color"].as<glm::vec4>();
 				}
 			}
 		}

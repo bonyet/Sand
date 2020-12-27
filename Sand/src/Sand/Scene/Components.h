@@ -60,14 +60,10 @@ namespace Sand
 	struct SpriteRendererComponent
 	{
 	public:
-		Ref<Material> Material;
+		glm::vec4 Color{ 1.0f, 1.0f, 1.0f, 1.0f };
 		
-		SpriteRendererComponent()
-		{
-			// Materials shader should default the the renderers shader
-			Material = Material::Create();
-			Material->SetShader(Renderer2D::GetShader());
-		}
+		SpriteRendererComponent() {}
+		SpriteRendererComponent(const glm::vec4& color) : Color(color) {}
 		SpriteRendererComponent(const SpriteRendererComponent&) = default;
 	};
 

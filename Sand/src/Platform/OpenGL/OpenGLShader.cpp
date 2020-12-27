@@ -325,6 +325,7 @@ namespace Sand
 		case GL_INT_VEC3:   return "vec3i";
 		case GL_INT_VEC4:   return "vec4i";
 		}
+		return "Unknown uniform type";
 	}
 
 	std::vector<Shader::Uniform> OpenGLShader::GetUniforms()
@@ -342,7 +343,7 @@ namespace Sand
 
 		glGetProgramiv(m_RendererID, GL_ACTIVE_UNIFORMS, &uniformAmount);
 
-		for (uint32_t i = 0; i < uniformAmount; i++)
+		for (int i = 0; i < uniformAmount; i++)
 		{
 			glGetActiveUniform(m_RendererID, i, 48, &nameLength, &uniformSize, &uniformType, uniformName);
 

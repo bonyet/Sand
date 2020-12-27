@@ -43,7 +43,7 @@ namespace Sand
 		float y = std::min(m_ViewportHeight / 1000.0f, 2.4f); // max = 2.4f
 		float yFactor = 0.0366f * (y * y) - 0.1778f * y + 0.3021f;
 
-		return { xFactor, yFactor };
+		return { xFactor * 1.6, yFactor * 1.6 };
 	}
 
 	float EditorCamera::RotationSpeed() const
@@ -82,7 +82,7 @@ namespace Sand
 
 	bool EditorCamera::OnMouseScroll(MouseScrolledEvent& e)
 	{
-		float delta = e.GetYOffset() * 0.1f;
+		float delta = e.GetYOffset() * 0.15f;
 		MouseZoom(delta);
 		UpdateView();
 		return false;

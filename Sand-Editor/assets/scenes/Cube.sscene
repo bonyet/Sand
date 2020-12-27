@@ -1,5 +1,14 @@
-Scene: Untitled
+Scene: Unnamed Scene
 Entities:
+  - Entity: 123456789
+    TagComponent:
+      Tag: ben shapiro
+    TransformComponent:
+      Position: [0, -0.5, 0.5]
+      Rotation: [-1.57079637, 0, 0]
+      Scale: [5, 4.96341705, 0.999985397]
+    SpriteRendererComponent:
+      Color: [0.462633431, 0.462628812, 0.462628812, 1]
   - Entity: 123456789
     TagComponent:
       Tag: Left
@@ -41,7 +50,7 @@ Entities:
       Tag: Top
     TransformComponent:
       Position: [0, 0.5, 0]
-      Rotation: [1.57079637, 0.785398185, 0]
-      Scale: [1, 1, 1]
+      Rotation: [1.57079637, 0.785398245, 2.10734271e-07]
+      Scale: [1, 0.99999851, 0.999974966]
     SpriteRendererComponent:
       Color: [0.0124762524, 0.876447856, 0, 1]

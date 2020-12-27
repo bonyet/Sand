@@ -64,9 +64,6 @@
 #else
 	#define SAND_ASSERT(x, ...)
 	#define SAND_CORE_ASSERT(x, ...)
-	
-	#define SAND_ASSERT(x)
-	#define SAND_CORE_ASSERT(x)
 #endif
 
 #define BIT(x) (1 << x)
