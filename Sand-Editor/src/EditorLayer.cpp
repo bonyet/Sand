@@ -1,15 +1,14 @@
 #include "EditorLayer.h"
 
-#include <glm\glm\gtc\type_ptr.hpp>
-
 #include "Sand/Scene/SceneSerializer.h"
 #include "Sand/Utils/PlatformUtils.h"
-#include "ImGuizmo.h"
-
-#include "Sand/Math/Math.h"
-#include "Sand/Debug/Debug.h"
-
+#include "Sand/Scene/SceneRenderer.h"
 #include "Sand/ImGui/imgui_custom.h"
+#include "Sand/Debug/Debug.h"
+#include "Sand/Math/Math.h"
+
+#include <glm\glm\gtc\type_ptr.hpp>
+#include "ImGuizmo.h"
 
 namespace Sand
 {
@@ -26,12 +25,13 @@ namespace Sand
 	{
 		SAND_PROFILE_FUNCTION();
 
+		SceneRenderer::Init();
+
 		FramebufferSpecification framebufferSpecs = { 1280, 720 };
 		m_Framebuffer = Framebuffer::Create(framebufferSpecs);
 		m_IDFramebuffer = Framebuffer::Create(framebufferSpecs);
 
 		m_ActiveScene = CreateRef<Scene>();
-		Scene::SetActiveScene(m_ActiveScene);
 
 		m_EditorCamera = EditorCamera(30.0f, 1.778f, 0.1f, 1000.0f);
 
@@ -49,6 +49,8 @@ namespace Sand
 	{
 		auto& style = ImGui::GetStyle();
 		style.FrameRounding = 10.0f;
+		style.WindowTitleAlign = { 0.5f, 0.5f };
+		style.WindowMenuButtonPosition = ImGuiDir_None;
 
 		auto& colors = style.Colors;
 		colors[ImGuiCol_WindowBg] = ImVec4{ 0.70f, 0.70f, 0.70f, 1.0f };
@@ -106,7 +108,9 @@ namespace Sand
 		s_ThemeInitialized = true;
 
 		auto& style = ImGui::GetStyle();
-		style.FrameRounding = 10.0f;	
+		style.FrameRounding = 10.0f;
+		style.WindowTitleAlign = { 0.5f, 0.5f };
+		style.WindowMenuButtonPosition = ImGuiDir_None;
 
 		auto& colors = style.Colors;
 		colors[ImGuiCol_WindowBg] = ImVec4{ 0.15f, 0.15f, 0.15f, 1.0f };
@@ -186,7 +190,7 @@ namespace Sand
 			m_EditorCamera.OnUpdate(ts);
 		}
 
-		Renderer2D::ResetStats();
+		SceneRenderer::ResetStats();
 
 		if (FramebufferSpecification spec = m_Framebuffer->GetSpecification();
 			m_ViewportSize.x > 0 && m_ViewportSize.y > 0 && // zero sized framebuffer is invalid
@@ -282,90 +286,6 @@ namespace Sand
 
 				ImGui::EndMenu();
 			}
-			static bool customization = false;
-			if (ImGui::BeginMenu("Help"))
-			{
-				if (ImGui::MenuItem("Customize"))
-				{
-					customization = true;
-				}
-				ImGui::EndMenu();
-			}
-			
-			if (customization)
-			{
-				ImGui::OpenPopup("Customizations");
-				
-				ImGui::SetNextWindowSize({ static_cast<float>(Application::Get().GetWindow().GetWidth()) / 2, static_cast<float>(Application::Get().GetWindow().GetHeight()) / 2 }, ImGuiCond_Appearing);
-				if (ImGui::BeginPopupModal("Customizations", &customization, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse))
-				{
-					static bool customizingAppearance = false;
-
-					// SCROLL
-					{
-						ImGui::BeginChild("Scroll_View", { ImGui::GetWindowContentRegionWidth() / 3, ImGui::GetWindowContentRegionMax().y }, true);
-
-						ImGui::Selectable("Appearance", &customizingAppearance);
-
-						ImGui::EndChild();
-					}
-					ImGui::SameLine();
-					// INFO
-					{
-						ImGui::BeginChild("Info_View", { ImGui::GetContentRegionAvailWidth(), ImGui::GetContentRegionAvail().y }, true);
-
-						if (customizingAppearance)
-						{
-							// THEME SELECTION
-							{
-								if (ImGui::Checkbox("Dark Mode", &s_UsingDarkTheme))
-								{
-									if (!s_UsingDarkTheme) {
-										SetLightTheme();
-									}
-									else if (s_UsingDarkTheme) {
-										SetDarkTheme();
-									}
-								}
-							}
-							// FONT SELECTION
-							{
-								ImGuiIO& io = ImGui::GetIO();
-								ImFont* font_current = ImGui::GetFont();
-								ImGui::SetNextItemWidth(250.0);
-								if (ImGui::BeginCombo("Font", font_current->GetDebugName()))
-								{
-									for (int n = 0; n < io.Fonts->Fonts.Size; n++)
-									{
-										ImFont* font = io.Fonts->Fonts[n];
-										ImGui::PushID((void*)font);
-										if (ImGui::Selectable(font->GetDebugName(), font == font_current))
-											io.FontDefault = font;
-										ImGui::PopID();
-									}
-									ImGui::EndCombo();
-								}
-							}
-							// FONT SIZE
-							{
-								static float fontSize = 1.0f;
-								ImGui::TextTooltip("Font Size", "Some UI may not scale correctly at very large or small font sizes");
-
-								ImGui::SameLine();
-								ImGui::SetNextItemWidth(150);
-								if (ImGui::SliderFloat("##Font Size", &fontSize, 0.5f, 1.5f, "%.2f", 1.0f)) {
-									fontSize = Math::Clamp(fontSize, 0.5f, 1.5f);
-									Application::Get().GetImGuiLayer()->SetFontScale(fontSize);
-								}
-							}
-						}
-
-						ImGui::EndChild();
-					}
-
-					ImGui::EndPopup();
-				}
-			}
 
 			float originalCursorX = ImGui::GetCursorPosX();
 			ImGui::SetCursorPosX((ImGui::GetContentRegionAvailWidth() / 2) + 20);
@@ -386,39 +306,39 @@ namespace Sand
 			ImGui::EndMainMenuBar();
 		}
 
-		static bool showSettingsWindow = true;
-		if (showSettingsWindow)
-		{
-			ImGui::Begin("Stuff", &showSettingsWindow);
+		ImGui::Begin("Stuff");
 
-			auto font = ImGui::GetFont();
-			font->Scale = 1.1f;
-			ImGui::PushFont(font);
-			ImGui::Text("%.3fms (%.1ffps)", 1000 / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-			font->Scale = 1.0f;
-			ImGui::PopFont();
+		auto font = ImGui::GetFont();
+		font->Scale = 1.1f;
+		ImGui::PushFont(font);
+		ImGui::Text("%.3fms (%.1ffps)", 1000 / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+		font->Scale = 1.0f;
+		ImGui::PopFont();
 
-			static bool vsync = true;
-			if (ImGui::Checkbox("VSync", &vsync)) {
-				Application::Get().GetWindow().SetVSync(vsync);
-			}
+		static bool vsync = true;
+		if (ImGui::Checkbox("VSync", &vsync)) {
+			Application::Get().GetWindow().SetVSync(vsync);
+		}
 
-			ImGui::Separator();
-			auto stats = Renderer2D::GetStats();
+		ImGui::Separator();
+		if (ImGui::TreeNodeEx("Renderer")) {
+			auto stats = SceneRenderer::GetStats();
 			ImGui::Text("Renderer2D:");
 			ImGui::Text("Draw Calls: %d", stats.DrawCalls);
 			ImGui::Text("Quads: %d", stats.QuadCount);
 			ImGui::Text("Vertices: %d", stats.GetTotalVertexCount());
 			ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
 
-			std::string name = "Null";
-			if ((entt::entity)m_HoveredEntity != entt::null) {
-				name = m_HoveredEntity.GetComponent<TagComponent>().Name;
-			}
-			ImGui::Text("Hovered Entity: %s", name.c_str());
-
-			ImGui::End();
+			ImGui::TreePop();
 		}
+
+		std::string name = "Null";
+		if ((entt::entity)m_HoveredEntity != entt::null) {
+			name = m_HoveredEntity.GetComponent<TagComponent>().Name;
+		}
+		ImGui::Text("Hovered Entity: %s", name.c_str());
+
+		ImGui::End();
 
 		m_SceneHierarchyPanel.OnGuiRender();
 		m_PropertiesPanel.SetSelection(m_SceneHierarchyPanel.GetSelectedEntity());
@@ -433,7 +353,7 @@ namespace Sand
 		m_ViewportFocused = ImGui::IsWindowFocused();
 		m_ViewportHovered = ImGui::IsWindowHovered();
 
-		Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportFocused && !m_ViewportHovered);
+		//Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportFocused && !m_ViewportHovered);
 		ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
 
 		if (m_ViewportSize != *((glm::vec2*) & viewportPanelSize))
@@ -463,12 +383,11 @@ namespace Sand
 			ImGuizmo::SetRect(viewportScreenPos.x, viewportScreenPos.y, windowWidth, windowHeight);
 
 			// Runtime camera
-#if 0
-			auto cameraEntity = m_ActiveScene->GetPrimaryCameraEntity();
-			const auto& camera = cameraEntity.GetComponent<CameraComponent>().Camera;
-			const glm::mat4& cameraProjection = camera.GetProjection();
-			glm::mat4 cameraView = glm::inverse(cameraEntity.GetComponent<TransformComponent>().GetTransform());
-#endif
+			//auto cameraEntity = m_ActiveScene->GetPrimaryCameraEntity();
+			//const auto& camera = cameraEntity.GetComponent<CameraComponent>().Camera;
+			//const glm::mat4& cameraProjection = camera.GetProjection();
+			//glm::mat4 cameraView = glm::inverse(cameraEntity.GetComponent<TransformComponent>().GetTransform());
+
 			// Editor camera
 			const glm::mat4& cameraProjection = m_EditorCamera.GetProjection();
 			glm::mat4 cameraView = m_EditorCamera.GetViewMatrix();
@@ -511,7 +430,9 @@ namespace Sand
 	void EditorLayer::OnEvent(Event& e)
 	{
 		EventDispatcher dispatcher(e);
-		m_EditorCamera.OnEvent(e);
+
+		if (m_ViewportHovered)
+			m_EditorCamera.OnEvent(e);
 
 		dispatcher.Dispatch<KeyPressedEvent>(SAND_BIND_EVENT_FN(EditorLayer::OnKeyPressed));
 		dispatcher.Dispatch<MouseButtonPressedEvent>(SAND_BIND_EVENT_FN(EditorLayer::OnMouseButtonPressed));
@@ -536,7 +457,7 @@ namespace Sand
 		SAND_PROFILE_FUNCTION();
 
 		// Shortcuts
-		if (e.GetRepeatCount() > 0)
+		if (e.GetRepeatCount() > 0) 
 			return false;
 
 		bool controlPressed = Input::IsKeyPressed(Keycode::LeftControl);
@@ -568,7 +489,7 @@ namespace Sand
 			// GIZMOS YEA
 			case Keycode::Q:
 			{
-				if (ImGuizmo::IsUsing())
+				if (!m_ViewportHovered || ImGuizmo::IsUsing())
 					break;
 
 				m_GizmoType = -1;
@@ -576,7 +497,7 @@ namespace Sand
 			}
 			case Keycode::W:
 			{
-				if (ImGuizmo::IsUsing())
+				if (!m_ViewportHovered || ImGuizmo::IsUsing())
 					break;
 
 				m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
@@ -584,7 +505,7 @@ namespace Sand
 			}
 			case Keycode::E: 
 			{
-				if (ImGuizmo::IsUsing())
+				if (!m_ViewportHovered || ImGuizmo::IsUsing())
 					break;
 
 				m_GizmoType = ImGuizmo::OPERATION::ROTATE;
@@ -592,7 +513,7 @@ namespace Sand
 			}
 			case Keycode::R:
 			{
-				if (ImGuizmo::IsUsing())
+				if (!m_ViewportHovered || ImGuizmo::IsUsing())
 					break;
 
 				m_GizmoType = ImGuizmo::OPERATION::SCALE;
@@ -602,8 +523,11 @@ namespace Sand
 			// MISC KEY COMBOS
 			case Keycode::D:
 			{
-				if (controlPressed && m_HoveredEntity) {
-					auto& duplicated = m_ActiveScene->DuplicateEntity(m_HoveredEntity);
+				if (controlPressed && (m_HoveredEntity || m_SceneHierarchyPanel.GetSelectedEntity())) {
+					if (m_HoveredEntity)
+						m_SceneHierarchyPanel.SetSelectedEntity(m_ActiveScene->DuplicateEntity(m_HoveredEntity));
+					else if (m_SceneHierarchyPanel.GetSelectedEntity())
+						m_SceneHierarchyPanel.SetSelectedEntity(m_ActiveScene->DuplicateEntity(m_SceneHierarchyPanel.GetSelectedEntity()));
 				}
 				break;
 			}
@@ -627,7 +551,6 @@ namespace Sand
 			Debug::PrintInfo("Saving scene");
 			SceneSerializer serializer(m_ActiveScene);
 			serializer.Serialize(currentSceneFilepath);
-
 			// TODO: visual feedback that the scene saved
 		}
 	}
@@ -649,7 +572,6 @@ namespace Sand
 			m_ActiveScene = CreateRef<Scene>();
 			m_ActiveScene->OnViewportResize(m_ViewportSize.x, m_ViewportSize.y);
 			m_SceneHierarchyPanel.SetContext(m_ActiveScene);
-			Scene::SetActiveScene(m_ActiveScene);
 
 			SceneSerializer serializer(m_ActiveScene);
 			serializer.Deserialize(filepath);

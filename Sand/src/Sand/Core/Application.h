@@ -40,15 +40,12 @@ namespace Sand
 		bool OnWindowResize(WindowResizeEvent& e);
 
 		Scope<Window> m_Window;
-
-		Ref<Scene>& GetActiveScene() { return m_CurrentScene; }
-		void SetActiveScene(const Ref<Scene>& scene);
 	private:
-		Ref<Scene> m_CurrentScene;
 		ImGuiLayer* m_UILayer;
-		bool m_Running = true, m_Minimized = false;
 		LayerStack m_LayerStack;
+
 		float m_LastFrameTime = 0.0f;
+		bool m_Running = true, m_Minimized = false;
 	private:
 		static Application* s_Instance;
 		friend int ::main(int argc, char** argv);

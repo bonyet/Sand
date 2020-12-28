@@ -16,7 +16,7 @@ namespace Sand
 		if (type == "fragment" || type == "pixel")
 			return GL_FRAGMENT_SHADER;
 
-		SAND_CORE_ASSERT(false, "Unknown shader type!");
+		SAND_CORE_ASSERT(false, "Unknown shader type");
 		return 0;
 	}
 
@@ -29,6 +29,9 @@ namespace Sand
 		std::string source = ReadFile(filepath);
 		auto shaderSources = PreProcess(source);
 		Compile(shaderSources);
+
+		// Init the thang
+		InitUniformCache();
 
 		// Extract name from filepath
 		auto lastSlash = filepath.find_last_of("/\\");
@@ -189,6 +192,44 @@ namespace Sand
 		}
 	}
 
+	void OpenGLShader::InitUniformCache()
+	{
+		int uniformAmount;
+		glGetProgramiv(m_RendererID, GL_ACTIVE_UNIFORMS, &uniformAmount);
+
+		for (int i = 0; i < uniformAmount; i++)
+		{
+			int length;
+			const unsigned int nameLength = 512;
+			char name[nameLength];
+			GLint size;
+			GLenum type;
+			glGetActiveUniform(m_RendererID, (GLuint)i, nameLength, &length, &size, &type, name);
+
+			int location;
+			location = glGetUniformLocation(m_RendererID, name);
+			m_UniformLocationCache[std::string(name)] = location;
+		}
+	}
+
+	GLint OpenGLShader::GetUniformLocation(const std::string& name) const
+	{
+		SAND_PROFILE_FUNCTION();
+
+		auto cachedLocation = m_UniformLocationCache.find(name);
+		if (cachedLocation != m_UniformLocationCache.end())
+			return cachedLocation->second;
+
+		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+		// TODO: deal with situation where uniform does not exist
+		if (location == -1) {
+			// it does not exist
+			SAND_CORE_ERROR("Uniform '{0}' does not exist", name);
+		}
+		m_UniformLocationCache[name] = location;
+		return location;
+	}
+
 	void OpenGLShader::Bind() const
 	{
 		SAND_PROFILE_FUNCTION();
@@ -250,60 +291,53 @@ namespace Sand
 
 	void OpenGLShader::UploadUniformInt(const std::string& name, int value)
 	{
-		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+		GLint location = GetUniformLocation(name);
 		glUniform1i(location, value);
-		SAND_CORE_ASSERT(location != -1, "Uniform does not exist!");
 	}
 
 	void OpenGLShader::UploadUniformIntArray(const std::string& name, int* values, uint32_t count)
 	{
-		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+		GLint location = GetUniformLocation(name);
 		glUniform1iv(location, count, values);
-		SAND_CORE_ASSERT(location != -1, "Uniform does not exist!");
 	}
 
 	void OpenGLShader::UploadUniformFloat(const std::string& name, float value)
 	{
-		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+		GLint location = GetUniformLocation(name);
 		glUniform1f(location, value);
-		SAND_CORE_ASSERT(location != -1, "Uniform does not exist!");
 	}
 
 	void OpenGLShader::UploadUniformFloat2(const std::string& name, const glm::vec2& value)
 	{
-		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+		GLint location = GetUniformLocation(name);
 		glUniform2f(location, value.x, value.y);
-		SAND_CORE_ASSERT(location != -1, "Uniform does not exist!");
 	}
 
 	void OpenGLShader::UploadUniformFloat3(const std::string& name, const glm::vec3& value)
 	{
-		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+		GLint location = GetUniformLocation(name);
 		glUniform3f(location, value.x, value.y, value.z);
-		SAND_CORE_ASSERT(location != -1, "Uniform does not exist!");
 	}
 
 	void OpenGLShader::UploadUniformFloat4(const std::string& name, const glm::vec4& value)
 	{
-		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+		GLint location = GetUniformLocation(name);
 		glUniform4f(location, value.x, value.y, value.z, value.w);
-		SAND_CORE_ASSERT(location != -1, "Uniform does not exist!");
 	}
 
 	void OpenGLShader::UploadUniformMat3(const std::string& name, const glm::mat3& matrix)
 	{
-		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+		GLint location = GetUniformLocation(name);
 		glUniformMatrix3fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
-		SAND_CORE_ASSERT(location != -1, "Uniform does not exist!");
 	}
 
 	void OpenGLShader::UploadUniformMat4(const std::string& name, const glm::mat4& matrix)
 	{
-		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+		GLint location = GetUniformLocation(name);
 		glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
-		SAND_CORE_ASSERT(location != -1, "Uniform does not exist!");
 	}
 
+#if 0
 	static std::string GLUniformTypeToString(GLenum enumType)
 	{
 		switch (enumType)
@@ -327,30 +361,6 @@ namespace Sand
 		}
 		return "Unknown uniform type";
 	}
-
-	std::vector<Shader::Uniform> OpenGLShader::GetUniforms()
-	{
-		std::vector<Uniform> uniformsInShader;
-
-		GLint uniformAmount;
-
-		GLint uniformSize;
-		GLenum uniformType; // type of the variable
-
-		char uniformName[48]; // variable name in GLSL, max size of 48 letters
-
-		GLint nameLength;
-
-		glGetProgramiv(m_RendererID, GL_ACTIVE_UNIFORMS, &uniformAmount);
-
-		for (int i = 0; i < uniformAmount; i++)
-		{
-			glGetActiveUniform(m_RendererID, i, 48, &nameLength, &uniformSize, &uniformType, uniformName);
-
-			uniformsInShader.push_back({ uniformName, GLUniformTypeToString(uniformType) });
-		}
-
-		return uniformsInShader;
-	}
+#endif
 
 }

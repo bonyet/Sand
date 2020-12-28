@@ -6,14 +6,14 @@
 
 namespace ImGui
 {
-	void TextTooltip(const char* text, const char* tooltip)
+	void TextTooltip(const char* text, const char* tooltip, float delay)
 	{
 		float cursorX = ImGui::GetCursorPosX();
 		ImGui::Text(text);
 		ImGui::SameLine(cursorX, 0);
 		ImGui::InvisibleButton("##button", ImGui::GetItemRectSize());
 
-		if (ImGui::IsItemHovered() && GImGui->HoveredIdTimer > 0.75f)
+		if (ImGui::IsItemHovered() && GImGui->HoveredIdTimer > delay)
 		{
 			ImGui::BeginTooltip();
 			ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
@@ -22,9 +22,9 @@ namespace ImGui
 			ImGui::EndTooltip();
 		}
 	}
-	void Tooltip(const char* text)
+	void Tooltip(const char* text, float delay)
 	{
-		if (ImGui::IsItemHovered() && GImGui->HoveredIdTimer > 0.75f)
+		if (ImGui::IsItemHovered() && GImGui->HoveredIdTimer > delay)
 		{
 			ImGui::BeginTooltip();
 			ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);

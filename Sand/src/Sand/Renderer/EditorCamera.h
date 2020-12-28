@@ -21,6 +21,10 @@ namespace Sand
 
 		inline float GetDistance() const { return m_Distance; }
 		inline void SetDistance(float distance) { m_Distance = distance; }
+		
+		inline void SetVerticalFOV(float fov) { m_FOV = fov; UpdateProjection(); }
+		inline void SetNearClip(float nearclip) { m_NearClip = nearclip; UpdateProjection(); }
+		inline void SetFarClip(float farclip) { m_FarClip = farclip; UpdateProjection(); }
 
 		inline void SetViewportSize(float width, float height) { m_ViewportWidth = width; m_ViewportHeight = height; UpdateProjection(); }
 

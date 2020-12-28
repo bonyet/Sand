@@ -191,6 +191,7 @@
     <ClInclude Include="src\Sand\Scene\Entity.h" />
     <ClInclude Include="src\Sand\Scene\Scene.h" />
     <ClInclude Include="src\Sand\Scene\SceneCamera.h" />
+    <ClInclude Include="src\Sand\Scene\SceneRenderer.h" />
     <ClInclude Include="src\Sand\Scene\SceneSerializer.h" />
     <ClInclude Include="src\Sand\Scene\ScriptableEntity.h" />
     <ClInclude Include="src\Sand\Utils\PlatformUtils.h" />
@@ -649,6 +650,7 @@
     <ClCompile Include="src\Sand\Scene\Entity.cpp" />
     <ClCompile Include="src\Sand\Scene\Scene.cpp" />
     <ClCompile Include="src\Sand\Scene\SceneCamera.cpp" />
+    <ClCompile Include="src\Sand\Scene\SceneRenderer.cpp" />
     <ClCompile Include="src\Sand\Scene\SceneSerializer.cpp" />
     <ClCompile Include="src\sandpch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>

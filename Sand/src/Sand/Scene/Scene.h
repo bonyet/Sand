@@ -30,9 +30,6 @@ namespace Sand
 		int Pixel(int x, int y);
 
 		Entity GetPrimaryCameraEntity();
-
-		static Ref<Scene>& GetActiveScene() { return Application::Get().GetActiveScene(); }
-		static void SetActiveScene(const Ref<Scene>& scene) { return Application::Get().SetActiveScene(scene); }
 	private:
 		template<typename T>
 		void OnComponentAdded(Entity entity, T& component);

@@ -56,16 +56,18 @@ namespace Sand
 		ImGuiTreeNodeFlags flags = ((m_SelectionContext == entity) ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
 		flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
 		bool opened = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)entity, flags, tag.c_str());
+		
 		if (ImGui::IsItemClicked())
-		{
 			m_SelectionContext = entity;
-		}
 
 		bool entityDeleted = false;
 		if (ImGui::BeginPopupContextItem())
 		{
-			if (ImGui::MenuItem("Delete Entity"))
+			if (ImGui::MenuItem("Delete"))
 				entityDeleted = true;
+			if (ImGui::MenuItem("Rename")) {
+				m_SelectionContext = entity;
+			}
 
 			ImGui::EndPopup();
 		}

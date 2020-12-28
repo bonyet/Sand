@@ -3,7 +3,7 @@
 
 #include "Sand/Renderer/Renderer2D.h"
 #include "Sand/Core/Application.h"
-
+#include "SceneRenderer.h"
 #include "Components.h"
 
 #include <glad\glad.h>
@@ -29,6 +29,22 @@ namespace Sand
 
 	Entity Scene::DuplicateEntity(Entity original)
 	{
+		auto entity = CreateEntity();
+
+		// Go through components copying them onto new entity
+		if (original.HasComponent<TransformComponent>()) {
+			entity.GetComponent<TransformComponent>() = original.GetComponent<TransformComponent>();
+		}
+		if (original.HasComponent<CameraComponent>()) {
+			auto& camera = entity.AddComponent<CameraComponent>();
+			camera = original.GetComponent<CameraComponent>();
+		}
+		if (original.HasComponent<SpriteRendererComponent>()) {
+			auto& sprite = entity.AddComponent<SpriteRendererComponent>();
+			sprite = original.GetComponent<SpriteRendererComponent>();
+		}
+
+		return entity;
 	}
 
 	void Scene::DestroyEntity(Entity& entity)
@@ -42,17 +58,17 @@ namespace Sand
 	{
 		// Render geometry
 		{
-			Renderer2D::BeginScene(camera);
+			SceneRenderer::Begin(camera);
 
 			auto group = m_Registry.group<SpriteRendererComponent>(entt::get<TransformComponent>);
 			for (auto entity : group)
 			{
 				auto [sprite, transform] = group.get<SpriteRendererComponent, TransformComponent>(entity);
 
-				Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color, (uint32_t)entity);
+				SceneRenderer::Submit(transform.GetTransform(), sprite.Color, (uint32_t)entity);
 			}
 
-			Renderer2D::EndScene();
+			SceneRenderer::End();
 		}
 
 	}

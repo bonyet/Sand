@@ -76,7 +76,7 @@ namespace Sand
 
 		CameraComponent() = default;
 		CameraComponent(const CameraComponent&) = default;
-		CameraComponent(float size) { Camera.SetOrthographicSize(size); }
+		CameraComponent(float orthoSize) { Camera.SetOrthographicSize(orthoSize); }
 	};
 
 	struct NativeScriptComponent

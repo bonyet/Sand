@@ -22,17 +22,15 @@ namespace Sand
 
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 2, 2 });
 		float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
-		ImGui::Spacing();
-		ImGui::Separator();
 		bool open = ImGui::TreeNodeEx((void*)typeid(T).hash_code(), treeNodeFlags, name.c_str());
 		ImGui::PopStyleVar();
-		ImGui::Tooltip("Right click for more actions");
+		ImGui::Tooltip("Right click for more actions", 1.1f);
 
 		if (ImGui::IsItemClicked(1))
-			ImGui::OpenPopup("ComponentSettings");
+			ImGui::OpenPopup("Component_Settings");
 
 		bool removeComponent = false;
-		if (ImGui::BeginPopup("ComponentSettings"))
+		if (ImGui::BeginPopup("Component_Settings"))
 		{
 			if (ImGui::MenuItem("Remove component"))
 				removeComponent = true;
@@ -51,6 +49,7 @@ namespace Sand
 		if (removeComponent)
 			entity.RemoveComponent<T>();
 
+		ImGui::Separator();
 		ImGui::Spacing();
 	}
 
@@ -200,8 +199,9 @@ namespace Sand
 		}
 
 		ImGui::SameLine();
-
 		DrawComponentsMenu(entity);
+		ImGui::Separator();
+
 
 		DrawComponent<TransformComponent>("Transform", entity, [](auto& component)
 		{

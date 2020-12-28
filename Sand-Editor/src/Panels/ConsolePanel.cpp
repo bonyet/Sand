@@ -27,8 +27,6 @@ namespace Sand
 	void ConsolePanel::OnGuiRender()
 	{
 		if (!m_ShowWindow) {
-			if (Debug::GetMessages().size() != 0)
-				Debug::GetMessages().clear();
 			return;
 		}
 

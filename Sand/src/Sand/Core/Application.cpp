@@ -137,9 +137,4 @@ namespace Sand
 		return false;
 	}
 
-	void Application::SetActiveScene(const Ref<Scene>& scene)
-	{
-		m_CurrentScene = scene;
-	}
-
 }

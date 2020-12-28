@@ -1474,6 +1474,7 @@
       <Filter>vendor\stb_image</Filter>
     </ClInclude>
     <ClInclude Include="src\Sand\ImGui\imgui_custom.h" />
+    <ClInclude Include="src\Sand\Scene\SceneRenderer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Platform\OpenGL\OpenGLBuffer.cpp">
@@ -1588,5 +1589,6 @@
       <Filter>vendor\stb_image</Filter>
     </ClCompile>
     <ClCompile Include="src\Sand\ImGui\imgui_custom.cpp" />
+    <ClCompile Include="src\Sand\Scene\SceneRenderer.cpp" />
   </ItemGroup>
 </Project>

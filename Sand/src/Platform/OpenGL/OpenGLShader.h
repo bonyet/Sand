@@ -2,8 +2,10 @@
 
 #include "Sand/Renderer/Shader.h"
 #include <glm/glm.hpp>
+#include <unordered_map>
 
 typedef unsigned int GLenum;
+typedef int GLint;
 
 namespace Sand 
 {
@@ -46,9 +48,12 @@ namespace Sand
 		std::string ReadFile(const std::string& filepath);
 		std::unordered_map<GLenum, std::string> PreProcess(const std::string& source);
 		void Compile(const std::unordered_map<GLenum, std::string>& shaderSources);
+		void InitUniformCache();
+		GLint GetUniformLocation(const std::string& name) const;
 	private:
 		uint32_t m_RendererID;
 		std::string m_Name;
+		mutable std::unordered_map<std::string, GLint> m_UniformLocationCache;
 	};
 
 }
