@@ -16,7 +16,13 @@
 namespace Sand
 {
 
-	struct TagComponent
+	struct ComponentBase
+	{
+	public:
+		Entity owner{};
+	};
+
+	struct TagComponent : ComponentBase
 	{
 	public:
 		std::string Name;
@@ -27,7 +33,7 @@ namespace Sand
 			: Name(tag) {}
 	};
 
-	struct TransformComponent
+	struct TransformComponent : ComponentBase
 	{
 	private:
 		glm::mat4 Transform{ glm::mat4(1.0f) };
@@ -57,7 +63,7 @@ namespace Sand
 		operator const glm::mat4& () { return GetTransform(); }
 	};
 
-	struct SpriteRendererComponent
+	struct SpriteRendererComponent : ComponentBase
 	{
 	public:
 		glm::vec4 Color{ 1.0f, 1.0f, 1.0f, 1.0f };
@@ -67,7 +73,7 @@ namespace Sand
 		SpriteRendererComponent(const SpriteRendererComponent&) = default;
 	};
 
-	struct CameraComponent
+	struct CameraComponent : ComponentBase
 	{
 	public:
 		SceneCamera Camera;
@@ -79,7 +85,7 @@ namespace Sand
 		CameraComponent(float orthoSize) { Camera.SetOrthographicSize(orthoSize); }
 	};
 
-	struct NativeScriptComponent
+	struct NativeScriptComponent : ComponentBase
 	{
 	public:
 		ScriptableEntity* Instance = nullptr;

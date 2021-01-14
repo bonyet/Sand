@@ -11,11 +11,6 @@ namespace Sand
 	class Shader
 	{
 	public:
-		struct Uniform
-		{
-			std::string m_Name, m_Type;
-		};
-	public:
 		virtual ~Shader() = default;
 
 		virtual void Bind() const = 0;
@@ -46,12 +41,11 @@ namespace Sand
 	public:
 		void Add(const std::string& name, const Ref<Shader>& shader);
 		void Add(const Ref<Shader>& shader);
+		Ref<Shader> Get(const std::string& name);
+		bool Exists(const std::string& name) const;
+
 		Ref<Shader> Load(const std::string& filepath);
 		Ref<Shader> Load(const std::string& name, const std::string& filepath);
-
-		Ref<Shader> Get(const std::string& name);
-
-		bool Exists(const std::string& name) const;
 	private:
 		std::unordered_map<std::string, Ref<Shader>> m_Shaders;
 	};

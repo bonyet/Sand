@@ -26,6 +26,8 @@ namespace Sand
 		inline void SetNearClip(float nearclip) { m_NearClip = nearclip; UpdateProjection(); }
 		inline void SetFarClip(float farclip) { m_FarClip = farclip; UpdateProjection(); }
 
+		inline void SetRotation(float pitch, float yaw) { m_Pitch = pitch, m_Yaw = yaw; }
+
 		inline void SetViewportSize(float width, float height) { m_ViewportWidth = width; m_ViewportHeight = height; UpdateProjection(); }
 
 		const glm::mat4& GetViewMatrix() const { return m_ViewMatrix; }
@@ -39,6 +41,8 @@ namespace Sand
 
 		float GetPitch() const { return m_Pitch; }
 		float GetYaw() const { return m_Yaw; }
+
+		bool Use2DControls = true;
 	private:
 		void UpdateProjection();
 		void UpdateView();

@@ -207,11 +207,9 @@ namespace Sand
 
 	void WindowsWindow::SetTitle(const std::string& name)
 	{
-		std::string windowtitle = "Sand | " + name + " - " + RendererAPI::GetAPIAsString();
+		m_Data.Title = name;
 
-		m_Data.Title = windowtitle;
-
-		glfwSetWindowTitle(m_Window, windowtitle.c_str());
+		glfwSetWindowTitle(m_Window, name.c_str());
 	}
 
 	void WindowsWindow::SetIcon(const std::string& filepath)

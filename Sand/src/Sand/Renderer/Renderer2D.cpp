@@ -372,6 +372,11 @@ namespace Sand
 		return s_Data.QuadShader;
 	}
 
+	glm::vec4 Renderer2D::GetViewport()
+	{
+		return RenderCommand::GetViewport();
+	}
+
 	void Renderer2D::ResetStats()
 	{
 		memset(&s_Data.Stats, 0, sizeof(Statistics));

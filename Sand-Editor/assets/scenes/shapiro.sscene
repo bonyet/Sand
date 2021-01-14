@@ -1,0 +1,11 @@
+Scene: Unnamed Scene
+Entities:
+  - Entity: 123456789
+    TagComponent:
+      Tag: ben shapiro
+    TransformComponent:
+      Position: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    SpriteRendererComponent:
+      Color: [1, 1, 1, 1]

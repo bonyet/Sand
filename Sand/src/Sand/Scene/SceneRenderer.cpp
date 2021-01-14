@@ -18,7 +18,7 @@ namespace Sand
 		int ObjectID;
 	};
 
-	struct RendererData
+	struct SceneRendererData
 	{
 		static const uint32_t MaxQuads = 20000;
 		static const uint32_t MaxVertices = MaxQuads * 4;
@@ -38,23 +38,28 @@ namespace Sand
 		uint32_t TextureSlotIndex = 1; // 0 = white texture
 
 		const glm::vec4 QuadVertexPositions[4] = {
-			{-0.5f, -0.5f, 0.0f, 1.0f},
-			{ 0.5f, -0.5f, 0.0f, 1.0f},
-			{ 0.5f,  0.5f, 0.0f, 1.0f},
-			{-0.5f,  0.5f, 0.0f, 1.0f},
+			{ -0.5f, -0.5f, 0.0f, 1.0f },
+			{  0.5f, -0.5f, 0.0f, 1.0f },
+			{  0.5f,  0.5f, 0.0f, 1.0f },
+			{ -0.5f,  0.5f, 0.0f, 1.0f },
 		};
 
 		SceneRenderer::Statistics Stats;
 	};
 
-	static RendererData s_Data;
+	static SceneRendererData s_Data;
+
+
+	void SceneRenderer::OnViewportResize(float x, float y)
+	{
+	}
 
 	void SceneRenderer::Init()
 	{
 		SAND_PROFILE_FUNCTION();
 
+		// VBO, IBO, VAO, Shaders, textures
 		s_Data.QuadVertexArray = VertexArray::Create();
-
 		s_Data.QuadVertexBuffer = VertexBuffer::Create(s_Data.MaxVertices * sizeof(QuadVertex));
 
 		s_Data.QuadVertexBuffer->SetLayout({
@@ -166,7 +171,7 @@ namespace Sand
 		constexpr glm::vec2 textureCoords[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
 		const float tilingFactor = 1.0f;
 
-		if (s_Data.QuadIndexCount >= RendererData::MaxIndices)
+		if (s_Data.QuadIndexCount >= SceneRendererData::MaxIndices)
 			FlushAndReset();
 
 		for (size_t i = 0; i < quadVertexCount; i++)

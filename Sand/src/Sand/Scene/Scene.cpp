@@ -29,9 +29,11 @@ namespace Sand
 
 	Entity Scene::DuplicateEntity(Entity original)
 	{
-		auto entity = CreateEntity();
+		std::string name = original.GetComponent<TagComponent>().Name;
 
-		// Go through components copying them onto new entity
+		auto entity = CreateEntity(name);
+
+		// copy components & data
 		if (original.HasComponent<TransformComponent>()) {
 			entity.GetComponent<TransformComponent>() = original.GetComponent<TransformComponent>();
 		}
@@ -183,23 +185,28 @@ namespace Sand
 	template<>
 	void Scene::OnComponentAdded<TagComponent>(Entity entity, TagComponent& component)
 	{
+		component.owner = entity;
 	}
 	template<>
 	void Scene::OnComponentAdded<TransformComponent>(Entity entity, TransformComponent& component)
 	{
+		component.owner = entity;
 	}
 	template<>
 	void Scene::OnComponentAdded<SpriteRendererComponent>(Entity entity, SpriteRendererComponent& component)
 	{
+		component.owner = entity;
 	}
 	template<>
 	void Scene::OnComponentAdded<CameraComponent>(Entity entity, CameraComponent& component)
 	{
+		component.owner = entity;
 		component.Camera.SetViewportSize(m_ViewportWidth, m_ViewportHeight);
 	}
 	template<>
 	void Scene::OnComponentAdded<NativeScriptComponent>(Entity entity, NativeScriptComponent& component)
 	{
+		component.owner = entity;
 	}
 
 }

@@ -65,9 +65,6 @@ namespace Sand
 		{
 			if (ImGui::MenuItem("Delete"))
 				entityDeleted = true;
-			if (ImGui::MenuItem("Rename")) {
-				m_SelectionContext = entity;
-			}
 
 			ImGui::EndPopup();
 		}

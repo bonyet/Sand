@@ -22,12 +22,15 @@ namespace Sand
 	void EditorCamera::UpdateProjection()
 	{
 		m_AspectRatio = m_ViewportWidth / m_ViewportHeight;
+
 		m_Projection = glm::perspective(glm::radians(m_FOV), m_AspectRatio, m_NearClip, m_FarClip);
 	}
 
 	void EditorCamera::UpdateView()
 	{
-		// m_Yaw = m_Pitch = 0.0f; // Lock the camera's rotation
+		if (Use2DControls)
+			m_Yaw = m_Pitch = 0.0f; // Lock the camera's rotation
+
 		m_Position = CalculatePosition();
 
 		glm::quat orientation = GetOrientation();
@@ -54,22 +57,32 @@ namespace Sand
 	float EditorCamera::ZoomSpeed() const
 	{
 		float distance = m_Distance * 0.2f;
+
 		distance = std::max(distance, 0.0f);
 		float speed = distance * distance;
 		speed = std::min(speed, 100.0f); // max speed = 100
+
 		return speed;
 	}
 
 	void EditorCamera::OnUpdate(Timestep ts)
 	{
-		const glm::vec2& mouse{ Input::GetMouseX(), Input::GetMouseY() };
+		const glm::vec2& mouse { Input::GetMouseX(), Input::GetMouseY() };
 		glm::vec2 delta = (mouse - m_InitialMousePosition) * 0.003f;
 		m_InitialMousePosition = mouse;
 
-		if (Input::IsKeyPressed(Mousecode::Middle))
-			MousePan(delta);
-		else if (Input::IsKeyPressed(Mousecode::Right))
-			MouseRotate(delta);
+		if (Use2DControls) {
+			// 2d controls
+			if (Input::IsKeyPressed(Mousecode::Right))
+				MousePan(delta);
+		}
+		else if (!Use2DControls) {
+			// 3d controls
+			if (Input::IsKeyPressed(Mousecode::Middle))
+				MousePan(delta);
+			if (Input::IsKeyPressed(Mousecode::Right))
+				MouseRotate(delta);
+		}		
 
 		UpdateView();
 	}

@@ -22,6 +22,7 @@ namespace ImGui
 			ImGui::EndTooltip();
 		}
 	}
+
 	void Tooltip(const char* text, float delay)
 	{
 		if (ImGui::IsItemHovered() && GImGui->HoveredIdTimer > delay)
@@ -32,5 +33,16 @@ namespace ImGui
 			ImGui::PopTextWrapPos();
 			ImGui::EndTooltip();
 		}
+	}
+
+	bool ToggleButton(const char* str_id, bool* v)
+	{
+		ImGui::Button(str_id, { 40, 25 });
+		if (ImGui::IsItemClicked()) {
+			*v = !*v;
+			return true;
+		}
+
+		return false;
 	}
 }

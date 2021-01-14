@@ -12,9 +12,6 @@
 
 namespace Sand
 {
-	static ImGuiStyle s_DefaultImGuiStyle = {};
-	static bool s_ThemeInitialized = false;
-	static bool s_UsingDarkTheme = true;
 
 	EditorLayer::EditorLayer()
 		: Layer("Editor")
@@ -27,8 +24,9 @@ namespace Sand
 
 		SceneRenderer::Init();
 
+		// Framebuffers
 		FramebufferSpecification framebufferSpecs = { 1280, 720 };
-		m_Framebuffer = Framebuffer::Create(framebufferSpecs);
+		m_ViewportFramebuffer = Framebuffer::Create(framebufferSpecs);
 		m_IDFramebuffer = Framebuffer::Create(framebufferSpecs);
 
 		m_ActiveScene = CreateRef<Scene>();
@@ -45,68 +43,8 @@ namespace Sand
 		Log::GetCoreLogger()->sinks().push_back(std::make_shared<ConsolePanel>());
 	}
 
-	void EditorLayer::SetLightTheme()
-	{
-		auto& style = ImGui::GetStyle();
-		style.FrameRounding = 10.0f;
-		style.WindowTitleAlign = { 0.5f, 0.5f };
-		style.WindowMenuButtonPosition = ImGuiDir_None;
-
-		auto& colors = style.Colors;
-		colors[ImGuiCol_WindowBg] = ImVec4{ 0.70f, 0.70f, 0.70f, 1.0f };
-
-		// Headers
-		colors[ImGuiCol_Header]        = ImVec4{ 0.70f, 0.70f, 0.70f, 1.0f };
-		colors[ImGuiCol_HeaderHovered] = ImVec4{ 0.80f, 0.80f, 0.80f, 1.0f };
-		colors[ImGuiCol_HeaderActive]  = ImVec4{ 0.70f, 0.70f, 0.70f, 1.0f };
-
-		// Buttons
-		colors[ImGuiCol_Button]         = ImVec4{ 0.60f, 0.60f, 0.60f, 1.0f };
-		colors[ImGuiCol_ButtonHovered]  = ImVec4{ 0.70f, 0.70f, 0.70f, 1.0f };
-		colors[ImGuiCol_ButtonActive]   = ImVec4{ 0.60f, 0.60f, 0.60f, 1.0f };
-
-		// Frame BG
-		colors[ImGuiCol_FrameBg]        = ImVec4{ 0.60f, 0.60f, 0.60f, 1.0f };
-		colors[ImGuiCol_FrameBgHovered] = ImVec4{ 0.70f, 0.70f, 0.70f, 1.0f };
-		colors[ImGuiCol_FrameBgActive]  = ImVec4{ 0.60f, 0.60f, 0.60f, 1.0f };
-
-		// Child and popups and misc
-		colors[ImGuiCol_ChildBg] = ImVec4{ 0.50f, 0.50f, 0.50f, 1.0f };
-		colors[ImGuiCol_PopupBg] = ImVec4{ 0.50f, 0.50f, 0.50f, 1.0f };
-		colors[ImGuiCol_CheckMark] = ImVec4{ 0.0f, 0.0f, 0.0f, 1.0f };
-
-		// Tabs
-		colors[ImGuiCol_Tab]                = ImVec4{ 0.8f, 0.8f, 0.8f, 1.0f };
-		colors[ImGuiCol_TabHovered]         = ImVec4{ 0.85f, 0.85f, 0.85f, 1.0f };
-		colors[ImGuiCol_TabActive]          = ImVec4{ 0.9f, 0.9f, 0.9f, 1.0f };
-		colors[ImGuiCol_TabUnfocused]       = ImVec4{ 0.7f, 0.7f, 0.7f, 1.0f };
-		colors[ImGuiCol_TabUnfocusedActive] = ImVec4{ 0.8f, 0.8f, 0.8f, 1.0f };
-
-		// Title
-		colors[ImGuiCol_TitleBg]          = ImVec4{ 0.9f, 0.9f, 0.9f, 1.0f };
-		colors[ImGuiCol_TitleBgActive]    = ImVec4{ 0.9f, 0.9f, 0.9f, 1.0f };
-		colors[ImGuiCol_TitleBgCollapsed] = ImVec4{ 0.9f, 0.9f, 0.9f, 1.0f };
-
-		// Resize grip
-		colors[ImGuiCol_ResizeGrip]        = ImVec4{ 0.50f, 0.50f, 0.50f, 1.0f };
-		colors[ImGuiCol_ResizeGripHovered] = ImVec4{ 0.55f, 0.55f, 0.55f, 1.0f };
-		colors[ImGuiCol_ResizeGripActive]  = ImVec4{ 0.50f, 0.50f, 0.50f, 1.0f };
-
-		colors[ImGuiCol_Text] = ImVec4{ 0.0f, 0.0f, 0.0f, 1.0f };
-		colors[ImGuiCol_ModalWindowDarkening] = ImVec4{ 0.4f, 0.4f, 0.4f, 0.5f };
-		colors[ImGuiCol_DockingPreview]       = ImVec4{ 0.45f, 0.45f, 0.45f, 1.0f };
-		colors[ImGuiCol_MenuBarBg] = ImVec4{ 1.0f, 1.0f, 1.0f, 1.0f };
-	}
 	void EditorLayer::SetDarkTheme()
 	{
-		if (s_ThemeInitialized) {
-			auto& style = ImGui::GetStyle();
-			style = s_DefaultImGuiStyle;
-			return;
-		}
-
-		s_ThemeInitialized = true;
-
 		auto& style = ImGui::GetStyle();
 		style.FrameRounding = 10.0f;
 		style.WindowTitleAlign = { 0.5f, 0.5f };
@@ -156,8 +94,6 @@ namespace Sand
 		colors[ImGuiCol_ModalWindowDarkening] = ImVec4{ 0.2f, 0.2f, 0.2f, 0.5f };
 		colors[ImGuiCol_DockingPreview] = ImVec4{ 0.45f, 0.45f, 0.45f, 1.0f };
 		colors[ImGuiCol_MenuBarBg] = ImVec4{ 0.14f, 0.14f, 0.14f, 1.0f };
-
-		s_DefaultImGuiStyle = style;
 	}
 
 	void EditorLayer::OnDetach() 
@@ -192,29 +128,36 @@ namespace Sand
 
 		SceneRenderer::ResetStats();
 
-		if (FramebufferSpecification spec = m_Framebuffer->GetSpecification();
+		if (FramebufferSpecification spec = m_ViewportFramebuffer->GetSpecification();
 			m_ViewportSize.x > 0 && m_ViewportSize.y > 0 && // zero sized framebuffer is invalid
 			(spec.Width != m_ViewportSize.x || spec.Height != m_ViewportSize.y))
 		{
-			m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+			SceneRenderer::OnViewportResize(m_ViewportSize.x, m_ViewportSize.y);
+			m_ViewportFramebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 			m_IDFramebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 
 			m_EditorCamera.SetViewportSize(m_ViewportSize.x, m_ViewportSize.y);
 			m_ActiveScene->OnViewportResize(m_ViewportSize.x, m_ViewportSize.y);
 		}
 
-		m_Framebuffer->Bind();
+		m_ViewportFramebuffer->Bind();
 
 		RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.12f, 1.0f });
 		RenderCommand::Clear();
-		m_Framebuffer->Bind();
 
-		m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);
+		m_ViewportFramebuffer->Bind(); // remove
+
+		if (Input::IsKeyPressed(Keycode::Space)) {
+			m_ActiveScene->OnUpdateRuntime(ts);
+		}
+		else {
+			m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);
+		}
 
 		// mouse picking
 		m_HoveredEntity = GetHoveredEntity();
 
-		m_Framebuffer->Unbind();
+		m_ViewportFramebuffer->Unbind();
 	}
 
 	void EditorLayer::OnGuiRender()
@@ -261,10 +204,6 @@ namespace Sand
 				{
 					OpenScene();
 				}
-				if (ImGui::MenuItem("Save", "Shift+S"))
-				{
-					SaveScene();
-				}
 				if (ImGui::MenuItem("Save As", "Ctrl+Shift+S"))
 				{
 					SaveSceneAs();
@@ -286,22 +225,6 @@ namespace Sand
 
 				ImGui::EndMenu();
 			}
-
-			float originalCursorX = ImGui::GetCursorPosX();
-			ImGui::SetCursorPosX((ImGui::GetContentRegionAvailWidth() / 2) + 20);
-			for (int i = 0; i < 4; i++)
-			{
-				auto& texture = m_GizmoImages[i];
-
-				ImVec4 tintColor = s_UsingDarkTheme ? ImVec4{ 1.0f, 1.0f, 1.0f, 1.0f } : ImVec4{ 0.0f, 0.0f, 0.0f, 1.0f };
-				if (i == m_GizmoType + 1) // +1 because gizmotype starts at -1
-					tintColor = { 0.2f, 0.8f, 0.3f, 1.0f };
-
-				if (ImGui::ImageButton((ImTextureID)texture->GetID(), { 22, 22 }, { 0, 1 }, { 1, 0 }, -1, { 0, 0, 0, 0 }, tintColor)) {
-					m_GizmoType = i - 1;
-				}
-			}
-			ImGui::SetCursorPosX(originalCursorX);
 
 			ImGui::EndMainMenuBar();
 		}
@@ -345,8 +268,29 @@ namespace Sand
 		m_PropertiesPanel.OnGuiRender();
 		m_ConsolePanel.OnGuiRender();
 
+		{
+			ImGui::Begin("EditorTools", false, ImGuiWindowFlags_NoMove);
+
+			for (int i = 0; i < 4; i++)
+			{
+				auto& texture = m_GizmoImages[i];
+
+				ImVec4 tintColor = ImVec4{ 1.0f, 1.0f, 1.0f, 1.0f };
+				if (i == m_GizmoType + 1) // +1 because gizmotype starts at -1
+					tintColor = { 0.2f, 0.8f, 0.3f, 1.0f };
+
+				if (ImGui::ImageButton((ImTextureID)texture->GetID(), { 22, 22 }, { 0, 1 }, { 1, 0 }, -1, { 0, 0, 0, 0 }, tintColor)) {
+					m_GizmoType = i - 1;
+				}
+				ImGui::SameLine();
+			}
+
+			ImGui::End();
+		}
+		
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
 		ImGui::Begin("Viewport", false, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoCollapse);
+		
 		auto viewportOffset = ImGui::GetCursorPos();
 		auto viewportScreenPos = ImGui::GetCursorScreenPos();
 
@@ -355,13 +299,13 @@ namespace Sand
 
 		//Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportFocused && !m_ViewportHovered);
 		ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
-
+		
 		if (m_ViewportSize != *((glm::vec2*) & viewportPanelSize))
 		{
 			m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
 		}
 
-		uint32_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
+		uint32_t textureID = m_ViewportFramebuffer->GetColorAttachmentRendererID();
 		ImGui::Image(reinterpret_cast<void*>(textureID), viewportPanelSize, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 
 		auto windowSize = ImGui::GetWindowSize();
@@ -456,12 +400,24 @@ namespace Sand
 	{
 		SAND_PROFILE_FUNCTION();
 
-		// Shortcuts
-		if (e.GetRepeatCount() > 0) 
-			return false;
-
 		bool controlPressed = Input::IsKeyPressed(Keycode::LeftControl);
 		bool shiftPressed = Input::IsKeyPressed(Keycode::LeftShift);
+
+		// Shortcuts
+		if (e.GetRepeatCount() >= 0) 
+		{
+			switch (e.GetKey()) 
+			{
+				// MISC KEY COMBOS
+				case Keycode::D:
+				{
+					if (controlPressed && m_SceneHierarchyPanel.GetSelectedEntity()) {
+						m_SceneHierarchyPanel.SetSelectedEntity(m_ActiveScene->DuplicateEntity(m_SceneHierarchyPanel.GetSelectedEntity()));
+					}
+					break;
+				}
+			}
+		}
 
 		switch (e.GetKey())
 		{
@@ -481,8 +437,6 @@ namespace Sand
 			{
 				if (controlPressed && shiftPressed)
 					SaveSceneAs();
-				else if (controlPressed && !shiftPressed)
-					SaveScene();
 				break;
 			}
 
@@ -521,16 +475,7 @@ namespace Sand
 			}
 
 			// MISC KEY COMBOS
-			case Keycode::D:
-			{
-				if (controlPressed && (m_HoveredEntity || m_SceneHierarchyPanel.GetSelectedEntity())) {
-					if (m_HoveredEntity)
-						m_SceneHierarchyPanel.SetSelectedEntity(m_ActiveScene->DuplicateEntity(m_HoveredEntity));
-					else if (m_SceneHierarchyPanel.GetSelectedEntity())
-						m_SceneHierarchyPanel.SetSelectedEntity(m_ActiveScene->DuplicateEntity(m_SceneHierarchyPanel.GetSelectedEntity()));
-				}
-				break;
-			}
+			
 		}
 
 		return false;
@@ -543,23 +488,11 @@ namespace Sand
 		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
 	}
 
-	static std::string currentSceneFilepath;
-	void EditorLayer::SaveScene()
-	{
-		if (!currentSceneFilepath.empty())
-		{
-			Debug::PrintInfo("Saving scene");
-			SceneSerializer serializer(m_ActiveScene);
-			serializer.Serialize(currentSceneFilepath);
-			// TODO: visual feedback that the scene saved
-		}
-	}
 	void EditorLayer::SaveSceneAs()
 	{
 		std::string filepath = FileDialogs::SaveFile("Sand Scene (*.sscene)\0*.sscene\0");
 		if (!filepath.empty())
 		{
-			currentSceneFilepath = filepath;
 			SceneSerializer serializer(m_ActiveScene);
 			serializer.Serialize(filepath);
 		}

@@ -2,6 +2,7 @@
 
 #include <glm/glm.hpp>
 #include "Sand/Renderer/EditorCamera.h"
+#include "Sand/Renderer/Framebuffer.h"
 
 namespace Sand
 {
@@ -14,6 +15,8 @@ namespace Sand
 		static void Begin(EditorCamera& camera);
 		static void Submit(const glm::mat4& transform, const glm::vec4& color, uint32_t entityID);
 		static void End();
+
+		static void OnViewportResize(float x, float y);
 	private:
 		static void Flush();
 		static void FlushAndReset();

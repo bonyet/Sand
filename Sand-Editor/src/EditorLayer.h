@@ -26,17 +26,16 @@ namespace Sand
 		virtual void OnEvent(Event& e) override;
 	private:
 		void SetDarkTheme();
-		void SetLightTheme();
 		bool OnKeyPressed(KeyPressedEvent& e);
 		bool OnMouseButtonPressed(MouseButtonPressedEvent& e);
+
 		Entity GetHoveredEntity();
 
 		void NewScene();
-		void SaveScene();
 		void SaveSceneAs();
 		void OpenScene();
 	private:
-		Ref<Framebuffer> m_Framebuffer;
+		Ref<Framebuffer> m_ViewportFramebuffer;
 		Ref<Framebuffer> m_IDFramebuffer;
 
 		Ref<Scene> m_ActiveScene;
