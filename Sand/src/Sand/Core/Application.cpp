@@ -109,7 +109,7 @@ namespace Sand
 				m_UILayer->End();
 			}
 
-			Input::Update();
+			Input::ClearState();
 
 			m_Window->OnUpdate();
 		}

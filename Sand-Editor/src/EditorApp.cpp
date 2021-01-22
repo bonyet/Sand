@@ -1,9 +1,10 @@
 ﻿#include <Sand.h>
 #include <Sand/Core/EntryPoint.h>
 
-#include "EditorLayer.h" 
+#include "EditorLayer.h"
 
-namespace Sand {
+namespace Sand 
+{
 
 	class SandEditor : public Application
 	{
@@ -23,4 +24,5 @@ namespace Sand {
 	{
 		return new SandEditor();
 	}
+
 }

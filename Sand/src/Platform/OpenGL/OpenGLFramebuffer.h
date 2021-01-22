@@ -20,12 +20,19 @@ namespace Sand
 
 		virtual const FramebufferSpecification& GetSpecification() const override { return m_Specification; };
 	
-		virtual uint32_t GetColorAttachmentRendererID() const override { return m_ColorAttachment; }
+		virtual uint32_t GetColorAttachmentRendererID(uint32_t index = 0) const override { 
+			SAND_CORE_ASSERT(index < m_ColorAttachments.size(), "Invalid color attachment index.");  
+			return m_ColorAttachments[index]; 
+		}
 	private:
 		uint32_t m_RendererID;
-		uint32_t m_ColorAttachment, m_DepthAttachment;
-		uint32_t m_IDAttachment;
 		FramebufferSpecification m_Specification;
+
+		std::vector<FramebufferTextureSpecification> m_ColorAttachmentSpecs;
+		FramebufferTextureSpecification m_DepthAttachmentSpec;
+
+		std::vector<uint32_t> m_ColorAttachments;
+		uint32_t m_DepthAttachment;
 	};
 
 }

@@ -38,15 +38,13 @@ namespace Sand
 		static bool WasKeyReleased(Mousecode key);
 
 		static glm::vec2 GetMousePosition();
-		static float GetMouseX();
-		static float GetMouseY();
 	private:
 		static void OnKeyPressed(Keycode key);
 		static void OnKeyReleased(Keycode key);
 		static void OnMouseButtonPressed(Mousecode button);
 		static void OnMouseButtonReleased(Mousecode button);
 
-		static void Update()
+		static void ClearState()
 		{
 			state.Clear();
 		}

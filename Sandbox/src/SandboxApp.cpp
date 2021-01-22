@@ -1,14 +1,18 @@
 #include <Sand.h>
 #include <Sand/Core/EntryPoint.h>
 
-namespace Sand {
+#include "Sandbox2D.h"
+
+namespace Sand 
+{
 
 	class SandboxApp : public Application
 	{
 	public:
 		SandboxApp()
+			: Application("Sandbox")
 		{
-			//PushLayer(new Sandinclude/box2d());
+			PushLayer(new Sandbox2D());
 		}
 
 		~SandboxApp()

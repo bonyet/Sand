@@ -15,7 +15,6 @@ namespace Sand
 		glm::vec2 TexCoord;
 		float TexIndex;
 		float TilingFactor;
-		int ObjectID;
 	};
 
 	struct SceneRendererData
@@ -49,11 +48,6 @@ namespace Sand
 
 	static SceneRendererData s_Data;
 
-
-	void SceneRenderer::OnViewportResize(float x, float y)
-	{
-	}
-
 	void SceneRenderer::Init()
 	{
 		SAND_PROFILE_FUNCTION();
@@ -68,7 +62,6 @@ namespace Sand
 			{ ShaderDataType::Float2, "a_TexCoord" },
 			{ ShaderDataType::Float, "a_TexIndex" },
 			{ ShaderDataType::Float, "a_TilingFactor" },
-			{ ShaderDataType::Int, "a_ObjectID" },
 		});
 
 		s_Data.QuadVertexArray->AddVertexBuffer(s_Data.QuadVertexBuffer);
@@ -126,6 +119,21 @@ namespace Sand
 
 		s_Data.TextureSlotIndex = 1;
 	}
+
+	void SceneRenderer::Begin(const Camera& camera, const glm::mat4& cameraTransform)
+	{
+		SAND_PROFILE_FUNCTION();
+
+		glm::mat4 viewProj = camera.GetProjection() * glm::inverse(cameraTransform);
+
+		s_Data.QuadShader->Bind();
+		s_Data.QuadShader->SetMat4("u_ViewProjection", viewProj);
+
+		s_Data.QuadIndexCount = 0;
+		s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
+
+		s_Data.TextureSlotIndex = 1;
+	}
 		
 	void SceneRenderer::End()
 	{
@@ -140,6 +148,9 @@ namespace Sand
 	void SceneRenderer::Flush()
 	{
 		SAND_PROFILE_FUNCTION();
+
+		s_Data.QuadShader->Bind();
+		s_Data.QuadVertexArray->Bind();
 
 		if (s_Data.QuadIndexCount == 0)
 			return; // Nothing to draw
@@ -181,7 +192,6 @@ namespace Sand
 			s_Data.QuadVertexBufferPtr->TexCoord = textureCoords[i];
 			s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
 			s_Data.QuadVertexBufferPtr->TilingFactor = tilingFactor;
-			s_Data.QuadVertexBufferPtr->ObjectID = (int)entityID;
 			s_Data.QuadVertexBufferPtr++;
 		}
 

@@ -7,6 +7,7 @@
 #include "Components.h"
 
 #include <glad\glad.h>
+#include "Physics/PhysicsWorld.h"
 
 namespace Sand
 {
@@ -23,28 +24,6 @@ namespace Sand
 		auto& transform = entity.AddComponent<TransformComponent>();
 		auto& tag = entity.AddComponent<TagComponent>();
 		tag.Name = name.empty() ? "Entity" : name;
-
-		return entity;
-	}
-
-	Entity Scene::DuplicateEntity(Entity original)
-	{
-		std::string name = original.GetComponent<TagComponent>().Name;
-
-		auto entity = CreateEntity(name);
-
-		// copy components & data
-		if (original.HasComponent<TransformComponent>()) {
-			entity.GetComponent<TransformComponent>() = original.GetComponent<TransformComponent>();
-		}
-		if (original.HasComponent<CameraComponent>()) {
-			auto& camera = entity.AddComponent<CameraComponent>();
-			camera = original.GetComponent<CameraComponent>();
-		}
-		if (original.HasComponent<SpriteRendererComponent>()) {
-			auto& sprite = entity.AddComponent<SpriteRendererComponent>();
-			sprite = original.GetComponent<SpriteRendererComponent>();
-		}
 
 		return entity;
 	}
@@ -72,7 +51,36 @@ namespace Sand
 
 			SceneRenderer::End();
 		}
+	}
 
+	void Scene::BeginPlay()
+	{
+		m_Playmode = true;
+
+		m_Registry.view<Rigidbody2DComponent>().each([=](auto entity, auto& body)
+		{
+			Entity bodyEntity = Entity{ entity, this };
+			auto& transform = bodyEntity.GetComponent<TransformComponent>();
+			body.Create();
+		});
+
+		m_Registry.view<NativeScriptComponent>().each([=](auto entity, auto& nsc)
+		{
+			nsc.Instance = nsc.InstantiateScript();
+			nsc.Instance->m_Entity = Entity{ entity, this };
+			nsc.Instance->OnCreate();
+		});
+	}
+
+	void Scene::EndPlay()
+	{
+		m_Playmode = false;
+
+		m_Registry.view<NativeScriptComponent>().each([=](auto entity, auto& nsc)
+		{
+			nsc.Instance->OnDestroy();
+			nsc.DestroyScript(&nsc);
+		});
 	}
 
 	void Scene::OnUpdateRuntime(Timestep ts)
@@ -81,13 +89,6 @@ namespace Sand
 		{
 			m_Registry.view<NativeScriptComponent>().each([=](auto entity, auto& nsc)
 			{
-				m_Registry.view<NativeScriptComponent>().each([=](auto entity, auto& nsc)
-				{
-					nsc.Instance = nsc.InstantiateScript();
-					nsc.Instance->m_Entity = Entity{ entity, this };
-					nsc.Instance->OnCreate();
-				});
-
 				nsc.Instance->OnUpdate(ts);
 			});
 		}
@@ -104,22 +105,31 @@ namespace Sand
 				primaryCamera = &camera.Camera;
 				camTransform = transform;
 				break;
-			}			
+			}
+		}
+
+		{
+			PhysicsWorld::Step();
+			// rigidbodies
+			m_Registry.view<Rigidbody2DComponent>().each([=](auto entity, auto& body)
+			{
+				body.UpdateTransform();
+			});
 		}
 
 		if (primaryCamera)
 		{
-			Renderer2D::BeginScene(*primaryCamera, camTransform);
+			SceneRenderer::Begin(*primaryCamera, camTransform);
 
 			auto group = m_Registry.group<SpriteRendererComponent>(entt::get<TransformComponent>);
 			for (auto entity : group)
 			{
 				auto [sprite, transform] = group.get<SpriteRendererComponent, TransformComponent>(entity);
 				
-				Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color, (uint32_t)entity);
+				SceneRenderer::Submit(transform.GetTransform(), sprite.Color, (uint32_t)entity);
 			}
 
-			Renderer2D::EndScene();
+			SceneRenderer::End();
 		}
 	}
 
@@ -142,15 +152,6 @@ namespace Sand
 		}
 	}
 
-	int Scene::Pixel(int x, int y)
-	{
-		glReadBuffer(GL_COLOR_ATTACHMENT1);
-
-		int pixelData;
-		glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_INT, &pixelData);
-		return pixelData;
-	}
-
 	Entity Scene::GetPrimaryCameraEntity()
 	{
 		auto view = m_Registry.view<CameraComponent>();
@@ -159,6 +160,22 @@ namespace Sand
 			if (camera.Primary)
 				return Entity{ entity, this };
 		}
+		return {};
+	}
+
+	Entity Scene::FindEntity(const std::string& name)
+	{
+		auto view = m_Registry.view<TagComponent>();
+		for (auto entity : view)
+		{
+			auto& tag = view.get(entity);
+
+			if (tag.Name == name)
+				return Entity{ entity, this };
+		}
+
+		SAND_CORE_ERROR("Entity '{0}' not present in scene", name);
+
 		return {};
 	}
 
@@ -202,6 +219,11 @@ namespace Sand
 	{
 		component.owner = entity;
 		component.Camera.SetViewportSize(m_ViewportWidth, m_ViewportHeight);
+	}
+	template<>
+	void Scene::OnComponentAdded<Rigidbody2DComponent>(Entity entity, Rigidbody2DComponent& component)
+	{
+		component.owner = entity;
 	}
 	template<>
 	void Scene::OnComponentAdded<NativeScriptComponent>(Entity entity, NativeScriptComponent& component)

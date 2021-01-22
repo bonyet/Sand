@@ -79,7 +79,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>SAND_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\Sand\vendor\spdlog\include;..\Sand\src;..\Sand\vendor;..\Sand\vendor\entt\include;..\Sand\vendor\glm;..\Sand\vendor\ImGuizmo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Sand\vendor\spdlog\include;..\Sand\src;..\Sand\vendor;..\Sand\vendor\entt\include;..\Sand\vendor\glm;..\Sand\vendor\ImGuizmo;..\Sand\vendor\box2d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -97,7 +97,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>SAND_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\Sand\vendor\spdlog\include;..\Sand\src;..\Sand\vendor;..\Sand\vendor\entt\include;..\Sand\vendor\glm;..\Sand\vendor\ImGuizmo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Sand\vendor\spdlog\include;..\Sand\src;..\Sand\vendor;..\Sand\vendor\entt\include;..\Sand\vendor\glm;..\Sand\vendor\ImGuizmo;..\Sand\vendor\box2d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -118,7 +118,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>SAND_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\Sand\vendor\spdlog\include;..\Sand\src;..\Sand\vendor;..\Sand\vendor\entt\include;..\Sand\vendor\glm;..\Sand\vendor\ImGuizmo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Sand\vendor\spdlog\include;..\Sand\src;..\Sand\vendor;..\Sand\vendor\entt\include;..\Sand\vendor\glm;..\Sand\vendor\ImGuizmo;..\Sand\vendor\box2d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>

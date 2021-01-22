@@ -1,11 +1,25 @@
 #include "sandpch.h"
 #include "Sand/Renderer/Renderer.h"
 #include "Sand/Renderer/Renderer2D.h"
-#include <array>
 
 namespace Sand 
 {
-	Scope<Renderer::SceneData> Renderer::s_SceneData = CreateScope<Renderer::SceneData>();
+
+	struct RendererData
+	{
+		Ref<VertexArray> CubeVertexArray;
+		Ref<VertexBuffer> CubeVertexBuffer;
+		Ref<Shader> CubeShader;
+	};
+
+	static RendererData s_Data;
+
+	struct CubeVertex
+	{
+		glm::vec3 Position;
+		glm::vec4 Color;
+		int ObjectID;
+	};
 
 	void Renderer::Init()
 	{
@@ -14,32 +28,30 @@ namespace Sand
 		RenderCommand::Init();
 		Renderer2D::Init();
 
-		// setup
-#if 0
-		float vertices[] =
-		{
-			-0.5f, -0.5f, -0.5f,
-			 0.5f, -0.5f, -0.5f,
-			 0.5f,  0.5f, -0.5f,
-			-0.5f,  0.5f, -0.5f,
-			-0.5f, -0.5f,  0.5f,
-			 0.5f, -0.5f,  0.5f,
-			 0.5f,  0.5f,  0.5f,
-			-0.5f,  0.5f,  0.5f
+		s_Data.CubeVertexArray = VertexArray::Create();
+
+		float vertices[] = {
+			-0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0,
+			 0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0,
+			 0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0,
+			-0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0,
+			-0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0,
+			 0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0,
+			 0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0,
+			-0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0,
 		};
 
-		s_Data.VertexArray = VertexArray::Create();
-		s_Data.VertexBuffer = VertexBuffer::Create(vertices, sizeof(vertices));
-		
-		s_Data.VertexBuffer->SetLayout({
+		s_Data.CubeVertexBuffer = VertexBuffer::Create(vertices, 8 * sizeof(CubeVertex));
+
+		s_Data.CubeVertexBuffer->SetLayout({
 			{ ShaderDataType::Float3, "a_Position" },
 			{ ShaderDataType::Float4, "a_Color" },
+			{ ShaderDataType::Int, "a_ObjectID" },
 		});
 
-		s_Data.VertexArray->AddVertexBuffer(s_Data.VertexBuffer);
+		s_Data.CubeVertexArray->AddVertexBuffer(s_Data.CubeVertexBuffer);
 
-		uint32_t indices[6 * 6] =
-		{
+		uint32_t quadIndices[6 * 6] = {
 			0, 1, 3, 3, 1, 2,
 			1, 5, 2, 2, 5, 6,
 			5, 4, 6, 6, 4, 7,
@@ -48,13 +60,12 @@ namespace Sand
 			4, 5, 0, 0, 5, 1
 		};
 
+		Ref<IndexBuffer> quadIB = IndexBuffer::Create(quadIndices, 6 * 6);
+		s_Data.CubeVertexArray->SetIndexBuffer(quadIB);
 
-		Ref<IndexBuffer> indexBuffer = IndexBuffer::Create(indices, 36);
-		s_Data.VertexArray->SetIndexBuffer(indexBuffer);
-
-		s_Data.Material = Material::Create("assets/shaders/BaseColor.glsl");
-		s_Data.Material->GetShader()->Bind();
-#endif
+		s_Data.CubeShader = Shader::Create("assets/shaders/BasicCube.glsl");
+		s_Data.CubeShader->Bind();
+		//s_Data.CubeShader->SetIntArray("u_Textures", samplers, s_Data.MaxTextureSlots);
 	}
 
 	void Renderer::Shutdown()
@@ -67,15 +78,38 @@ namespace Sand
 		RenderCommand::SetViewport(0, 0, width, height);
 	}
 
+	void Renderer::BeginScene(EditorCamera& camera)
+	{
+		s_Data.CubeShader->Bind();
+		s_Data.CubeShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
+	}
+
 	void Renderer::BeginScene(const Camera& camera, const glm::mat4& transform)
 	{
 		glm::mat4 viewProj = camera.GetProjection() * glm::inverse(transform);
 
-		s_SceneData->ViewProj = viewProj;
+		s_Data.CubeShader->Bind();
+		s_Data.CubeShader->SetMat4("u_ViewProjection", viewProj);
+	}
+
+	void Renderer::BeginScene(const glm::mat4& projection, const glm::mat4& transform)
+	{
+		glm::mat4 viewProj = projection * glm::inverse(transform);
+
+		s_Data.CubeShader->Bind();
+		s_Data.CubeShader->SetMat4("u_ViewProjection", viewProj);
 	}
 
 	void Renderer::EndScene()
 	{
+	}
+
+	void Renderer::DrawCube(const glm::vec3& position, const glm::vec3& scale, const glm::vec4& color)
+	{
+		s_Data.CubeShader->Bind();
+		s_Data.CubeVertexArray->Bind();
+
+		RenderCommand::DrawIndexed(s_Data.CubeVertexArray, 6 * 6);
 	}
 
 }

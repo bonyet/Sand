@@ -10,7 +10,7 @@ namespace Sand
 	OpenGLContext::OpenGLContext(GLFWwindow* windowHandle)
 		: m_WindowHandle(windowHandle)
 	{
-		SAND_CORE_ASSERT(windowHandle, "Window handle is null!")
+		SAND_CORE_ASSERT(windowHandle, "Window handle is null!");
 	}
 
 	void OpenGLContext::Init()

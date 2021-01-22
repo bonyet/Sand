@@ -18,7 +18,6 @@ namespace Sand
 		glm::vec2 TexCoord;
 		float TexIndex;
 		float TilingFactor;
-		int ObjectID;
 	};
 
 	struct Renderer2DData
@@ -66,7 +65,6 @@ namespace Sand
 			{ ShaderDataType::Float2, "a_TexCoord" },
 			{ ShaderDataType::Float, "a_TexIndex" },
 			{ ShaderDataType::Float, "a_TilingFactor" },
-			{ ShaderDataType::Int, "a_ObjectID" },
 		});
 
 		s_Data.QuadVertexArray->AddVertexBuffer(s_Data.QuadVertexBuffer);
@@ -117,6 +115,21 @@ namespace Sand
 		delete[] s_Data.QuadVertexBufferBase;
 	}
 
+	void Renderer2D::BeginScene(const glm::mat4& proj, const glm::mat4& transform)
+	{
+		SAND_PROFILE_FUNCTION();
+
+		glm::mat4 viewProj = proj * glm::inverse(transform);
+
+		s_Data.QuadShader->Bind();
+		s_Data.QuadShader->SetMat4("u_ViewProjection", viewProj);
+
+		s_Data.QuadIndexCount = 0;
+		s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
+
+		s_Data.TextureSlotIndex = 1;
+	}
+
 	void Renderer2D::BeginScene(const Camera& camera, const glm::mat4& transform)
 	{
 		SAND_PROFILE_FUNCTION();
@@ -159,6 +172,8 @@ namespace Sand
 
 	void Renderer2D::Flush()
 	{
+		s_Data.QuadVertexArray->Bind();
+
 		if (s_Data.QuadIndexCount == 0)
 			return; // Nothing to draw
 		
@@ -223,7 +238,6 @@ namespace Sand
 			s_Data.QuadVertexBufferPtr->TexCoord = textureCoords[i];
 			s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
 			s_Data.QuadVertexBufferPtr->TilingFactor = tilingFactor;
-			s_Data.QuadVertexBufferPtr->ObjectID = (int)entityID;
 			s_Data.QuadVertexBufferPtr++;
 		}
 

@@ -13,10 +13,10 @@ namespace Sand
 		static void Init();
 
 		static void Begin(EditorCamera& camera);
+		static void Begin(const Camera& camera, const glm::mat4& cameraTransform);
+
 		static void Submit(const glm::mat4& transform, const glm::vec4& color, uint32_t entityID);
 		static void End();
-
-		static void OnViewportResize(float x, float y);
 	private:
 		static void Flush();
 		static void FlushAndReset();

@@ -2,6 +2,7 @@
 
 #include "Sand/Renderer/RenderCommand.h"
 
+#include "Sand/Renderer/EditorCamera.h"
 #include "Sand/Renderer/Camera.h"
 #include "Sand/Renderer/Shader.h"
 
@@ -13,19 +14,15 @@ namespace Sand
 	public:
 		static void Init();
 		static void Shutdown();
-		
-		static void OnWindowResize(uint32_t width, uint32_t height);
 
+		static void BeginScene(EditorCamera& camera);
 		static void BeginScene(const Camera& camera, const glm::mat4& transform);
+		static void BeginScene(const glm::mat4& projection, const glm::mat4& transform);
 		static void EndScene();
 
-		static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
+		static void DrawCube(const glm::vec3& position, const glm::vec3& scale, const glm::vec4& color);
 
-		struct SceneData
-		{
-			glm::mat4 ViewProj;
-		};
-	private:
-		static Scope<SceneData> s_SceneData;
+		static void OnWindowResize(uint32_t width, uint32_t height);
+		static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
 	};
 }

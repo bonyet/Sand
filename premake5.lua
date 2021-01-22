@@ -26,12 +26,14 @@ IncludeDir["stb_image"] = "Sand/vendor/stb_image"
 IncludeDir["entt"]      = "Sand/vendor/entt/include"
 IncludeDir["yaml_cpp"]  = "Sand/vendor/yaml-cpp/include"
 IncludeDir["ImGuizmo"]  = "Sand/vendor/ImGuizmo"
+IncludeDir["Box2D"]     = "Sand/vendor/box2d/include"
 
 group "Dependencies"
 	include "Sand/vendor/GLFW"
 	include "Sand/vendor/Glad"
 	include "Sand/vendor/imgui"
 	include "Sand/vendor/yaml-cpp"
+	include "Sand/vendor/box2d"
 group ""
 
 project "Sand"
@@ -80,6 +82,7 @@ project "Sand"
 		"%{IncludeDir.entt}",
 		"%{IncludeDir.yaml_cpp}",
 		"%{IncludeDir.ImGuizmo}",
+		"%{IncludeDir.Box2D}",
 	}
 
 	links 
@@ -88,6 +91,7 @@ project "Sand"
 		"Glad",
 		"ImGui",
 		"yaml-cpp",
+		"Box2D",
 		"opengl32.lib"
 	}
 
@@ -134,7 +138,8 @@ project "Sandbox"
 		"Sand/src",
 		"Sand/vendor",
 		"%{IncludeDir.entt}",
-		"%{IncludeDir.glm}"
+		"%{IncludeDir.glm}",
+		"%{IncludeDir.Box2D}",
 	}
 
 	links
@@ -184,6 +189,7 @@ project "Sand-Editor"
 			"%{IncludeDir.entt}",
 			"%{IncludeDir.glm}",
 			"%{IncludeDir.ImGuizmo}",
+			"%{IncludeDir.Box2D}",
 		}
 	
 		links

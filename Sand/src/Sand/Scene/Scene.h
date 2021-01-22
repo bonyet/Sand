@@ -19,23 +19,29 @@ namespace Sand
 		~Scene();
 		
 		Entity CreateEntity(const std::string& name = std::string());
-		Entity DuplicateEntity(Entity original);
 		void DestroyEntity(Entity& entity);
 
 		void OnViewportResize(float x, float y);
 
+		void BeginPlay();
+		void EndPlay();
+		bool IsPlaying() const { return m_Playmode; }
+
 		void OnUpdateEditor(Timestep ts, EditorCamera& camera);
 		void OnUpdateRuntime(Timestep ts);
 		void DrawIDBuffer(Ref<Framebuffer> idFramebuffer, EditorCamera& camera);
-		int Pixel(int x, int y);
 
 		Entity GetPrimaryCameraEntity();
+		Entity FindEntity(const std::string& name);
 	private:
 		template<typename T>
 		void OnComponentAdded(Entity entity, T& component);
+		template<typename T>
+		void OnComponentRemoved(Entity entity, T& component);
 	private:
 		entt::registry m_Registry;
 
+		bool m_Playmode = false;
 		float m_ViewportWidth = 5, m_ViewportHeight = 5;
 
 		friend class Entity;

@@ -14,16 +14,14 @@ namespace Sand
 	static void DrawComponent(const std::string& name, Entity entity, UIFunction uiFunction)
 	{
 		constexpr ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_FramePadding;
+		
 		if (!entity.HasComponent<T>())
 			return;
 
 		auto& component = entity.GetComponent<T>();
 		ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
 
-		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 2, 2 });
-		float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
 		bool open = ImGui::TreeNodeEx((void*)typeid(T).hash_code(), treeNodeFlags, name.c_str());
-		ImGui::PopStyleVar();
 		ImGui::Tooltip("Right click for more actions", 1.1f);
 
 		if (ImGui::IsItemClicked(1))
@@ -32,7 +30,7 @@ namespace Sand
 		bool removeComponent = false;
 		if (ImGui::BeginPopup("Component_Settings"))
 		{
-			if (ImGui::MenuItem("Remove component"))
+			if (ImGui::MenuItem("Remove"))
 				removeComponent = true;
 
 			ImGui::EndPopup();
@@ -76,7 +74,7 @@ namespace Sand
 
 		ImGui::PushID(label.c_str());
 
-		if (tooltip != std::string()) {
+		if (!tooltip.empty()) {
 			SAND_LEFT_LABEL_TOOLTIP(ImGui::DragFloat3("##Drag", glm::value_ptr(vector), 0.1f, 0.0f, 0.0f, "%.2f"), label.c_str(), tooltip.c_str(), );
 		}
 		else {
@@ -147,13 +145,13 @@ namespace Sand
 		ImGui::PopID();
 	}
 
-	template<typename T>
-	static void DrawComponentMenuItem(const std::string& title, Entity entity)
+	template<typename T, typename... Args>
+	static void DrawComponentMenuItem(const std::string& title, Entity entity, Args&&... args)
 	{
 		if (ImGui::MenuItem(title.c_str()))
 		{
 			if (!entity.HasComponent<T>()) {
-				entity.AddComponent<T>();
+				entity.AddComponent<T>((args)...);
 			}
 			else
 			{
@@ -163,7 +161,7 @@ namespace Sand
 			ImGui::CloseCurrentPopup();
 		}
 	}
-	
+
 	void PropertiesPanel::DrawComponentsMenu(Entity entity)
 	{
 		ImGui::PushItemWidth(-1);
@@ -176,6 +174,8 @@ namespace Sand
 			DrawComponentMenuItem<CameraComponent>("Camera", entity);
 			DrawComponentMenuItem<TransformComponent>("Transform", entity);
 			DrawComponentMenuItem<SpriteRendererComponent>("Sprite Renderer", entity);
+			DrawComponentMenuItem<NativeScriptComponent>("Native Script", entity);
+			DrawComponentMenuItem<Rigidbody2DComponent>("Rigidbody2D", entity, entity.GetComponent<TransformComponent>().Scale);
 
 			ImGui::EndPopup();
 		}
@@ -201,7 +201,6 @@ namespace Sand
 		ImGui::SameLine();
 		DrawComponentsMenu(entity);
 		ImGui::Separator();
-
 
 		DrawComponent<TransformComponent>("Transform", entity, [](auto& component)
 		{
@@ -282,6 +281,58 @@ namespace Sand
 		DrawComponent<SpriteRendererComponent>("Sprite Renderer", entity, [](auto& component)
 		{
 			SAND_LEFT_LABEL(ImGui::ColorEdit4("##Color", glm::value_ptr(component.Color)), "Color", );
+		});
+
+		DrawComponent<NativeScriptComponent>("Native Script", entity, [](auto& component)
+		{
+		});
+
+		DrawComponent<Rigidbody2DComponent>("Rigidbody2D", entity, [](auto& component)
+		{
+			{
+				const char* rigidbodyTypesStrings[] = { "Static", "Kinematic", "Dynamic" };
+				const char* currentRigidbodyTypeString = rigidbodyTypesStrings[(int)component.GetType()];
+			
+				SAND_LEFT_LABEL(ImGui::BeginCombo("##Type", currentRigidbodyTypeString), "Type",
+				{
+					for (int i = 0; i < 3; i++)
+					{
+						bool isSelected = currentRigidbodyTypeString == rigidbodyTypesStrings[i];
+						if (ImGui::Selectable(rigidbodyTypesStrings[i], isSelected))
+						{
+							currentRigidbodyTypeString = rigidbodyTypesStrings[i];
+							component.SetType((RigidbodyType)i);
+						}
+
+						if (isSelected)
+							ImGui::SetItemDefaultFocus();
+					}
+
+					ImGui::EndCombo();
+				});
+			}
+
+			ImGui::Spacing();
+			ImGui::Separator();
+			ImGui::Spacing();
+
+			float friction = component.GetFriction();
+			SAND_LEFT_LABEL(ImGui::InputFloat("##Friction", &friction, 0.0f, 0.0f, 2), "Friction",
+			{
+				component.SetFriction(friction);
+			});
+
+			float gravity = component.GetGravityScale();
+			SAND_LEFT_LABEL(ImGui::InputFloat("##GravityScale", &gravity, 0.0f, 0.0f, 2), "Gravity Scale",
+			{
+				component.SetGravityScale(gravity);
+			});
+
+			float restitution = component.GetRestitution();
+			SAND_LEFT_LABEL(ImGui::InputFloat("##Restitution", &restitution, 0.0f, 0.0f, 2), "Restitution",
+			{
+				component.SetRestitution(restitution);
+			});
 		});
 	}
 

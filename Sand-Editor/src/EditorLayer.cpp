@@ -25,9 +25,11 @@ namespace Sand
 		SceneRenderer::Init();
 
 		// Framebuffers
-		FramebufferSpecification framebufferSpecs = { 1280, 720 };
-		m_ViewportFramebuffer = Framebuffer::Create(framebufferSpecs);
-		m_IDFramebuffer = Framebuffer::Create(framebufferSpecs);
+		FramebufferSpecification fbSpec;
+		fbSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::Depth };
+		fbSpec.Width = 1280;
+		fbSpec.Height = 720;
+		m_ViewportFramebuffer = Framebuffer::Create(fbSpec);
 
 		m_ActiveScene = CreateRef<Scene>();
 
@@ -41,6 +43,8 @@ namespace Sand
 
 		// Make sure our engine logs go to the editor console as well
 		Log::GetCoreLogger()->sinks().push_back(std::make_shared<ConsolePanel>());
+
+		m_EditorCamera.Use2DControls = false;
 	}
 
 	void EditorLayer::SetDarkTheme()
@@ -100,23 +104,23 @@ namespace Sand
 	{
 	}
 
-	Entity EditorLayer::GetHoveredEntity()
-	{
-		auto [mx, my] = ImGui::GetMousePos();
-		mx -= m_ViewportBounds[0].x;
-		my -= m_ViewportBounds[0].y;
-		auto viewportWidth = m_ViewportBounds[1].x - m_ViewportBounds[0].x;
-		auto viewportHeight = m_ViewportBounds[1].y - m_ViewportBounds[0].y;
-		my = viewportHeight - my;
+	//Entity EditorLayer::GetHoveredEntity()
+	//{
+	//	auto [mx, my] = ImGui::GetMousePos();
+	//	mx -= m_ViewportBounds[0].x;
+	//	my -= m_ViewportBounds[0].y;
+	//	auto viewportWidth = m_ViewportBounds[1].x - m_ViewportBounds[0].x;
+	//	auto viewportHeight = m_ViewportBounds[1].y - m_ViewportBounds[0].y;
+	//	my = viewportHeight - my;
 
-		int mouseX = (int)mx;
-		int mouseY = (int)my;
-		if (mouseX >= 0 && mouseY >= 0 && mouseX < viewportWidth && mouseY < viewportHeight) {
-			int pixel = m_ActiveScene->Pixel(mouseX, mouseY);
-			return (pixel == -1 ? Entity() : Entity((entt::entity)pixel, m_ActiveScene.get()));
-		}
-		return {};
-	}
+	//	int mouseX = (int)mx;
+	//	int mouseY = (int)my;
+	//	if (mouseX >= 0 && mouseY >= 0 && mouseX < viewportWidth && mouseY < viewportHeight) {
+	//		int pixel = m_ActiveScene->Pixel(mouseX, mouseY);
+	//		return (pixel == -1 ? Entity() : Entity((entt::entity)pixel, m_ActiveScene.get()));
+	//	}
+	//	return {};
+	//}
 
 	void EditorLayer::OnUpdate(Timestep ts)
 	{
@@ -127,14 +131,13 @@ namespace Sand
 		}
 
 		SceneRenderer::ResetStats();
+		Renderer2D::ResetStats();
 
 		if (FramebufferSpecification spec = m_ViewportFramebuffer->GetSpecification();
 			m_ViewportSize.x > 0 && m_ViewportSize.y > 0 && // zero sized framebuffer is invalid
 			(spec.Width != m_ViewportSize.x || spec.Height != m_ViewportSize.y))
 		{
-			SceneRenderer::OnViewportResize(m_ViewportSize.x, m_ViewportSize.y);
 			m_ViewportFramebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-			m_IDFramebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 
 			m_EditorCamera.SetViewportSize(m_ViewportSize.x, m_ViewportSize.y);
 			m_ActiveScene->OnViewportResize(m_ViewportSize.x, m_ViewportSize.y);
@@ -145,17 +148,7 @@ namespace Sand
 		RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.12f, 1.0f });
 		RenderCommand::Clear();
 
-		m_ViewportFramebuffer->Bind(); // remove
-
-		if (Input::IsKeyPressed(Keycode::Space)) {
-			m_ActiveScene->OnUpdateRuntime(ts);
-		}
-		else {
-			m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);
-		}
-
-		// mouse picking
-		m_HoveredEntity = GetHoveredEntity();
+		m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);
 
 		m_ViewportFramebuffer->Unbind();
 	}
@@ -255,38 +248,12 @@ namespace Sand
 			ImGui::TreePop();
 		}
 
-		std::string name = "Null";
-		if ((entt::entity)m_HoveredEntity != entt::null) {
-			name = m_HoveredEntity.GetComponent<TagComponent>().Name;
-		}
-		ImGui::Text("Hovered Entity: %s", name.c_str());
-
 		ImGui::End();
 
 		m_SceneHierarchyPanel.OnGuiRender();
 		m_PropertiesPanel.SetSelection(m_SceneHierarchyPanel.GetSelectedEntity());
 		m_PropertiesPanel.OnGuiRender();
 		m_ConsolePanel.OnGuiRender();
-
-		{
-			ImGui::Begin("EditorTools", false, ImGuiWindowFlags_NoMove);
-
-			for (int i = 0; i < 4; i++)
-			{
-				auto& texture = m_GizmoImages[i];
-
-				ImVec4 tintColor = ImVec4{ 1.0f, 1.0f, 1.0f, 1.0f };
-				if (i == m_GizmoType + 1) // +1 because gizmotype starts at -1
-					tintColor = { 0.2f, 0.8f, 0.3f, 1.0f };
-
-				if (ImGui::ImageButton((ImTextureID)texture->GetID(), { 22, 22 }, { 0, 1 }, { 1, 0 }, -1, { 0, 0, 0, 0 }, tintColor)) {
-					m_GizmoType = i - 1;
-				}
-				ImGui::SameLine();
-			}
-
-			ImGui::End();
-		}
 		
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
 		ImGui::Begin("Viewport", false, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoCollapse);
@@ -384,15 +351,6 @@ namespace Sand
 
 	bool EditorLayer::OnMouseButtonPressed(MouseButtonPressedEvent& e)
 	{
-		if (e.GetMouseButton() == Mousecode::Left) {
-			bool shouldPick = m_ViewportHovered && !ImGuizmo::IsUsing() && !ImGuizmo::IsOver() && !Input::IsKeyPressed(Mousecode::Right);
-			
-			if (!shouldPick)
-				return false;
-
-			m_SceneHierarchyPanel.SetSelectedEntity(m_HoveredEntity);
-		}
-
 		return false;
 	}
 
@@ -403,22 +361,7 @@ namespace Sand
 		bool controlPressed = Input::IsKeyPressed(Keycode::LeftControl);
 		bool shiftPressed = Input::IsKeyPressed(Keycode::LeftShift);
 
-		// Shortcuts
-		if (e.GetRepeatCount() >= 0) 
-		{
-			switch (e.GetKey()) 
-			{
-				// MISC KEY COMBOS
-				case Keycode::D:
-				{
-					if (controlPressed && m_SceneHierarchyPanel.GetSelectedEntity()) {
-						m_SceneHierarchyPanel.SetSelectedEntity(m_ActiveScene->DuplicateEntity(m_SceneHierarchyPanel.GetSelectedEntity()));
-					}
-					break;
-				}
-			}
-		}
-
+		// shortcuts
 		switch (e.GetKey())
 		{
 			case Keycode::N:

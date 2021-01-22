@@ -46,16 +46,6 @@ namespace Sand
 		return glm::vec2(x, y);
 	}
 
-	float Input::GetMouseX()
-	{
-		return GetMousePosition().x;
-	}
-
-	float Input::GetMouseY()
-	{
-		return GetMousePosition().y;
-	}
-
 	void Input::OnKeyPressed(Keycode key)
 	{
 		if (static_cast<uint32_t>(key) > state.KeysDown.size()) {

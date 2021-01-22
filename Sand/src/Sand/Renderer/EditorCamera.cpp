@@ -67,7 +67,7 @@ namespace Sand
 
 	void EditorCamera::OnUpdate(Timestep ts)
 	{
-		const glm::vec2& mouse { Input::GetMouseX(), Input::GetMouseY() };
+		const glm::vec2& mouse { Input::GetMousePosition().x, Input::GetMousePosition().y };
 		glm::vec2 delta = (mouse - m_InitialMousePosition) * 0.003f;
 		m_InitialMousePosition = mouse;
 

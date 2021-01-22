@@ -16,6 +16,7 @@ namespace Sand
 		T& AddComponent(Args&&... args)
 		{
 			SAND_CORE_ASSERT(!HasComponent<T>(), "Entity already has component.");
+
 			T& component = m_Scene->m_Registry.emplace<T>(m_EntityHandle, std::forward<Args>(args)...);
 			m_Scene->OnComponentAdded<T>(*this, component);
 
@@ -48,6 +49,7 @@ namespace Sand
 	private:
 		entt::entity m_EntityHandle = entt::null;
 		Scene* m_Scene = nullptr;
+
 		friend class Scene;
 	};
 

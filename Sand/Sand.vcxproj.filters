@@ -37,6 +37,9 @@
     <Filter Include="src\Sand\Scene">
       <UniqueIdentifier>{3FFC09E9-2BCA-FDEE-145E-6E1500CBD953}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Sand\Scene\Physics">
+      <UniqueIdentifier>{B1CE9575-9DC8-BEC7-8635-55D872CE2434}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Sand\Utils">
       <UniqueIdentifier>{829037E9-6E5E-2BEF-57F2-9B15435F0754}</UniqueIdentifier>
     </Filter>
@@ -153,6 +156,9 @@
     <ClInclude Include="src\Sand\ImGui\ImGuiLayer.h">
       <Filter>src\Sand\ImGui</Filter>
     </ClInclude>
+    <ClInclude Include="src\Sand\ImGui\imgui_custom.h">
+      <Filter>src\Sand\ImGui</Filter>
+    </ClInclude>
     <ClInclude Include="src\Sand\Math\Math.h">
       <Filter>src\Sand\Math</Filter>
     </ClInclude>
@@ -201,10 +207,16 @@
     <ClInclude Include="src\Sand\Scene\Entity.h">
       <Filter>src\Sand\Scene</Filter>
     </ClInclude>
+    <ClInclude Include="src\Sand\Scene\Physics\PhysicsWorld.h">
+      <Filter>src\Sand\Scene\Physics</Filter>
+    </ClInclude>
     <ClInclude Include="src\Sand\Scene\Scene.h">
       <Filter>src\Sand\Scene</Filter>
     </ClInclude>
     <ClInclude Include="src\Sand\Scene\SceneCamera.h">
+      <Filter>src\Sand\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Sand\Scene\SceneRenderer.h">
       <Filter>src\Sand\Scene</Filter>
     </ClInclude>
     <ClInclude Include="src\Sand\Scene\SceneSerializer.h">
@@ -1473,8 +1485,6 @@
     <ClInclude Include="vendor\stb_image\stb_image.h">
       <Filter>vendor\stb_image</Filter>
     </ClInclude>
-    <ClInclude Include="src\Sand\ImGui\imgui_custom.h" />
-    <ClInclude Include="src\Sand\Scene\SceneRenderer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Platform\OpenGL\OpenGLBuffer.cpp">
@@ -1528,6 +1538,9 @@
     <ClCompile Include="src\Sand\ImGui\ImGuiLayer.cpp">
       <Filter>src\Sand\ImGui</Filter>
     </ClCompile>
+    <ClCompile Include="src\Sand\ImGui\imgui_custom.cpp">
+      <Filter>src\Sand\ImGui</Filter>
+    </ClCompile>
     <ClCompile Include="src\Sand\Math\Math.cpp">
       <Filter>src\Sand\Math</Filter>
     </ClCompile>
@@ -1570,10 +1583,16 @@
     <ClCompile Include="src\Sand\Scene\Entity.cpp">
       <Filter>src\Sand\Scene</Filter>
     </ClCompile>
+    <ClCompile Include="src\Sand\Scene\Physics\PhysicsWorld.cpp">
+      <Filter>src\Sand\Scene\Physics</Filter>
+    </ClCompile>
     <ClCompile Include="src\Sand\Scene\Scene.cpp">
       <Filter>src\Sand\Scene</Filter>
     </ClCompile>
     <ClCompile Include="src\Sand\Scene\SceneCamera.cpp">
+      <Filter>src\Sand\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Sand\Scene\SceneRenderer.cpp">
       <Filter>src\Sand\Scene</Filter>
     </ClCompile>
     <ClCompile Include="src\Sand\Scene\SceneSerializer.cpp">
@@ -1588,7 +1607,5 @@
     <ClCompile Include="vendor\stb_image\stb_image.cpp">
       <Filter>vendor\stb_image</Filter>
     </ClCompile>
-    <ClCompile Include="src\Sand\ImGui\imgui_custom.cpp" />
-    <ClCompile Include="src\Sand\Scene\SceneRenderer.cpp" />
   </ItemGroup>
 </Project>

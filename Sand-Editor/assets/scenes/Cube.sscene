@@ -4,94 +4,39 @@ Entities:
     TagComponent:
       Tag: Entity
     TransformComponent:
-      Position: [3.69737816, 0.762230456, 0]
-      Rotation: [0, 0, 2.08668995]
-      Scale: [0.999999821, 0.999999821, 1]
+      Position: [2.59062624, -7.34100389, 0]
+      Rotation: [0, 0, 1.21519077]
+      Scale: [5.9846859, 1, 1]
     SpriteRendererComponent:
-      Color: [1, 1, 1, 1]
+      Color: [1, 0, 0, 1]
+    Rigidbody2DComponent:
+      Type: 0
+      Friction: 0
+      Gravity Scale: 1
   - Entity: 123456789
     TagComponent:
       Tag: Entity
     TransformComponent:
-      Position: [2.1811378, 2.93602371, 0]
+      Position: [6.11253643, -2.566535, 0]
+      Rotation: [0, 0, 1.21519077]
+      Scale: [5.9846859, 1, 1]
+    SpriteRendererComponent:
+      Color: [1, 0, 0, 1]
+    Rigidbody2DComponent:
+      Type: 0
+      Friction: 0
+      Gravity Scale: 1
+  - Entity: 123456789
+    TagComponent:
+      Tag: cam
+    TransformComponent:
+      Position: [0, -1.26534629, 16.2506218]
       Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-    SpriteRendererComponent:
-      Color: [1, 1, 1, 1]
-  - Entity: 123456789
-    TagComponent:
-      Tag: Entity
-    TransformComponent:
-      Position: [-2.18177128, 1.49714458, 0]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-    SpriteRendererComponent:
-      Color: [1, 1, 1, 1]
-  - Entity: 123456789
-    TagComponent:
-      Tag: Entity
-    TransformComponent:
-      Position: [-0.325152546, 3.05206156, 0]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-    SpriteRendererComponent:
-      Color: [1, 1, 1, 1]
-  - Entity: 123456789
-    TagComponent:
-      Tag: Entity
-    TransformComponent:
-      Position: [2.05750847, 1.42752099, 0]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-    SpriteRendererComponent:
-      Color: [1, 1, 1, 1]
-  - Entity: 123456789
-    TagComponent:
-      Tag: Entity
-    TransformComponent:
-      Position: [0, 1.42752099, 0]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-    SpriteRendererComponent:
-      Color: [1, 1, 1, 1]
-  - Entity: 123456789
-    TagComponent:
-      Tag: ben shapiro
-    TransformComponent:
-      Position: [0, -0.49999997, 0.5]
-      Rotation: [-1.57079637, 0, 0]
-      Scale: [5, 4.96335363, 0.999977469]
-    SpriteRendererComponent:
-      Color: [0.462633431, 0.462628812, 0.462628812, 1]
-  - Entity: 123456789
-    TagComponent:
-      Tag: Left
-    TransformComponent:
-      Position: [-0.354999989, 0, 0.349999994]
-      Rotation: [0, -0.785398185, 0]
-      Scale: [1, 1, 1]
-    SpriteRendererComponent:
-      Color: [0, 1, 0.00711727142, 1]
-  - Entity: 123456789
-    TagComponent:
-      Tag: Right
-    TransformComponent:
-      Position: [0.351999998, 0, 0.349999994]
-      Rotation: [0, 0.785398185, 0]
-      Scale: [1, 1, 1]
-    SpriteRendererComponent:
-      Color: [0, 0.708185077, 0.126011506, 1]
-  - Entity: 123456789
-    TagComponent:
-      Tag: Camera
-    TransformComponent:
-      Position: [0, 1.70000005, 4]
-      Rotation: [-0.404916406, 0, 0]
       Scale: [1, 1, 1]
     CameraComponent:
       Camera:
         ProjectionType: 0
-        PerspectiveFOV: 0.52359879
+        PerspectiveFOV: 0.785398185
         PerspectiveNear: 0.00999999978
         PerspectiveFar: 1000
         OrthographicSize: 10
@@ -101,37 +46,27 @@ Entities:
       FixedAspectRatio: false
   - Entity: 123456789
     TagComponent:
-      Tag: Top
-    TransformComponent:
-      Position: [5.58793545e-09, 0.5, 3.7252903e-09]
-      Rotation: [1.57079661, 0.785398304, 2.10734271e-07]
-      Scale: [1, 0.999998271, 0.999974787]
-    SpriteRendererComponent:
-      Color: [0.0124762524, 0.876447856, 0, 1]
-  - Entity: 123456789
-    TagComponent:
       Tag: Entity
     TransformComponent:
-      Position: [-0.355106831, 0, -0.357106715]
-      Rotation: [0, 0.785398245, 0]
-      Scale: [1, 1, 1]
+      Position: [0, -2.45102358, 0]
+      Rotation: [0, 0, -0.380754113]
+      Scale: [5.98468494, 1, 1]
     SpriteRendererComponent:
-      Color: [0, 0.586872578, 0.104425661, 1]
+      Color: [1, 0, 0, 1]
+    Rigidbody2DComponent:
+      Type: 0
+      Friction: 0
+      Gravity Scale: 1
   - Entity: 123456789
     TagComponent:
-      Tag: Entity
+      Tag: ben shapiro
     TransformComponent:
-      Position: [0.352106839, 0, -0.357106715]
-      Rotation: [0, -0.785398245, 0]
-      Scale: [1, 1, 1]
+      Position: [-0.973161101, 0.308525741, 0]
+      Rotation: [0, 0, 2.29173851]
+      Scale: [1.99726105, 0.999999881, 1]
     SpriteRendererComponent:
-      Color: [0, 0.626334548, 0.0044577932, 1]
-  - Entity: 123456789
-    TagComponent:
-      Tag: Entity
-    TransformComponent:
-      Position: [-5.40167093e-08, -0.5, -2.34693289e-07]
-      Rotation: [1.57079661, 0.785398304, 2.10734271e-07]
-      Scale: [1, 0.999998271, 0.999974787]
-    SpriteRendererComponent:
-      Color: [0.0124762524, 0.876447856, 0, 1]
+      Color: [1, 1, 1, 1]
+    Rigidbody2DComponent:
+      Type: 2
+      Friction: 0
+      Gravity Scale: 1

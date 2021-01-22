@@ -25,6 +25,8 @@ namespace Sand
 		{
 			return m_Time;
 		}
+
+
 	private:
 		static float m_Time;
 
