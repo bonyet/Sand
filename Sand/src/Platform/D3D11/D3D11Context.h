@@ -25,7 +25,7 @@ namespace Sand
 		ID3D11RenderTargetView** const GetTargetPointer() { return &pTarget; }
 
 		ID3D11DeviceContext* const GetDeviceContext() const { return pContext; }
-		Ref<D3D11SwapChain> GetSwapChain() const { return m_SwapChain; }
+		Ref<D3D11SwapChain> GetSwapChain() const { return pSwapChain; }
 
 		static D3D11Context* GetInstance() { return s_Instance; }
 	private:
@@ -36,7 +36,7 @@ namespace Sand
 		ID3D11DeviceContext* pContext = nullptr;
 		ID3D11RenderTargetView* pTarget = nullptr;
 
-		Ref<D3D11SwapChain> m_SwapChain;
+		Ref<D3D11SwapChain> pSwapChain;
 	private:
 		static D3D11Context* s_Instance;
 	};

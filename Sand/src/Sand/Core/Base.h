@@ -2,12 +2,17 @@
 
 #include <memory>
 
-// Platform detection using predefined macros
+// Platform detection
 #ifdef _WIN32
 	/* Windows x64/x86 */
 	#ifdef _WIN64
 		/* Windows x64  */
 		#define SAND_PLATFORM_WINDOWS
+		#ifdef SAND_DEBUG
+			#define D3D11_CALL(hrcall) {HRESULT hr = (hrcall); if (FAILED(hr)) {SAND_CORE_ERROR("Direct3D call failed: {0}, {1}, {2}", __FILE__, __LINE__, ((const char*)_com_error(hr).ErrorMessage())); __debugbreak(); }}
+		#else
+			#define D3D11_CALL(hrcall)
+		#endif
 	#else
 		/* Windows x86 */
 		#error "x86 Builds are not supported!"

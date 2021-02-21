@@ -11,6 +11,8 @@
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include "GLFW/glfw3native.h"
 
+#include <comdef.h>
+
 namespace Sand
 {
 	
@@ -28,7 +30,7 @@ namespace Sand
 
 		// Create the render target view
 		auto backBuffer = swapChain->GetBackBuffer();
-		context->GetDevice()->CreateRenderTargetView(backBuffer, nullptr, context->GetTargetPointer());
+		D3D11_CALL(context->GetDevice()->CreateRenderTargetView(backBuffer, nullptr, context->GetTargetPointer()));
 		backBuffer->Release(); // Only needed this to create the view
 	}
 

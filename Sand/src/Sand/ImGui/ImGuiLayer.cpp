@@ -2,14 +2,17 @@
 #include "Sand/ImGui/ImGuiLayer.h"
 #include "Sand/Core/Application.h"
 #include "Platform/D3D11/D3D11Context.h"
+#include "Sand/Renderer/RendererAPI.h"
 
 #include <imgui.h>
 #include <examples/imgui_impl_glfw.h>
 #include <examples/imgui_impl_opengl3.h>
 #include <examples/imgui_impl_dx11.h>
-
+#include <examples/imgui_impl_win32.h>
 
 #include <GLFW/glfw3.h>
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW/glfw3native.h>
 #include <glad/glad.h>
 
 #include "ImGuizmo.h"
@@ -31,8 +34,8 @@ namespace Sand
 		ImGui::CreateContext();
 		ImGuiIO& io = ImGui::GetIO();
 		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;    
-		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;  
+		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 															
 		ImGuiStyle& style = ImGui::GetStyle();
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
@@ -49,16 +52,33 @@ namespace Sand
 		Application& app = Application::Get();
 		GLFWwindow* window = static_cast<GLFWwindow*>(app.GetWindow().GetNativeWindow());
 
-		ImGui_ImplGlfw_InitForOpenGL(window, true);
-		ImGui_ImplOpenGL3_Init("#version 410");
+		if (RendererAPI::GetAPI() == RendererAPI::API::OpenGL)
+		{
+			ImGui_ImplGlfw_InitForOpenGL(window, true);
+			ImGui_ImplOpenGL3_Init("#version 410");
+		}
+		else if(RendererAPI::GetAPI() == RendererAPI::API::D3D11)
+		{
+			auto context = D3D11Context::GetInstance();
+			ImGui_ImplWin32_Init(glfwGetWin32Window(window));
+			ImGui_ImplDX11_Init(context->GetDevice(), context->GetDeviceContext());
+		}
 	}
 
 	void ImGuiLayer::OnDetach()
 	{
 		SAND_PROFILE_FUNCTION();
 
-		ImGui_ImplOpenGL3_Shutdown();
-		ImGui_ImplGlfw_Shutdown();
+		if (RendererAPI::GetAPI() == RendererAPI::API::OpenGL)
+		{
+			ImGui_ImplOpenGL3_Shutdown();
+			ImGui_ImplGlfw_Shutdown();
+		}
+		else if (RendererAPI::GetAPI() == RendererAPI::API::D3D11)
+		{
+			ImGui_ImplDX11_Shutdown();
+			ImGui_ImplWin32_Shutdown();
+		}
 
 		ImGui::DestroyContext();
 	}
@@ -77,8 +97,16 @@ namespace Sand
 	{
 		SAND_PROFILE_FUNCTION();
 
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
+		if (RendererAPI::GetAPI() == RendererAPI::API::OpenGL)
+		{
+			ImGui_ImplOpenGL3_NewFrame();
+			ImGui_ImplGlfw_NewFrame();
+		}
+		else if (RendererAPI::GetAPI() == RendererAPI::API::D3D11)
+		{
+			ImGui_ImplDX11_NewFrame();
+			ImGui_ImplWin32_NewFrame();
+		}
 
 		ImGui::NewFrame();
 		ImGuizmo::BeginFrame();
@@ -93,9 +121,17 @@ namespace Sand
 		io.DisplaySize = ImVec2((float)app.GetWindow().GetWidth(), (float)app.GetWindow().GetHeight());
 
 		ImGui::Render();
-		ImGui_ImplGlfw_NewFrame();
+		if (RendererAPI::GetAPI() == RendererAPI::API::OpenGL)
+		{
+			ImGui_ImplGlfw_NewFrame();
+			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		}
+		else if (RendererAPI::GetAPI() == RendererAPI::API::D3D11)
+		{
+			ImGui_ImplWin32_NewFrame();
+			ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+		}
 
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 		{
 			GLFWwindow* backup_current_context = glfwGetCurrentContext();

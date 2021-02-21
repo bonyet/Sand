@@ -6,6 +6,8 @@
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include "GLFW/glfw3native.h"
 
+#include <comdef.h>
+
 namespace Sand
 {
 
@@ -22,28 +24,30 @@ namespace Sand
 
 	D3D11Context::~D3D11Context()
 	{
-		if (pDevice)
-			pDevice->Release();
-		if (pContext)
-			pContext->Release();
-		if (pTarget)
-			pTarget->Release();
+		SAND_CORE_INFO("Destroying Direct3D 11 objects...");
 
-		// SwapChain will automatically be released via ref count + destructor
+		if (pDevice)
+			pDevice->Release(); SAND_CORE_INFO("Destroyed device.");
+		if (pContext)
+			pContext->Release(); SAND_CORE_INFO("Destroyed context.");
+		if (pTarget)
+			pTarget->Release(); SAND_CORE_INFO("Destroyed render target.");
+		if (pSwapChain)
+			pSwapChain->Release(); SAND_CORE_INFO("Destroyed swapchain.");
 	}
 	
 	void D3D11Context::Init()
-	{
-		m_SwapChain = CreateRef<D3D11SwapChain>(m_hWnd);
+	{ 
+		pSwapChain = CreateRef<D3D11SwapChain>(m_hWnd);
 
 		// Create device, front / back buffers, & rendering context
-		D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, 0, nullptr, 0, D3D11_SDK_VERSION, 
-			&m_SwapChain->GetDescription(), m_SwapChain->AsD3D11ResourcePointer(), &pDevice, nullptr, &pContext);
+		D3D11_CALL(D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, 0, nullptr, 0, D3D11_SDK_VERSION,
+			&pSwapChain->GetDescription(), pSwapChain->AsD3D11ResourcePointer(), &pDevice, nullptr, &pContext));
 	}
 	
 	void D3D11Context::SwapBuffers()
 	{
-		m_SwapChain->AsD3D11Resource()->Present(1u, 0u);
+		pSwapChain->Present(1u);
 	}
 
 }

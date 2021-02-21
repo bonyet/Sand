@@ -1,5 +1,7 @@
 #include "sandpch.h"
-#include "D3D11SwapChain.h"
+#include "D3D11Context.h"
+
+#include <comdef.h>
 
 namespace Sand
 {
@@ -23,18 +25,18 @@ namespace Sand
 		m_Description.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 		m_Description.Flags = 0;
 	}
-	
-	D3D11SwapChain::~D3D11SwapChain()
-	{
-		pSwapChain->Release();
-	}
 
 	// Remember to release the backBuffer once you are done!
 	ID3D11Resource* D3D11SwapChain::GetBackBuffer()
 	{
 		ID3D11Resource* backBuffer = nullptr;
-		pSwapChain->GetBuffer(0, __uuidof(ID3D11Resource), reinterpret_cast<void**>(&backBuffer));
+		D3D11_CALL(pSwapChain->GetBuffer(0, __uuidof(ID3D11Resource), reinterpret_cast<void**>(&backBuffer)));
 		return backBuffer;
+	}
+
+	void D3D11SwapChain::Present(uint32_t syncInterval)
+	{
+		D3D11_CALL(pSwapChain->Present(syncInterval, 0u));
 	}
 
 }
