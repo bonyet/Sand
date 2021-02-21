@@ -14,8 +14,8 @@
 
 #include "Sand/ImGui/ImGuiLayer.h"
 #include "Sand/Scene/Scene.h"
-#include "Sand/Scene/Entity.h"
-#include "Sand/Scene/ScriptableEntity.h"
+#include "Sand/Scene/Actor.h"
+#include "Sand/Scene/ScriptableActor.h"
 #include "Sand/Scene/Components.h"
 
 #include "Sand/Core/Random.h"

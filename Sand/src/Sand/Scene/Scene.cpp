@@ -16,37 +16,38 @@ namespace Sand
 	{
 	}
 
-	Entity Scene::CreateEntity(const std::string& name)
+	Actor Scene::CreateActor(const std::string& name)
 	{
 		SAND_PROFILE_FUNCTION();
 
-		Entity entity = { m_Registry.create(), this };
-		auto& transform = entity.AddComponent<TransformComponent>();
-		auto& tag = entity.AddComponent<TagComponent>();
-		tag.Name = name.empty() ? "Entity" : name;
+		Actor actor = { m_Registry.create(), this };
+		auto& transform = actor.AddComponent<TransformComponent>();
+		auto& tag = actor.AddComponent<TagComponent>();
+		tag.Name = name.empty() ? "Actor" : name;
 
-		return entity;
+		return actor;
 	}
 
-	void Scene::DestroyEntity(Entity& entity)
+	void Scene::DestroyActor(Actor& actor)
 	{
 		SAND_PROFILE_FUNCTION();
 
-		m_Registry.destroy(entity);
+		m_Registry.destroy(actor);
 	}
 
 	void Scene::OnUpdateEditor(Timestep ts, EditorCamera& camera)
 	{
 		// Render geometry
+
 		{
 			SceneRenderer::Begin(camera);
 
 			auto group = m_Registry.group<SpriteRendererComponent>(entt::get<TransformComponent>);
-			for (auto entity : group)
+			for (auto actor : group)
 			{
-				auto [sprite, transform] = group.get<SpriteRendererComponent, TransformComponent>(entity);
+				auto [sprite, transform] = group.get<SpriteRendererComponent, TransformComponent>(actor);
 
-				SceneRenderer::Submit(transform.GetTransform(), sprite.Color, (uint32_t)entity);
+				SceneRenderer::Submit(transform.GetTransform(), sprite.Color, (uint32_t)actor);
 			}
 
 			SceneRenderer::End();
@@ -57,17 +58,21 @@ namespace Sand
 	{
 		m_Playmode = true;
 
-		m_Registry.view<Rigidbody2DComponent>().each([=](auto entity, auto& body)
+		m_Registry.view<Rigidbody2DComponent>().each([=](auto actor, auto& body)
 		{
-			Entity bodyEntity = Entity{ entity, this };
-			auto& transform = bodyEntity.GetComponent<TransformComponent>();
+			Actor bodyActor = Actor{ actor, this };
+			
 			body.Create();
+			
+			if (bodyActor.HasComponent<BoxCollider2DComponent>()) {
+				bodyActor.GetComponent<BoxCollider2DComponent>().Apply(body.m_Body);
+			}
 		});
 
-		m_Registry.view<NativeScriptComponent>().each([=](auto entity, auto& nsc)
+		m_Registry.view<NativeScriptComponent>().each([=](auto actor, auto& nsc)
 		{
 			nsc.Instance = nsc.InstantiateScript();
-			nsc.Instance->m_Entity = Entity{ entity, this };
+			nsc.Instance->m_Actor = Actor{ actor, this };
 			nsc.Instance->OnCreate();
 		});
 	}
@@ -76,7 +81,7 @@ namespace Sand
 	{
 		m_Playmode = false;
 
-		m_Registry.view<NativeScriptComponent>().each([=](auto entity, auto& nsc)
+		m_Registry.view<NativeScriptComponent>().each([=](auto actor, auto& nsc)
 		{
 			nsc.Instance->OnDestroy();
 			nsc.DestroyScript(&nsc);
@@ -87,7 +92,7 @@ namespace Sand
 	{
 		// scritps
 		{
-			m_Registry.view<NativeScriptComponent>().each([=](auto entity, auto& nsc)
+			m_Registry.view<NativeScriptComponent>().each([=](auto actor, auto& nsc)
 			{
 				nsc.Instance->OnUpdate(ts);
 			});
@@ -97,9 +102,9 @@ namespace Sand
 		glm::mat4 camTransform;
 
 		auto group = m_Registry.group<TransformComponent, CameraComponent>();
-		for (auto entity : group)
+		for (auto actor : group)
 		{
-			auto [transform, camera] = group.get<TransformComponent, CameraComponent>(entity);				
+			auto [transform, camera] = group.get<TransformComponent, CameraComponent>(actor);				
 			if (camera.Primary)
 			{
 				primaryCamera = &camera.Camera;
@@ -111,7 +116,7 @@ namespace Sand
 		{
 			PhysicsWorld::Step();
 			// rigidbodies
-			m_Registry.view<Rigidbody2DComponent>().each([=](auto entity, auto& body)
+			m_Registry.view<Rigidbody2DComponent>().each([=](auto actor, auto& body)
 			{
 				body.UpdateTransform();
 			});
@@ -122,59 +127,40 @@ namespace Sand
 			SceneRenderer::Begin(*primaryCamera, camTransform);
 
 			auto group = m_Registry.group<SpriteRendererComponent>(entt::get<TransformComponent>);
-			for (auto entity : group)
+			for (auto actor : group)
 			{
-				auto [sprite, transform] = group.get<SpriteRendererComponent, TransformComponent>(entity);
+				auto [sprite, transform] = group.get<SpriteRendererComponent, TransformComponent>(actor);
 				
-				SceneRenderer::Submit(transform.GetTransform(), sprite.Color, (uint32_t)entity);
+				SceneRenderer::Submit(transform.GetTransform(), sprite.Color, (uint32_t)actor);
 			}
 
 			SceneRenderer::End();
 		}
 	}
 
-	void Scene::DrawIDBuffer(Ref<Framebuffer> target, EditorCamera& camera)
-	{
-		target->Bind();
-		// Render to ID buffer
-		{
-			Renderer2D::BeginScene(camera);
-
-			auto group = m_Registry.group<SpriteRendererComponent>(entt::get<TransformComponent>);
-			for (auto entity : group)
-			{
-				auto [sprite, transform] = group.get<SpriteRendererComponent, TransformComponent>(entity);
-
-				Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color, (uint32_t)entity);
-			}
-
-			Renderer2D::EndScene();
-		}
-	}
-
-	Entity Scene::GetPrimaryCameraEntity()
+	Actor Scene::GetPrimaryCameraActor()
 	{
 		auto view = m_Registry.view<CameraComponent>();
-		for (auto entity : view) {
-			const auto& camera = view.get<CameraComponent>(entity);
+		for (auto actor : view) {
+			const auto& camera = view.get<CameraComponent>(actor);
 			if (camera.Primary)
-				return Entity{ entity, this };
+				return Actor{ actor, this };
 		}
 		return {};
 	}
 
-	Entity Scene::FindEntity(const std::string& name)
+	Actor Scene::FindActor(const std::string& name)
 	{
 		auto view = m_Registry.view<TagComponent>();
-		for (auto entity : view)
+		for (auto actor : view)
 		{
-			auto& tag = view.get(entity);
+			auto& tag = view.get(actor);
 
 			if (tag.Name == name)
-				return Entity{ entity, this };
+				return Actor{ actor, this };
 		}
 
-		SAND_CORE_ERROR("Entity '{0}' not present in scene", name);
+		SAND_CORE_ERROR("Actor '{0}' not present in scene", name);
 
 		return {};
 	}
@@ -185,50 +171,55 @@ namespace Sand
 		m_ViewportHeight = y;
 
 		auto view = m_Registry.view<CameraComponent>();
-		for (auto entity : view)
+		for (auto actor : view)
 		{
-			auto& cameraComponent = view.get<CameraComponent>(entity);
+			auto& cameraComponent = view.get<CameraComponent>(actor);
 			if (!cameraComponent.FixedAspectRatio)
 				cameraComponent.Camera.SetViewportSize(x, y);
 		}
 	}
 
 	template<typename T>
-	void Scene::OnComponentAdded(Entity entity, T& component)
+	void Scene::OnComponentAdded(Actor actor, T& component)
 	{
 		static_assert(false);
 	}
 
 	template<>
-	void Scene::OnComponentAdded<TagComponent>(Entity entity, TagComponent& component)
+	void Scene::OnComponentAdded<TagComponent>(Actor actor, TagComponent& component)
 	{
-		component.owner = entity;
+		component.owner = actor;
 	}
 	template<>
-	void Scene::OnComponentAdded<TransformComponent>(Entity entity, TransformComponent& component)
+	void Scene::OnComponentAdded<TransformComponent>(Actor actor, TransformComponent& component)
 	{
-		component.owner = entity;
+		component.owner = actor;
 	}
 	template<>
-	void Scene::OnComponentAdded<SpriteRendererComponent>(Entity entity, SpriteRendererComponent& component)
+	void Scene::OnComponentAdded<SpriteRendererComponent>(Actor actor, SpriteRendererComponent& component)
 	{
-		component.owner = entity;
+		component.owner = actor;
 	}
 	template<>
-	void Scene::OnComponentAdded<CameraComponent>(Entity entity, CameraComponent& component)
+	void Scene::OnComponentAdded<CameraComponent>(Actor actor, CameraComponent& component)
 	{
-		component.owner = entity;
+		component.owner = actor;
 		component.Camera.SetViewportSize(m_ViewportWidth, m_ViewportHeight);
 	}
 	template<>
-	void Scene::OnComponentAdded<Rigidbody2DComponent>(Entity entity, Rigidbody2DComponent& component)
+	void Scene::OnComponentAdded<BoxCollider2DComponent>(Actor actor, BoxCollider2DComponent& component)
 	{
-		component.owner = entity;
+		component.owner = actor;
 	}
 	template<>
-	void Scene::OnComponentAdded<NativeScriptComponent>(Entity entity, NativeScriptComponent& component)
+	void Scene::OnComponentAdded<Rigidbody2DComponent>(Actor actor, Rigidbody2DComponent& component)
 	{
-		component.owner = entity;
+		component.owner = actor;
+	}
+	template<>
+	void Scene::OnComponentAdded<NativeScriptComponent>(Actor actor, NativeScriptComponent& component)
+	{
+		component.owner = actor;
 	}
 
 }

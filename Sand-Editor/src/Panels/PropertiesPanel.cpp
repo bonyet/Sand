@@ -11,14 +11,14 @@
 namespace Sand
 {
 	template<typename T, typename UIFunction>
-	static void DrawComponent(const std::string& name, Entity entity, UIFunction uiFunction)
+	static void DrawComponent(const std::string& name, Actor Actor, UIFunction uiFunction)
 	{
 		constexpr ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_FramePadding;
 		
-		if (!entity.HasComponent<T>())
+		if (!Actor.HasComponent<T>())
 			return;
 
-		auto& component = entity.GetComponent<T>();
+		auto& component = Actor.GetComponent<T>();
 		ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
 
 		bool open = ImGui::TreeNodeEx((void*)typeid(T).hash_code(), treeNodeFlags, name.c_str());
@@ -30,6 +30,8 @@ namespace Sand
 		bool removeComponent = false;
 		if (ImGui::BeginPopup("Component_Settings"))
 		{
+			if (ImGui::MenuItem("Reset"))
+				component.Reset();
 			if (ImGui::MenuItem("Remove"))
 				removeComponent = true;
 
@@ -45,7 +47,7 @@ namespace Sand
 		}
 
 		if (removeComponent)
-			entity.RemoveComponent<T>();
+			Actor.RemoveComponent<T>();
 
 		ImGui::Separator();
 		ImGui::Spacing();
@@ -146,23 +148,23 @@ namespace Sand
 	}
 
 	template<typename T, typename... Args>
-	static void DrawComponentMenuItem(const std::string& title, Entity entity, Args&&... args)
+	static void DrawComponentMenuItem(const std::string& title, Actor actor, Args&&... args)
 	{
 		if (ImGui::MenuItem(title.c_str()))
 		{
-			if (!entity.HasComponent<T>()) {
-				entity.AddComponent<T>((args)...);
+			if (!actor.HasComponent<T>()) {
+				actor.AddComponent<T>((args)...);
 			}
 			else
 			{
-				SAND_CORE_WARN("{0} component already present on '{1}'", title, entity.GetComponent<TagComponent>().Name);
+				SAND_CORE_WARN("{0} component already present on '{1}'", title, actor.GetComponent<TagComponent>().Name);
 			}
 
 			ImGui::CloseCurrentPopup();
 		}
 	}
 
-	void PropertiesPanel::DrawComponentsMenu(Entity entity)
+	void PropertiesPanel::DrawComponentsMenu(Actor actor)
 	{
 		ImGui::PushItemWidth(-1);
 
@@ -171,11 +173,11 @@ namespace Sand
 
 		if (ImGui::BeginPopup("AddComponent"))
 		{
-			DrawComponentMenuItem<CameraComponent>("Camera", entity);
-			DrawComponentMenuItem<TransformComponent>("Transform", entity);
-			DrawComponentMenuItem<SpriteRendererComponent>("Sprite Renderer", entity);
-			DrawComponentMenuItem<NativeScriptComponent>("Native Script", entity);
-			DrawComponentMenuItem<Rigidbody2DComponent>("Rigidbody2D", entity, entity.GetComponent<TransformComponent>().Scale);
+			DrawComponentMenuItem<CameraComponent>("Camera", actor);
+			DrawComponentMenuItem<TransformComponent>("Transform", actor);
+			DrawComponentMenuItem<SpriteRendererComponent>("Sprite Renderer", actor);
+			DrawComponentMenuItem<Rigidbody2DComponent>("Rigidbody2D", actor);
+			DrawComponentMenuItem<BoxCollider2DComponent>("Box Collider 2D", actor, actor.GetComponent<TransformComponent>().Scale);
 
 			ImGui::EndPopup();
 		}
@@ -183,11 +185,11 @@ namespace Sand
 		ImGui::PopItemWidth();
 	}
 
-	void PropertiesPanel::DrawComponents(Entity entity)
+	void PropertiesPanel::DrawComponents(Actor actor)
 	{
-		if (entity.HasComponent<TagComponent>())
+		if (actor.HasComponent<TagComponent>())
 		{
-			auto& tag = entity.GetComponent<TagComponent>().Name;
+			auto& tag = actor.GetComponent<TagComponent>().Name;
 
 			char buffer[256];
 			memset(buffer, 0, sizeof(buffer));
@@ -199,22 +201,22 @@ namespace Sand
 		}
 
 		ImGui::SameLine();
-		DrawComponentsMenu(entity);
+		DrawComponentsMenu(actor);
 		ImGui::Separator();
 
-		DrawComponent<TransformComponent>("Transform", entity, [](auto& component)
+		DrawComponent<TransformComponent>("Transform", actor, [](auto& component)
 		{
-			DrawVectorControl("Position", component.Position, 0.0f, 100.0f, "The world space position of this entity, in meters");
+			DrawVectorControl("Position", component.Position, 0.0f, 100.0f, "The world space position of this actor, in meters");
 
 			// Rotation in euler angles for UI, radians internally so we convert
 			glm::vec3 eulerAngles = glm::degrees(component.Rotation);
-			DrawVectorControl("Rotation", eulerAngles, 0.0f, 100.0f, "The rotation of this entity in euler angles");
+			DrawVectorControl("Rotation", eulerAngles, 0.0f, 100.0f, "The rotation of this actor in euler angles");
 			component.Rotation = glm::radians(eulerAngles);
 
-			DrawVectorControl("Scale", component.Scale, 1.0f, 100.0f, "The scale of this entity in meters");
+			DrawVectorControl("Scale", component.Scale, 1.0f, 100.0f, "The scale of this actor in meters");
 		});
 
-		DrawComponent<CameraComponent>("Camera", entity, [](auto& component)
+		DrawComponent<CameraComponent>("Camera", actor, [](auto& component)
 		{
 			auto& camera = component.Camera;
 
@@ -278,16 +280,21 @@ namespace Sand
 			}
 		});
 
-		DrawComponent<SpriteRendererComponent>("Sprite Renderer", entity, [](auto& component)
+		DrawComponent<SpriteRendererComponent>("Sprite Renderer", actor, [](auto& component)
 		{
 			SAND_LEFT_LABEL(ImGui::ColorEdit4("##Color", glm::value_ptr(component.Color)), "Color", );
 		});
 
-		DrawComponent<NativeScriptComponent>("Native Script", entity, [](auto& component)
+		DrawComponent<BoxCollider2DComponent>("Box Collider 2D", actor, [](auto& component)
 		{
+			glm::vec2 bounds = component.GetBounds();
+			SAND_LEFT_LABEL(ImGui::DragFloat2("##Bounds", glm::value_ptr(bounds)), "Bounds",
+			{
+				component.SetBounds(bounds);
+			});
 		});
 
-		DrawComponent<Rigidbody2DComponent>("Rigidbody2D", entity, [](auto& component)
+		DrawComponent<Rigidbody2DComponent>("Rigidbody2D", actor, [](auto& component)
 		{
 			{
 				const char* rigidbodyTypesStrings[] = { "Static", "Kinematic", "Dynamic" };

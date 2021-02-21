@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Entity.h"
+#include "Actor.h"
 
 #include "Sand/Events/MouseEvent.h"
 #include "Sand/Events/KeyEvent.h"
@@ -8,37 +8,37 @@
 namespace Sand
 {
 
-	class ScriptableEntity
+	class ScriptableActor
 	{
 	public:
-		virtual ~ScriptableEntity() {}
+		virtual ~ScriptableActor() {}
 
 		template<typename T>
 		T& GetComponent()
 		{
-			return m_Entity.GetComponent<T>();
+			return m_Actor.GetComponent<T>();
 		}
 		template<typename T, typename... Args>
 		T& AddComponent(Args&&... args)
 		{
-			return m_Entity.AddComponent<T>(args);
+			return m_Actor.AddComponent<T>(args);
 		}
 		template<typename T>
 		bool HasComponent()
 		{
-			return m_Entity.HasComponent<T>();
+			return m_Actor.HasComponent<T>();
 		}
 		template<typename T>
 		void RemoveComponent()
 		{
-			m_Entity.RemoveComponent<T>();
+			m_Actor.RemoveComponent<T>();
 		}
 	protected:
 		virtual void OnCreate() {}
 		virtual void OnDestroy() {}
 		virtual void OnUpdate(Timestep ts) {}
 	private:
-		Entity m_Entity;
+		Actor m_Actor;
 
 		friend class Scene;
 	};

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "EditorPanel.h"
-#include "Sand/Scene/Entity.h"
+#include "Sand/Scene/Actor.h"
 
 namespace Sand
 {
@@ -12,12 +12,12 @@ namespace Sand
 		PropertiesPanel() = default;
 
 		virtual void OnGuiRender() override;
-		void SetSelection(Entity entity) { m_SelectionContext = entity; }
+		void SetSelection(Actor actor) { m_SelectionContext = actor; }
 	private:
-		void DrawComponents(Entity entity);
-		void DrawComponentsMenu(Entity entity);
+		void DrawComponents(Actor actor);
+		void DrawComponentsMenu(Actor actor);
 
-		Entity m_SelectionContext;
+		Actor m_SelectionContext;
 	};
 
 }

@@ -3,6 +3,7 @@
 
 #include "Sand/Renderer/Renderer.h"
 #include "Platform/OpenGL/OpenGLContext.h"
+#include "Platform/D3D11/D3D11Context.h"
 
 namespace Sand 
 {
@@ -13,6 +14,7 @@ namespace Sand
 		{
 			case RendererAPI::API::None:    SAND_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
 			case RendererAPI::API::OpenGL:  return CreateScope<OpenGLContext>(static_cast<GLFWwindow*>(window));
+			case RendererAPI::API::D3D11:   return CreateScope<D3D11Context>(static_cast<GLFWwindow*>(window));
 		}
 
 		SAND_CORE_ASSERT(false, "Unknown RendererAPI!");

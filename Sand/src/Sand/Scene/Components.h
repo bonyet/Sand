@@ -1,7 +1,7 @@
 #pragma once
 
 #include "SceneCamera.h"
-#include "ScriptableEntity.h"
+#include "ScriptableActor.h"
 
 #include "Sand/Debug/Profiler.h"
 
@@ -18,14 +18,9 @@
 namespace Sand
 {
 
-	struct ComponentBase
+	struct TagComponent
 	{
-	public:
-		Entity owner{};
-	};
-
-	struct TagComponent : ComponentBase
-	{
+		Actor owner{};
 	public:
 		std::string Name;
 
@@ -35,13 +30,14 @@ namespace Sand
 			: Name(tag) {}
 	};
 
-	struct TransformComponent : ComponentBase
+	struct TransformComponent
 	{
+		Actor owner{};
 	private:
 		glm::mat4 Transform{ glm::mat4(1.0f) };
 	public:
 		glm::vec3 Position{ 0.0f, 0.0f, 0.0f };
-		glm::vec3 Rotation{ 0.0f };
+		glm::vec3 Rotation{ 0.0f, 0.0f, 0.0f };
 		glm::vec3 Scale{ 1.0f, 1.0f, 1.0f };
 
 		TransformComponent() = default;
@@ -63,20 +59,34 @@ namespace Sand
 		}
 
 		operator const glm::mat4& () { return GetTransform(); }
+	public:
+		void Reset()
+		{
+			Position = { 0.0f, 0.0f, 0.0f };
+			Rotation = { 0.0f, 0.0f, 0.0f };
+			Scale = { 1.0f, 1.0f, 1.0f };
+		}
 	};
 
-	struct SpriteRendererComponent : ComponentBase
+	struct SpriteRendererComponent
 	{
+		Actor owner{};
 	public:
 		glm::vec4 Color{ 1.0f, 1.0f, 1.0f, 1.0f };
 		
 		SpriteRendererComponent() {}
 		SpriteRendererComponent(const glm::vec4& color) : Color(color) {}
 		SpriteRendererComponent(const SpriteRendererComponent&) = default;
+	public:
+		void Reset()
+		{
+			Color = { 1.0f, 1.0f, 1.0f, 1.0f };
+		}
 	};
 
-	struct CameraComponent : ComponentBase
+	struct CameraComponent
 	{
+		Actor owner{};
 	public:
 		SceneCamera Camera;
 		bool Primary = true;
@@ -85,25 +95,89 @@ namespace Sand
 		CameraComponent() = default;
 		CameraComponent(const CameraComponent&) = default;
 		CameraComponent(float orthoSize) { Camera.SetOrthographicSize(orthoSize); }
+	public:
+		void Reset()
+		{
+			Camera.SetOrthographicFarClip(1.0f);
+			Camera.SetOrthographicNearClip(-1.0f);
+			Camera.SetPerspectiveFarClip(1000.0f);
+			Camera.SetPerspectiveNearClip(0.1f);
+			
+			Camera.SetPerspectiveFOV(45.0f);
+			Camera.SetOrthographicSize(10.0f);
+		}
 	};
 
-	struct NativeScriptComponent : ComponentBase
+	struct NativeScriptComponent
 	{
+		Actor owner{};
 	public:
-		ScriptableEntity* Instance = nullptr;
+		ScriptableActor* Instance = nullptr;
 	
-		ScriptableEntity*(*InstantiateScript)();
+		ScriptableActor*(*InstantiateScript)();
 		void (*DestroyScript)(NativeScriptComponent*);
 
 		template<typename T>
 		void Bind()
 		{
-			InstantiateScript = []() { return static_cast<ScriptableEntity*>(new T()); };
+			InstantiateScript = []() { return static_cast<ScriptableActor*>(new T()); };
 			DestroyScript = [](NativeScriptComponent* nsc) { delete nsc->Instance; nsc->Instance = nullptr; };
 		}
 	};
 
-	// ======= PHYSICS STUFF ========
+	struct BoxCollider2DComponent
+	{
+		Actor owner{};
+	private:
+		glm::vec2 m_Bounds;
+	public:
+		void* Fixture = nullptr;
+
+		BoxCollider2DComponent() = default;
+		BoxCollider2DComponent(const BoxCollider2DComponent&) = default;
+		BoxCollider2DComponent(const glm::vec2& dimensions)
+			: m_Bounds(dimensions)
+		{
+		}
+
+		void SetWidth(float width)
+		{
+			m_Bounds.x = width;
+		}
+		void SetHeight(float height)
+		{
+			m_Bounds.y = height;
+		}
+		void SetBounds(const glm::vec2& bounds)
+		{
+			m_Bounds = bounds;
+		}
+		glm::vec2 GetBounds() const
+		{
+			return m_Bounds;
+		}
+
+		void Reset()
+		{
+			Fixture = nullptr;
+		}
+	private:
+		void Apply(b2Body* body)
+		{
+			b2PolygonShape boxShape;
+			boxShape.SetAsBox(m_Bounds.x / 2.0f, m_Bounds.y / 2.0f);
+
+			b2FixtureDef fixtureDef;
+			fixtureDef.shape = &boxShape;
+			fixtureDef.density = 1.0f;
+			fixtureDef.friction = 0.0f;
+			fixtureDef.restitution = 0.0f;
+
+			Fixture = body->CreateFixture(&fixtureDef);
+		}
+
+		friend class Scene;
+	};
 
 	enum class RigidbodyType
 	{
@@ -112,32 +186,17 @@ namespace Sand
 		Dynamic,
 	};
 
-	struct Rigidbody2DComponent : ComponentBase
+	struct Rigidbody2DComponent
 	{
+		Actor owner{};
 	public:
 		Rigidbody2DComponent() = default;
-		Rigidbody2DComponent(const glm::vec3& scale)
-		{
-			m_Scale = scale;
-		}
 		Rigidbody2DComponent(const Rigidbody2DComponent&) = default;
 		
 		// Getters and setters
 		void SetType(RigidbodyType type) { m_Type = type; }
 		RigidbodyType GetType() { return m_Type; }
 
-		void SetScale(const glm::vec2& scale)
-		{
-			m_Scale = scale;
-
-			if (m_Body)
-				((b2PolygonShape*)m_Body->GetFixtureList()->GetShape())->SetAsBox(scale.x, scale.y);
-		}
-
-		glm::vec2 GetScale() const
-		{
-			return m_Scale;
-		}
 		glm::vec3 GetPosition() const
 		{
 			auto pos = m_Body->GetPosition();
@@ -187,13 +246,14 @@ namespace Sand
 		{
 			m_Body->ApplyAngularImpulse(impulse, wake);
 		}
+
+		void Reset() {}// TODO: make
 	private:
 		void Create()
 		{
 			auto& tc = owner.GetComponent<TransformComponent>();
 			auto& position = tc.Position;
 			float rotation = tc.Rotation.z;
-			m_Scale = tc.Scale;
 
 			b2BodyDef bodyDef;
 			bodyDef.type = (b2BodyType)m_Type;
@@ -202,18 +262,7 @@ namespace Sand
 			bodyDef.gravityScale = m_GravityScale;
 			bodyDef.angle = rotation;
 
-			m_Body = PhysicsWorld::CreateBody(&bodyDef);
-
-			b2PolygonShape boxShape;
-			boxShape.SetAsBox(m_Scale.x / 2.0f, m_Scale.y / 2.0f);
-
-			b2FixtureDef fixtureDef;
-			fixtureDef.shape = &boxShape;
-			fixtureDef.density = 1.0f;
-			fixtureDef.friction = 0.0f;
-			fixtureDef.restitution = 0.0f;
-
-			m_Body->CreateFixture(&fixtureDef);
+			m_Body = PhysicsWorld::CreateBody(&bodyDef);			
 		}
 		void Destroy()
 		{
@@ -232,7 +281,6 @@ namespace Sand
 		RigidbodyType m_Type = RigidbodyType::Static;
 
 		float m_Friction = 0.0f, m_GravityScale = 1.0f, m_Restitution = 0.0f;
-		glm::vec2 m_Scale{ 0.0f };
 
 		friend class Scene;
 	};

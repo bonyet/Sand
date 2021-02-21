@@ -1,7 +1,7 @@
 #include "sandpch.h"
 #include "SceneSerializer.h"
 
-#include "Entity.h"
+#include "Actor.h"
 
 #include "Components.h"
 
@@ -109,39 +109,39 @@ namespace Sand
 	{
 	}
 
-	static void SerializeEntity(YAML::Emitter& out, Entity entity)
+	static void SerializeActor(YAML::Emitter& out, Actor actor)
 	{
-		out << YAML::BeginMap; // Entity
-		out << YAML::Key << "Entity" << YAML::Value << "123456789"; // entity id goes here		
+		out << YAML::BeginMap; // Actor
+		out << YAML::Key << "Actor" << YAML::Value << "123456789"; // actor id goes here		
 
-		if (entity.HasComponent<TagComponent>())
+		if (actor.HasComponent<TagComponent>())
 		{
 			out << YAML::Key << "TagComponent";
 			out << YAML::BeginMap; // TagComponent
 
-			auto& tag = entity.GetComponent<TagComponent>().Name;
+			auto& tag = actor.GetComponent<TagComponent>().Name;
 			out << YAML::Key << "Tag" << YAML::Value << tag;
 
 			out << YAML::EndMap; // TagComponent
 		}
-		if (entity.HasComponent<TransformComponent>())
+		if (actor.HasComponent<TransformComponent>())
 		{
 			out << YAML::Key << "TransformComponent";
 			out << YAML::BeginMap; // TransformComponent
 
-			auto& transform = entity.GetComponent<TransformComponent>();
+			auto& transform = actor.GetComponent<TransformComponent>();
 			out << YAML::Key << "Position" << YAML::Value << transform.Position;
 			out << YAML::Key << "Rotation" << YAML::Value << transform.Rotation;
 			out << YAML::Key << "Scale" << YAML::Value << transform.Scale;
 
 			out << YAML::EndMap; // TransformComponent
 		}
-		if (entity.HasComponent<CameraComponent>())
+		if (actor.HasComponent<CameraComponent>())
 		{
 			out << YAML::Key << "CameraComponent";
 			out << YAML::BeginMap; // CameraComponent
 
-			auto& cameraComponent = entity.GetComponent<CameraComponent>();
+			auto& cameraComponent = actor.GetComponent<CameraComponent>();
 			auto& camera = cameraComponent.Camera;
 
 			out << YAML::Key << "Camera" << YAML::Value;
@@ -161,23 +161,23 @@ namespace Sand
 			out << YAML::EndMap; // CameraComponent
 		}
 
-		if (entity.HasComponent<SpriteRendererComponent>())
+		if (actor.HasComponent<SpriteRendererComponent>())
 		{
 			out << YAML::Key << "SpriteRendererComponent";
 			out << YAML::BeginMap; // SpriteRendererComponent
 
-			auto& spriteRenderer = entity.GetComponent<SpriteRendererComponent>();
+			auto& spriteRenderer = actor.GetComponent<SpriteRendererComponent>();
 
 			out << YAML::Key << "Color" << YAML::Value << spriteRenderer.Color;
 
 			out << YAML::EndMap; // SpriteRendererComponent
 		}
-		if (entity.HasComponent<Rigidbody2DComponent>())
+		if (actor.HasComponent<Rigidbody2DComponent>())
 		{
 			out << YAML::Key << "Rigidbody2DComponent";
 			out << YAML::BeginMap; // Rigidbody2DComponent
 
-			auto& rigidbody = entity.GetComponent<Rigidbody2DComponent>();
+			auto& rigidbody = actor.GetComponent<Rigidbody2DComponent>();
 
 			out << YAML::Key << "Type" << YAML::Value << (int)rigidbody.GetType();
 			out << YAML::Key << "Friction" << YAML::Value << rigidbody.GetFriction();
@@ -186,7 +186,7 @@ namespace Sand
 			out << YAML::EndMap; // Rigidbody2DComponent
 		}
 
-		out << YAML::EndMap; // Entity
+		out << YAML::EndMap; // Actor
 	}
 
 	void SceneSerializer::Serialize(const std::string& filepath)
@@ -194,14 +194,14 @@ namespace Sand
 		YAML::Emitter out;
 		out << YAML::BeginMap;
 		out << YAML::Key << "Scene" << YAML::Value << "Unnamed Scene";
-		out << YAML::Key << "Entities" << YAML::Value << YAML::BeginSeq;
+		out << YAML::Key << "Actors" << YAML::Value << YAML::BeginSeq;
 		m_Scene->m_Registry.each([&](auto entityID)
 		{
-			Entity entity = { entityID, m_Scene.get() };
-			if (!entity)
+			Actor actor = { entityID, m_Scene.get() };
+			if (!actor)
 				return;
 
-			SerializeEntity(out, entity);
+			SerializeActor(out, actor);
 		});
 		out << YAML::EndSeq;
 		out << YAML::EndMap;
@@ -239,34 +239,34 @@ namespace Sand
 		std::string sceneName = data["Scene"].as<std::string>();
 		SAND_CORE_TRACE("Deserializing Scene '{0}'", sceneName);
 
-		auto entities = data["Entities"];
-		if (entities)
+		auto actors = data["Actors"];
+		if (actors)
 		{
-			for (auto entity : entities)
+			for (auto actor : actors)
 			{
-				uint64_t uuid = entity["Entity"].as<uint64_t>(); // todo
+				uint64_t uuid = actor["Actor"].as<uint64_t>(); // todo
 
 				std::string name;
-				auto tagComponent = entity["TagComponent"];
+				auto tagComponent = actor["TagComponent"];
 				if (tagComponent)
 					name = tagComponent["Tag"].as<std::string>();
 
-				SAND_CORE_TRACE("Deserialized entity with ID = {0}, name = {1}", uuid, name);
+				SAND_CORE_TRACE("Deserialized actor with ID = {0}, name = {1}", uuid, name);
 
-				Entity deserializedEntity = m_Scene->CreateEntity(name);
+				Actor deserializedActor = m_Scene->CreateActor(name);
 
-				auto transformComponent = entity["TransformComponent"];
+				auto transformComponent = actor["TransformComponent"];
 				if (transformComponent)
 				{
-					auto& tc = deserializedEntity.GetComponent<TransformComponent>(); // always has transform
+					auto& tc = deserializedActor.GetComponent<TransformComponent>(); // always has transform
 					tc.Position = transformComponent["Position"].as<glm::vec3>();
 					tc.Rotation = transformComponent["Rotation"].as<glm::vec3>();
 					tc.Scale = transformComponent["Scale"].as<glm::vec3>();
 				}
-				auto cameraComponent = entity["CameraComponent"];
+				auto cameraComponent = actor["CameraComponent"];
 				if (cameraComponent)
 				{
-					auto& cc = deserializedEntity.AddComponent<CameraComponent>();
+					auto& cc = deserializedActor.AddComponent<CameraComponent>();
 
 					auto& cameraProps = cameraComponent["Camera"];
 					cc.Camera.SetProjectionType((SceneCamera::ProjectionType)cameraProps["ProjectionType"].as<int>());
@@ -283,18 +283,18 @@ namespace Sand
 					cc.FixedAspectRatio = cameraComponent["FixedAspectRatio"].as<bool>();
 				}
 
-				auto spriteRendererComponent = entity["SpriteRendererComponent"];
+				auto spriteRendererComponent = actor["SpriteRendererComponent"];
 				if (spriteRendererComponent)
 				{
-					auto& src = deserializedEntity.AddComponent<SpriteRendererComponent>();
+					auto& src = deserializedActor.AddComponent<SpriteRendererComponent>();
 
 					src.Color = spriteRendererComponent["Color"].as<glm::vec4>();
 				}
 
-				auto rigidbody2DComponent = entity["Rigidbody2DComponent"];
+				auto rigidbody2DComponent = actor["Rigidbody2DComponent"];
 				if (rigidbody2DComponent)
 				{
-					auto& rbc = deserializedEntity.AddComponent<Rigidbody2DComponent>();
+					auto& rbc = deserializedActor.AddComponent<Rigidbody2DComponent>();
 
 					rbc.SetType((RigidbodyType)rigidbody2DComponent["Type"].as<int>());
 					rbc.SetFriction(rigidbody2DComponent["Friction"].as<float>());

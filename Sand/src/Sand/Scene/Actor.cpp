@@ -1,10 +1,10 @@
 #include "sandpch.h"
-#include "Entity.h"
+#include "Actor.h"
 
 namespace Sand
 {
 
-	Entity::Entity(entt::entity handle, Scene* scene)
+	Actor::Actor(entt::entity handle, Scene* scene)
 		: m_EntityHandle(handle), m_Scene(scene)
 	{
 	}

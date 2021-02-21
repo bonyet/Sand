@@ -1,11 +1,13 @@
 #include "sandpch.h"
 #include "Sand/ImGui/ImGuiLayer.h"
+#include "Sand/Core/Application.h"
+#include "Platform/D3D11/D3D11Context.h"
 
 #include <imgui.h>
 #include <examples/imgui_impl_glfw.h>
 #include <examples/imgui_impl_opengl3.h>
+#include <examples/imgui_impl_dx11.h>
 
-#include "Sand/Core/Application.h"
 
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
@@ -57,6 +59,7 @@ namespace Sand
 
 		ImGui_ImplOpenGL3_Shutdown();
 		ImGui_ImplGlfw_Shutdown();
+
 		ImGui::DestroyContext();
 	}
 
@@ -76,6 +79,7 @@ namespace Sand
 
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
+
 		ImGui::NewFrame();
 		ImGuizmo::BeginFrame();
 	}
@@ -89,8 +93,9 @@ namespace Sand
 		io.DisplaySize = ImVec2((float)app.GetWindow().GetWidth(), (float)app.GetWindow().GetHeight());
 
 		ImGui::Render();
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		ImGui_ImplGlfw_NewFrame();
 
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 		{
 			GLFWwindow* backup_current_context = glfwGetCurrentContext();

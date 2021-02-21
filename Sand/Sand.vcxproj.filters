@@ -7,6 +7,9 @@
     <Filter Include="src\Platform">
       <UniqueIdentifier>{21CA02E5-0D2D-9289-B6B2-CA3FA2F45D0C}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Platform\D3D11">
+      <UniqueIdentifier>{CD3542F1-B919-0347-227A-FD990E7DEDC8}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Platform\OpenGL">
       <UniqueIdentifier>{35A49437-A105-7245-2A73-B8F796D3A804}</UniqueIdentifier>
     </Filter>
@@ -72,6 +75,15 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Platform\D3D11\D3D11Context.h">
+      <Filter>src\Platform\D3D11</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Platform\D3D11\D3D11RendererAPI.h">
+      <Filter>src\Platform\D3D11</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Platform\D3D11\D3D11SwapChain.h">
+      <Filter>src\Platform\D3D11</Filter>
+    </ClInclude>
     <ClInclude Include="src\Platform\OpenGL\OpenGLBuffer.h">
       <Filter>src\Platform\OpenGL</Filter>
     </ClInclude>
@@ -201,10 +213,10 @@
     <ClInclude Include="src\Sand\Renderer\VertexArray.h">
       <Filter>src\Sand\Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="src\Sand\Scene\Components.h">
+    <ClInclude Include="src\Sand\Scene\Actor.h">
       <Filter>src\Sand\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="src\Sand\Scene\Entity.h">
+    <ClInclude Include="src\Sand\Scene\Components.h">
       <Filter>src\Sand\Scene</Filter>
     </ClInclude>
     <ClInclude Include="src\Sand\Scene\Physics\PhysicsWorld.h">
@@ -222,7 +234,7 @@
     <ClInclude Include="src\Sand\Scene\SceneSerializer.h">
       <Filter>src\Sand\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="src\Sand\Scene\ScriptableEntity.h">
+    <ClInclude Include="src\Sand\Scene\ScriptableActor.h">
       <Filter>src\Sand\Scene</Filter>
     </ClInclude>
     <ClInclude Include="src\Sand\Utils\PlatformUtils.h">
@@ -1487,6 +1499,15 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Platform\D3D11\D3D11Context.cpp">
+      <Filter>src\Platform\D3D11</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Platform\D3D11\D3D11RendererAPI.cpp">
+      <Filter>src\Platform\D3D11</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Platform\D3D11\D3D11SwapChain.cpp">
+      <Filter>src\Platform\D3D11</Filter>
+    </ClCompile>
     <ClCompile Include="src\Platform\OpenGL\OpenGLBuffer.cpp">
       <Filter>src\Platform\OpenGL</Filter>
     </ClCompile>
@@ -1580,7 +1601,7 @@
     <ClCompile Include="src\Sand\Renderer\VertexArray.cpp">
       <Filter>src\Sand\Renderer</Filter>
     </ClCompile>
-    <ClCompile Include="src\Sand\Scene\Entity.cpp">
+    <ClCompile Include="src\Sand\Scene\Actor.cpp">
       <Filter>src\Sand\Scene</Filter>
     </ClCompile>
     <ClCompile Include="src\Sand\Scene\Physics\PhysicsWorld.cpp">

@@ -30,8 +30,8 @@ namespace Sand
 
 		m_Context->m_Registry.each([&](auto entityID)
 		{
-			Entity entity{ entityID, m_Context.get() };
-			DrawEntityNode(entity);
+			Actor entity{ entityID, m_Context.get() };
+			DrawActorNode(entity);
 		});
 
 		if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered() && ImGui::GetIO().WantCaptureMouse) {
@@ -41,7 +41,7 @@ namespace Sand
 
 		if (ImGui::BeginPopupContextWindow(0, 1, false))
 		{
-			DrawEntityCreationMenu();
+			DrawActorCreationMenu();
 
 			ImGui::EndPopup();
 		}
@@ -49,7 +49,7 @@ namespace Sand
 		ImGui::End();
 	}
 
-	void SceneHierarchyPanel::DrawEntityNode(Entity entity)
+	void SceneHierarchyPanel::DrawActorNode(Actor entity)
 	{
 		auto& tag = entity.GetComponent<TagComponent>().Name;
 
@@ -79,23 +79,23 @@ namespace Sand
 
 		if (entityDeleted)
 		{
-			m_Context->DestroyEntity(entity);
+			m_Context->DestroyActor(entity);
 			if (m_SelectionContext == entity)
 				m_SelectionContext = {};
 		}
 	}
 
-	void SceneHierarchyPanel::DrawEntityCreationMenu()
+	void SceneHierarchyPanel::DrawActorCreationMenu()
 	{
-		if (ImGui::MenuItem("Create Empty Entity")) 
+		if (ImGui::MenuItem("Create Empty Actor")) 
 		{
-			auto& entity = m_Context->CreateEntity("Entity");
+			auto& entity = m_Context->CreateActor("Actor");
 
 			m_SelectionContext = entity;
 		}
 		else if (ImGui::MenuItem("Create Square")) 
 		{
-			auto& entity = m_Context->CreateEntity("Entity");
+			auto& entity = m_Context->CreateActor("Actor");
 			entity.AddComponent<SpriteRendererComponent>();
 
 			m_SelectionContext = entity;

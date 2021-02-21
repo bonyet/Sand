@@ -23,17 +23,17 @@ namespace Sand
 		m_Window->SetEventCallback(SAND_BIND_EVENT_FN(Application::OnEvent));
 		m_Window->SetVSync(true);
 
-		Renderer::Init();
+		//Renderer::Init();
 
 		m_UILayer = new ImGuiLayer();
-		PushOverlay(m_UILayer);
+		//PushOverlay(m_UILayer);
 	}
 
 	Application::~Application()
 	{
 		SAND_PROFILE_FUNCTION();
 
-		Renderer::Shutdown();
+		//Renderer::Shutdown();
 	}
 
 	void Application::PushLayer(Layer* layer)
@@ -97,16 +97,16 @@ namespace Sand
 					}		
 				}
 
-				m_UILayer->Begin();
-				{
-					SAND_PROFILE_SCOPE("LayerStack OnImGuiRender");
-
-					for (Layer* layer : m_LayerStack)
-					{
-						layer->OnGuiRender();
-					}
-				}
-				m_UILayer->End();
+				//m_UILayer->Begin();
+				//{
+				//	SAND_PROFILE_SCOPE("LayerStack OnImGuiRender");
+				//
+				//	for (Layer* layer : m_LayerStack)
+				//	{
+				//		layer->OnGuiRender();
+				//	}
+				//}
+				//m_UILayer->End();
 			}
 
 			Input::ClearState();

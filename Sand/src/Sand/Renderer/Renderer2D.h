@@ -37,8 +37,6 @@ namespace Sand
 		static Ref<Texture2D> GetWhiteTexture();
 		static Ref<Shader> GetShader();
 
-		static glm::vec4 GetViewport();
-
 		// Stats
 		struct Statistics
 		{

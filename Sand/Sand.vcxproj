@@ -144,6 +144,9 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\Platform\D3D11\D3D11Context.h" />
+    <ClInclude Include="src\Platform\D3D11\D3D11RendererAPI.h" />
+    <ClInclude Include="src\Platform\D3D11\D3D11SwapChain.h" />
     <ClInclude Include="src\Platform\OpenGL\OpenGLBuffer.h" />
     <ClInclude Include="src\Platform\OpenGL\OpenGLContext.h" />
     <ClInclude Include="src\Platform\OpenGL\OpenGLFramebuffer.h" />
@@ -187,14 +190,14 @@
     <ClInclude Include="src\Sand\Renderer\SubTexture2D.h" />
     <ClInclude Include="src\Sand\Renderer\Texture.h" />
     <ClInclude Include="src\Sand\Renderer\VertexArray.h" />
+    <ClInclude Include="src\Sand\Scene\Actor.h" />
     <ClInclude Include="src\Sand\Scene\Components.h" />
-    <ClInclude Include="src\Sand\Scene\Entity.h" />
     <ClInclude Include="src\Sand\Scene\Physics\PhysicsWorld.h" />
     <ClInclude Include="src\Sand\Scene\Scene.h" />
     <ClInclude Include="src\Sand\Scene\SceneCamera.h" />
     <ClInclude Include="src\Sand\Scene\SceneRenderer.h" />
     <ClInclude Include="src\Sand\Scene\SceneSerializer.h" />
-    <ClInclude Include="src\Sand\Scene\ScriptableEntity.h" />
+    <ClInclude Include="src\Sand\Scene\ScriptableActor.h" />
     <ClInclude Include="src\Sand\Utils\PlatformUtils.h" />
     <ClInclude Include="src\sandpch.h" />
     <ClInclude Include="vendor\ImGuizmo\ImGuizmo.h" />
@@ -617,6 +620,9 @@
     <ClInclude Include="vendor\stb_image\stb_image.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Platform\D3D11\D3D11Context.cpp" />
+    <ClCompile Include="src\Platform\D3D11\D3D11RendererAPI.cpp" />
+    <ClCompile Include="src\Platform\D3D11\D3D11SwapChain.cpp" />
     <ClCompile Include="src\Platform\OpenGL\OpenGLBuffer.cpp" />
     <ClCompile Include="src\Platform\OpenGL\OpenGLContext.cpp" />
     <ClCompile Include="src\Platform\OpenGL\OpenGLFramebuffer.cpp" />
@@ -648,7 +654,7 @@
     <ClCompile Include="src\Sand\Renderer\SubTexture2D.cpp" />
     <ClCompile Include="src\Sand\Renderer\Texture.cpp" />
     <ClCompile Include="src\Sand\Renderer\VertexArray.cpp" />
-    <ClCompile Include="src\Sand\Scene\Entity.cpp" />
+    <ClCompile Include="src\Sand\Scene\Actor.cpp" />
     <ClCompile Include="src\Sand\Scene\Physics\PhysicsWorld.cpp" />
     <ClCompile Include="src\Sand\Scene\Scene.cpp" />
     <ClCompile Include="src\Sand\Scene\SceneCamera.cpp" />

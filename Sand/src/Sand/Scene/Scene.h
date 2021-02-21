@@ -10,7 +10,7 @@
 
 namespace Sand
 {
-	class Entity;
+	class Actor;
 
 	class Scene
 	{
@@ -18,8 +18,8 @@ namespace Sand
 		Scene() {}
 		~Scene();
 		
-		Entity CreateEntity(const std::string& name = std::string());
-		void DestroyEntity(Entity& entity);
+		Actor CreateActor(const std::string& name = std::string());
+		void DestroyActor(Actor& entity);
 
 		void OnViewportResize(float x, float y);
 
@@ -29,22 +29,20 @@ namespace Sand
 
 		void OnUpdateEditor(Timestep ts, EditorCamera& camera);
 		void OnUpdateRuntime(Timestep ts);
-		void DrawIDBuffer(Ref<Framebuffer> idFramebuffer, EditorCamera& camera);
 
-		Entity GetPrimaryCameraEntity();
-		Entity FindEntity(const std::string& name);
+		Actor GetPrimaryCameraActor();
+		Actor FindActor(const std::string& name);
+		const uint32_t GetNumberOfActors() const { return (uint32_t)m_Registry.alive(); }
 	private:
 		template<typename T>
-		void OnComponentAdded(Entity entity, T& component);
-		template<typename T>
-		void OnComponentRemoved(Entity entity, T& component);
+		void OnComponentAdded(Actor entity, T& component);
 	private:
 		entt::registry m_Registry;
 
 		bool m_Playmode = false;
 		float m_ViewportWidth = 5, m_ViewportHeight = 5;
 
-		friend class Entity;
+		friend class Actor;
 		friend class SceneHierarchyPanel;
 		friend class SceneSerializer;
 	};

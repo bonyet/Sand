@@ -60,6 +60,8 @@ namespace Sand
 		#if defined(SAND_DEBUG)
 			if (Renderer::GetAPI() == RendererAPI::API::OpenGL)
 				glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
+			if (Renderer::GetAPI() == RendererAPI::API::D3D11)
+				glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 		#endif
 			m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
 			++s_GLFWWindowCount;
@@ -191,6 +193,9 @@ namespace Sand
 	void WindowsWindow::SetVSync(bool enabled)
 	{
 		SAND_PROFILE_FUNCTION();
+
+		if (RendererAPI::GetAPI() != RendererAPI::API::OpenGL)
+			return;
 
 		if (enabled == true)
 			glfwSwapInterval(1);

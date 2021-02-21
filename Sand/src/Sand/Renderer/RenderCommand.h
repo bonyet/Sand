@@ -32,11 +32,6 @@ namespace Sand
 		{
 			s_RendererAPI->DrawIndexed(vertexArray, count);
 		}
-
-		static glm::vec4 GetViewport()
-		{
-			return s_RendererAPI->GetViewport();
-		}
 	private:
 		static Scope<RendererAPI> s_RendererAPI;
 	};

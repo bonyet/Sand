@@ -45,17 +45,6 @@ namespace Sand
 		glViewport(x, y, width, height);
 	}
 
-	glm::vec4 OpenGLRendererAPI::GetViewport()
-	{
-		GLint values[4];
-		glGetIntegerv(GL_VIEWPORT, values);
-		glm::vec4 viewport = {
-			values[0], values[1],
-			values[2], values[3]
-		};
-		return viewport;
-	}
-
 	void OpenGLRendererAPI::SetClearColor(const glm::vec4& color)
 	{
 		glClearColor(color.r, color.g, color.b, color.a);

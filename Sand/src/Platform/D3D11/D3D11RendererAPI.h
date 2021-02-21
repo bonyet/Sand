@@ -2,13 +2,15 @@
 
 #include "Sand/Renderer/RendererAPI.h"
 
-namespace Sand 
+#include <d3d11.h>
+
+namespace Sand
 {
 
-	class OpenGLRendererAPI : public RendererAPI
+	class D3D11RendererAPI : public RendererAPI
 	{
 	public:
-		virtual ~OpenGLRendererAPI() override {}
+		virtual ~D3D11RendererAPI();
 
 		virtual void Init() override;
 		virtual void SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) override;
@@ -18,6 +20,5 @@ namespace Sand
 
 		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount = 0) override;
 	};
-
 
 }

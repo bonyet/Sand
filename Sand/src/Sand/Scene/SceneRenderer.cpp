@@ -15,6 +15,7 @@ namespace Sand
 		glm::vec2 TexCoord;
 		float TexIndex;
 		float TilingFactor;
+		int ObjectID;
 	};
 
 	struct SceneRendererData
@@ -62,6 +63,7 @@ namespace Sand
 			{ ShaderDataType::Float2, "a_TexCoord" },
 			{ ShaderDataType::Float, "a_TexIndex" },
 			{ ShaderDataType::Float, "a_TilingFactor" },
+			{ ShaderDataType::Int, "a_ObjectID" },
 		});
 
 		s_Data.QuadVertexArray->AddVertexBuffer(s_Data.QuadVertexBuffer);
@@ -192,6 +194,7 @@ namespace Sand
 			s_Data.QuadVertexBufferPtr->TexCoord = textureCoords[i];
 			s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
 			s_Data.QuadVertexBufferPtr->TilingFactor = tilingFactor;
+			s_Data.QuadVertexBufferPtr->ObjectID = (int)entityID;
 			s_Data.QuadVertexBufferPtr++;
 		}
 

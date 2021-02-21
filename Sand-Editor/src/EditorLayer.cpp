@@ -26,7 +26,7 @@ namespace Sand
 
 		// Framebuffers
 		FramebufferSpecification fbSpec;
-		fbSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::Depth };
+		fbSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RED_INTEGER, FramebufferTextureFormat::Depth };
 		fbSpec.Width = 1280;
 		fbSpec.Height = 720;
 		m_ViewportFramebuffer = Framebuffer::Create(fbSpec);
@@ -104,24 +104,6 @@ namespace Sand
 	{
 	}
 
-	//Entity EditorLayer::GetHoveredEntity()
-	//{
-	//	auto [mx, my] = ImGui::GetMousePos();
-	//	mx -= m_ViewportBounds[0].x;
-	//	my -= m_ViewportBounds[0].y;
-	//	auto viewportWidth = m_ViewportBounds[1].x - m_ViewportBounds[0].x;
-	//	auto viewportHeight = m_ViewportBounds[1].y - m_ViewportBounds[0].y;
-	//	my = viewportHeight - my;
-
-	//	int mouseX = (int)mx;
-	//	int mouseY = (int)my;
-	//	if (mouseX >= 0 && mouseY >= 0 && mouseX < viewportWidth && mouseY < viewportHeight) {
-	//		int pixel = m_ActiveScene->Pixel(mouseX, mouseY);
-	//		return (pixel == -1 ? Entity() : Entity((entt::entity)pixel, m_ActiveScene.get()));
-	//	}
-	//	return {};
-	//}
-
 	void EditorLayer::OnUpdate(Timestep ts)
 	{
 		SAND_PROFILE_FUNCTION();
@@ -149,6 +131,40 @@ namespace Sand
 		RenderCommand::Clear();
 
 		m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);
+
+		{
+			bool shouldMousePick = !ImGuizmo::IsOver() && !ImGuizmo::IsUsing() && m_ViewportHovered;
+			if (Input::WasKeyPressed(Mousecode::Left) && shouldMousePick)
+			{
+				auto [mx, my] = ImGui::GetMousePos();
+				mx -= m_ViewportBounds[0].x;
+				my -= m_ViewportBounds[0].y;
+				glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
+				my = viewportSize.y - my;
+
+				int mouseX = (int)mx;
+				int mouseY = (int)my;
+
+				if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
+				{
+					int pixelData = m_ViewportFramebuffer->ReadPixel(1, mouseX, mouseY);
+
+					if (pixelData < 0 || pixelData > m_ActiveScene->GetNumberOfActors())
+					{
+						pixelData = -1;
+						m_SceneHierarchyPanel.SetSelectedActor({});
+					}
+
+					if (pixelData != -1)
+					{
+						Actor clickedActor = Actor{ (entt::entity)pixelData, m_ActiveScene.get() };
+						m_SceneHierarchyPanel.SetSelectedActor(clickedActor);
+
+						SAND_CORE_INFO(clickedActor.GetComponent<TagComponent>().Name);
+					}
+				}
+			}
+		}
 
 		m_ViewportFramebuffer->Unbind();
 	}
@@ -251,7 +267,7 @@ namespace Sand
 		ImGui::End();
 
 		m_SceneHierarchyPanel.OnGuiRender();
-		m_PropertiesPanel.SetSelection(m_SceneHierarchyPanel.GetSelectedEntity());
+		m_PropertiesPanel.SetSelection(m_SceneHierarchyPanel.GetSelectedActor());
 		m_PropertiesPanel.OnGuiRender();
 		m_ConsolePanel.OnGuiRender();
 		
@@ -266,11 +282,7 @@ namespace Sand
 
 		//Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportFocused && !m_ViewportHovered);
 		ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
-		
-		if (m_ViewportSize != *((glm::vec2*) & viewportPanelSize))
-		{
-			m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
-		}
+		m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
 
 		uint32_t textureID = m_ViewportFramebuffer->GetColorAttachmentRendererID();
 		ImGui::Image(reinterpret_cast<void*>(textureID), viewportPanelSize, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
@@ -285,26 +297,26 @@ namespace Sand
 		m_ViewportBounds[1] = { maxBound.x, maxBound.y };
 
 		// GIZMOS
-		Entity selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();
+		Actor selectedActor = m_SceneHierarchyPanel.GetSelectedActor();
 
-		if (selectedEntity && m_GizmoType != -1)
+		if (selectedActor && m_GizmoType != -1)
 		{
 			ImGuizmo::SetDrawlist();
 			float windowWidth = ImGui::GetWindowWidth(), windowHeight = ImGui::GetWindowHeight();
 			ImGuizmo::SetRect(viewportScreenPos.x, viewportScreenPos.y, windowWidth, windowHeight);
 
 			// Runtime camera
-			//auto cameraEntity = m_ActiveScene->GetPrimaryCameraEntity();
-			//const auto& camera = cameraEntity.GetComponent<CameraComponent>().Camera;
+			//auto cameraActor = m_ActiveScene->GetPrimaryCameraActor();
+			//const auto& camera = cameraActor.GetComponent<CameraComponent>().Camera;
 			//const glm::mat4& cameraProjection = camera.GetProjection();
-			//glm::mat4 cameraView = glm::inverse(cameraEntity.GetComponent<TransformComponent>().GetTransform());
+			//glm::mat4 cameraView = glm::inverse(cameraActor.GetComponent<TransformComponent>().GetTransform());
 
 			// Editor camera
 			const glm::mat4& cameraProjection = m_EditorCamera.GetProjection();
 			glm::mat4 cameraView = m_EditorCamera.GetViewMatrix();
 
-			// Entity transform
-			auto& transformComponent = selectedEntity.GetComponent<TransformComponent>();
+			// Actor transform
+			auto& transformComponent = selectedActor.GetComponent<TransformComponent>();
 			glm::mat4 transform = transformComponent.GetTransform();
 
 			// Snapping
@@ -351,6 +363,8 @@ namespace Sand
 
 	bool EditorLayer::OnMouseButtonPressed(MouseButtonPressedEvent& e)
 	{
+		
+
 		return false;
 	}
 
