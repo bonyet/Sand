@@ -30,7 +30,7 @@ namespace Sand
 
 		// Create the render target view
 		auto backBuffer = swapChain->GetBackBuffer();
-		D3D11_CALL(context->GetDevice()->CreateRenderTargetView(backBuffer, nullptr, context->GetTargetPointer()));
+		D3D11_CALL(context->GetDevice()->CreateRenderTargetView(backBuffer, nullptr, context->GetTargetPP()));
 		backBuffer->Release(); // Only needed this to create the view
 	}
 

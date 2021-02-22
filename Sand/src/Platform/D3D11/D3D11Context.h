@@ -20,11 +20,13 @@ namespace Sand
 		virtual void Init() override;
 		virtual void SwapBuffers() override;
 
-		ID3D11Device* const GetDevice() const { return pDevice; }
-		ID3D11RenderTargetView* const GetTarget() const { return pTarget; }
-		ID3D11RenderTargetView** const GetTargetPointer() { return &pTarget; }
+		ID3D11Device* const GetDevice() { return pDevice; }
+		ID3D11Device** const GetDevicePP() { return &pDevice; }
+		ID3D11RenderTargetView* const GetTarget() { return pTarget; }
+		ID3D11RenderTargetView** const GetTargetPP() { return &pTarget; }
 
-		ID3D11DeviceContext* const GetDeviceContext() const { return pContext; }
+		ID3D11DeviceContext* const  GetDeviceContext() { return pContext; }
+		ID3D11DeviceContext** const  GetDeviceContextPP() { return &pContext; }
 		Ref<D3D11SwapChain> GetSwapChain() const { return pSwapChain; }
 
 		static D3D11Context* GetInstance() { return s_Instance; }

@@ -43,6 +43,9 @@
     <Filter Include="src\Sand\Scene\Physics">
       <UniqueIdentifier>{B1CE9575-9DC8-BEC7-8635-55D872CE2434}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Sand\Scripting">
+      <UniqueIdentifier>{24C52FF8-10A9-F04D-7909-EBA0650CDBCF}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Sand\Utils">
       <UniqueIdentifier>{829037E9-6E5E-2BEF-57F2-9B15435F0754}</UniqueIdentifier>
     </Filter>
@@ -236,6 +239,9 @@
     </ClInclude>
     <ClInclude Include="src\Sand\Scene\ScriptableActor.h">
       <Filter>src\Sand\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Sand\Scripting\ScriptEngine.h">
+      <Filter>src\Sand\Scripting</Filter>
     </ClInclude>
     <ClInclude Include="src\Sand\Utils\PlatformUtils.h">
       <Filter>src\Sand\Utils</Filter>
@@ -1618,6 +1624,9 @@
     </ClCompile>
     <ClCompile Include="src\Sand\Scene\SceneSerializer.cpp">
       <Filter>src\Sand\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Sand\Scripting\ScriptEngine.cpp">
+      <Filter>src\Sand\Scripting</Filter>
     </ClCompile>
     <ClCompile Include="src\sandpch.cpp">
       <Filter>src</Filter>

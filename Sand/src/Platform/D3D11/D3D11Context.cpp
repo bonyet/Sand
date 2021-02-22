@@ -40,9 +40,7 @@ namespace Sand
 	{ 
 		pSwapChain = CreateRef<D3D11SwapChain>(m_hWnd);
 
-		// Create device, front / back buffers, & rendering context
-		D3D11_CALL(D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, 0, nullptr, 0, D3D11_SDK_VERSION,
-			&pSwapChain->GetDescription(), pSwapChain->AsD3D11ResourcePointer(), &pDevice, nullptr, &pContext));
+		pSwapChain->CreateFromDeviceAndContext(&pDevice, &pContext);
 	}
 	
 	void D3D11Context::SwapBuffers()

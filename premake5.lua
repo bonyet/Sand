@@ -27,6 +27,10 @@ IncludeDir["entt"]      = "Sand/vendor/entt/include"
 IncludeDir["yaml_cpp"]  = "Sand/vendor/yaml-cpp/include"
 IncludeDir["ImGuizmo"]  = "Sand/vendor/ImGuizmo"
 IncludeDir["Box2D"]     = "Sand/vendor/box2d/include"
+IncludeDir["Mono"]      = "Sand/vendor/Mono/include/mono-2.0"
+
+LibraryDir = {}
+LibraryDir["Mono"] = "%{wks.location}/Sand/vendor/Mono/lib/mono-2.0-sgen.lib"
 
 group "Dependencies"
 	include "Sand/vendor/GLFW"
@@ -83,6 +87,7 @@ project "Sand"
 		"%{IncludeDir.yaml_cpp}",
 		"%{IncludeDir.ImGuizmo}",
 		"%{IncludeDir.Box2D}",
+		"%{IncludeDir.Mono}",
 	}
 
 	links 
@@ -92,7 +97,8 @@ project "Sand"
 		"ImGui",
 		"yaml-cpp",
 		"Box2D",
-		"opengl32.lib"
+		"%{LibraryDir.Mono}",
+		"opengl32.lib",
 	}
 
 	filter "files:Sand/vendor/ImGuizmo/**.cpp"
@@ -214,3 +220,17 @@ project "Sand-Editor"
 			defines "SAND_DIST"
 			runtime "Release"
 			optimize "on"
+
+
+project "Sand-CSClient"
+		location "Sand-CSClient"
+		kind "SharedLib"
+		language "C#"
+
+		targetdir ("bin/" .. outputdir .. "/%{prj.name}")
+		objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
+
+		files 
+		{
+			"%{prj.name}/src/**.cs", 
+		}

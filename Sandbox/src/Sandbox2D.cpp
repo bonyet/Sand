@@ -1,6 +1,8 @@
 #include "Sandbox2D.h"
 #include <imgui/imgui.h>
 
+#include "Sand/Scripting/ScriptEngine.h"
+
 using namespace Sand;
 
 Sandbox2D::Sandbox2D()
@@ -11,10 +13,13 @@ Sandbox2D::Sandbox2D()
 void Sandbox2D::OnAttach()
 {
 	SAND_PROFILE_FUNCTION();
+
+	ScriptEngine::Init();
 }
 
 void Sandbox2D::OnDetach()
 {
+	ScriptEngine::Cleanup();
 }
 
 void Sandbox2D::OnUpdate(Timestep ts)
