@@ -9,14 +9,18 @@
 #include <vector>
 #include <string>
 
+#include <winioctl.h>
+
 namespace Sand
 {
 	static MonoDomain* s_MonoDomain = nullptr;
-	static MonoAssembly* s_MonoAssembly = nullptr;
 	static MonoImage* s_MonoImage = nullptr;
+	static MonoAssembly* s_MonoAssembly = nullptr;
 
-	std::vector<std::tuple<std::string, glm::vec3, std::string>> Debug::m_DebugMessages;
+	static MonoAssembly* s_ClientMonoAssembly = nullptr;
+	static MonoImage* s_ClientMonoImage = nullptr;
 
+#pragma region InternalFunctions
 	static void PrintInfo_Native(MonoString* string)
 	{
 		char* str = mono_string_to_utf8(string);
@@ -35,44 +39,72 @@ namespace Sand
 		SAND_CORE_ERROR(str);
 		mono_free(str);
 	}
+#pragma endregion
 
 	void ScriptEngine::Init()
 	{
 		mono_set_dirs("C:\\Program Files\\Mono\\lib", "C:\\Program Files\\Mono\\etc");
+		mono_set_assemblies_path("../Sand/vendor/Mono/lib");
+		
+		MonoDomain* domain = mono_jit_init("Sand");
 
-		const char* domain_name = "Sand_ClientCS_Domain";
-		s_MonoDomain = mono_jit_init(domain_name);
+		s_MonoDomain = mono_domain_create_appdomain((char*)"Sand-Runtime", nullptr);
 
-		s_MonoAssembly = mono_domain_assembly_open(s_MonoDomain, "D:\\dev\\Sand\\bin\\Debug-windows-x86_64\\Sand-CSClient\\Sand-CSClient.dll");
-		SAND_CORE_ASSERT(s_MonoAssembly, "Failed to load MonoAssembly.");
+		// Core
+		const char* path = "D:\\dev\\Sand\\bin\\Debug-windows-x86_64\\Sand-CSCore\\Sand-CSCore.dll";
+		s_MonoAssembly = mono_domain_assembly_open(s_MonoDomain, path);
+		SAND_CORE_ASSERT(s_MonoAssembly, "Failed to load core MonoAssembly");
+		mono_assembly_set_main(s_MonoAssembly);
 
 		s_MonoImage = mono_assembly_get_image(s_MonoAssembly);
 
-		mono_add_internal_call("Sand.Log::Info", &PrintInfo_Native);
-		mono_add_internal_call("Sand.Log::Warn", &PrintWarn_Native);
-		mono_add_internal_call("Sand.Log::Error", &PrintError_Native);
+		LoadClientAssembly();
 
-		// Try to get the main class to do stuff (WIP)
-		{
-			auto klass = mono_class_from_name(s_MonoImage, "Client", "App");
-			MonoObject* classInstance = mono_object_new(s_MonoDomain, klass);
-			MonoMethod* runMethod = mono_class_get_method_from_name(klass, "Run", 0);
-			mono_runtime_invoke(runMethod, classInstance, nullptr, NULL);
-		}
-
-		//int argc = 1;
-		//char* argv[1] = { (char*)"CS" };
-		//int retval = mono_jit_exec(s_MonoDomain, s_MonoAssembly, argc, argv);
+		SetupInternalCalls();
 	}
 	
 	void ScriptEngine::Cleanup()
 	{
-		// Free mem
 		mono_jit_cleanup(s_MonoDomain);
+	}
 
-		// nullify all that good stuff
-		s_MonoDomain = nullptr;
-		s_MonoAssembly = nullptr;
+	void ScriptEngine::LoadClientAssembly()
+	{
+		MonoDomain* domain = nullptr;
+		if (s_MonoDomain)
+		{
+			domain = mono_domain_create_appdomain("Sand Client", nullptr);
+			mono_domain_set(domain, true);
+		}
+
+		// Client
+		const char* path = "D:\\dev\\Sand\\bin\\Debug-windows-x86_64\\Sand-CSClient\\Sand-CSClient.dll";
+		s_ClientMonoAssembly = mono_domain_assembly_open(s_MonoDomain, path);
+		SAND_CORE_ASSERT(s_ClientMonoAssembly, "Failed to load client MonoAssembly");
+		s_ClientMonoImage = mono_assembly_get_image(s_ClientMonoAssembly);
+	}
+
+	void* ScriptEngine::GetCoreAssembly()
+	{
+		return s_MonoAssembly;
+	}
+
+	void* ScriptEngine::GetClientAssembly()
+	{
+		return s_ClientMonoAssembly;
+	}
+
+	bool ScriptEngine::ModuleExists(const std::string& moduleName)
+	{
+		MonoClass* klass = mono_class_from_name(s_ClientMonoImage, "Client", moduleName.c_str());
+		return klass != nullptr;
+	}
+
+	void ScriptEngine::SetupInternalCalls()
+	{
+		mono_add_internal_call("Sand.Log::Info", &PrintInfo_Native);
+		mono_add_internal_call("Sand.Log::Warn", &PrintWarn_Native);
+		mono_add_internal_call("Sand.Log::Error", &PrintError_Native);
 	}
 	
 }

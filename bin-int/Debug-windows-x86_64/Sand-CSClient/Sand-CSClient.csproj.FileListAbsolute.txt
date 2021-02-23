@@ -4,3 +4,4 @@ D:\dev\Sand\bin-int\Debug-windows-x86_64\Sand-CSClient\Sand-CSClient.csprojAssem
 D:\dev\Sand\bin-int\Debug-windows-x86_64\Sand-CSClient\Sand-CSClient.csproj.CoreCompileInputs.cache
 D:\dev\Sand\bin-int\Debug-windows-x86_64\Sand-CSClient\Sand-CSClient.dll
 D:\dev\Sand\bin-int\Debug-windows-x86_64\Sand-CSClient\Sand-CSClient.pdb
+D:\dev\Sand\bin-int\Debug-windows-x86_64\Sand-CSClient\Sand-CSClient.csproj.CopyComplete

@@ -146,6 +146,7 @@ project "Sandbox"
 		"%{IncludeDir.entt}",
 		"%{IncludeDir.glm}",
 		"%{IncludeDir.Box2D}",
+		"%{IncludeDir.Mono}",
 	}
 
 	links
@@ -196,6 +197,7 @@ project "Sand-Editor"
 			"%{IncludeDir.glm}",
 			"%{IncludeDir.ImGuizmo}",
 			"%{IncludeDir.Box2D}",
+			"%{IncludeDir.Mono}",
 		}
 	
 		links
@@ -222,8 +224,8 @@ project "Sand-Editor"
 			optimize "on"
 
 
-project "Sand-CSClient"
-		location "Sand-CSClient"
+project "Sand-CSCore"
+		location "Sand-CSCore"
 		kind "SharedLib"
 		language "C#"
 
@@ -233,4 +235,17 @@ project "Sand-CSClient"
 		files 
 		{
 			"%{prj.name}/src/**.cs", 
+		}
+
+project "Sand-CSClient"
+		location "Sand-CSClient"
+		kind "SharedLib"
+		language "C#"
+
+		targetdir ("bin/" .. outputdir .. "/%{prj.name}")
+		objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
+
+		links
+		{
+			"Sand-CSCore",
 		}

@@ -7,7 +7,7 @@
 namespace Sand 
 {
 
-	RendererAPI::API RendererAPI::s_API = RendererAPI::API::D3D11;
+	RendererAPI::API RendererAPI::s_API = RendererAPI::API::OpenGL;
 
 	Scope<RendererAPI> RendererAPI::Create()
 	{

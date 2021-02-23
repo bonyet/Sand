@@ -1,6 +1,9 @@
 #include "PropertiesPanel.h"
 #include "Sand/Scene/Components.h"
 #include "Sand/ImGui/imgui_custom.h"
+#include "Sand/Scripting/ScriptComponent.h"
+#include "Sand/Scripting/ScriptEngine.h"
+#include "Sand/Core/KeyCodes.h"
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
@@ -178,6 +181,7 @@ namespace Sand
 			DrawComponentMenuItem<SpriteRendererComponent>("Sprite Renderer", actor);
 			DrawComponentMenuItem<Rigidbody2DComponent>("Rigidbody2D", actor);
 			DrawComponentMenuItem<BoxCollider2DComponent>("Box Collider 2D", actor, actor.GetComponent<TransformComponent>().Scale);
+			DrawComponentMenuItem<ScriptComponent>("Script", actor);
 
 			ImGui::EndPopup();
 		}
@@ -340,6 +344,33 @@ namespace Sand
 			{
 				component.SetRestitution(restitution);
 			});
+		});
+	
+		DrawComponent<ScriptComponent>("Script", actor, [](auto& component)
+		{
+			static bool moduleExists = false;
+
+			char buffer[50];
+			memset(buffer, 0, sizeof(buffer));
+			strcpy_s(buffer, sizeof(buffer), component.GetModuleName().c_str());
+
+			ImVec4 textColor = moduleExists ? ImVec4{ 0.2f, 0.8f, 0.3f, 1.0f } : ImVec4{ 0.8f, 0.1f, 0.2f, 1.0f };
+			ImGui::PushStyleColor(ImGuiCol_Text, textColor);
+			
+			SAND_LEFT_LABEL(ImGui::InputText("##ModuleName", buffer, sizeof(buffer)), "ModuleName",
+			{
+				moduleExists = ScriptEngine::ModuleExists(buffer);
+
+				if (!moduleExists)
+					component.Reset();
+
+				if (moduleExists && ImGui::IsKeyPressed((int)Keycode::Enter))
+				{
+					component.Init("Client", buffer);
+				}
+			});
+			
+			ImGui::PopStyleColor();
 		});
 	}
 

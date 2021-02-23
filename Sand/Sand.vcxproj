@@ -195,9 +195,9 @@
     <ClInclude Include="src\Sand\Scene\Physics\PhysicsWorld.h" />
     <ClInclude Include="src\Sand\Scene\Scene.h" />
     <ClInclude Include="src\Sand\Scene\SceneCamera.h" />
-    <ClInclude Include="src\Sand\Scene\SceneRenderer.h" />
     <ClInclude Include="src\Sand\Scene\SceneSerializer.h" />
     <ClInclude Include="src\Sand\Scene\ScriptableActor.h" />
+    <ClInclude Include="src\Sand\Scripting\ScriptComponent.h" />
     <ClInclude Include="src\Sand\Scripting\ScriptEngine.h" />
     <ClInclude Include="src\Sand\Utils\PlatformUtils.h" />
     <ClInclude Include="src\sandpch.h" />
@@ -659,8 +659,8 @@
     <ClCompile Include="src\Sand\Scene\Physics\PhysicsWorld.cpp" />
     <ClCompile Include="src\Sand\Scene\Scene.cpp" />
     <ClCompile Include="src\Sand\Scene\SceneCamera.cpp" />
-    <ClCompile Include="src\Sand\Scene\SceneRenderer.cpp" />
     <ClCompile Include="src\Sand\Scene\SceneSerializer.cpp" />
+    <ClCompile Include="src\Sand\Scripting\ScriptComponent.cpp" />
     <ClCompile Include="src\Sand\Scripting\ScriptEngine.cpp" />
     <ClCompile Include="src\sandpch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>

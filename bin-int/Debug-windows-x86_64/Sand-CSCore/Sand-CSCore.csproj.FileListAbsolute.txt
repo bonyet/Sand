@@ -1,0 +1,6 @@
+D:\dev\Sand\bin\Debug-windows-x86_64\Sand-CSCore\Sand-CSCore.dll
+D:\dev\Sand\bin\Debug-windows-x86_64\Sand-CSCore\Sand-CSCore.pdb
+D:\dev\Sand\bin-int\Debug-windows-x86_64\Sand-CSCore\Sand-CSCore.csprojAssemblyReference.cache
+D:\dev\Sand\bin-int\Debug-windows-x86_64\Sand-CSCore\Sand-CSCore.csproj.CoreCompileInputs.cache
+D:\dev\Sand\bin-int\Debug-windows-x86_64\Sand-CSCore\Sand-CSCore.dll
+D:\dev\Sand\bin-int\Debug-windows-x86_64\Sand-CSCore\Sand-CSCore.pdb

@@ -50,12 +50,15 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="src\Log.cs" />
-    <Compile Include="src\TestClass.cs" />
+    <Compile Include="src\Test.cs" />
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Sand-CSCore\Sand-CSCore.csproj">
+      <Project>{5726F431-C3DB-6C27-4CD0-66FEB884632B}</Project>
+      <Name>Sand-CSCore</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.

@@ -231,14 +231,14 @@
     <ClInclude Include="src\Sand\Scene\SceneCamera.h">
       <Filter>src\Sand\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="src\Sand\Scene\SceneRenderer.h">
-      <Filter>src\Sand\Scene</Filter>
-    </ClInclude>
     <ClInclude Include="src\Sand\Scene\SceneSerializer.h">
       <Filter>src\Sand\Scene</Filter>
     </ClInclude>
     <ClInclude Include="src\Sand\Scene\ScriptableActor.h">
       <Filter>src\Sand\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Sand\Scripting\ScriptComponent.h">
+      <Filter>src\Sand\Scripting</Filter>
     </ClInclude>
     <ClInclude Include="src\Sand\Scripting\ScriptEngine.h">
       <Filter>src\Sand\Scripting</Filter>
@@ -1619,11 +1619,11 @@
     <ClCompile Include="src\Sand\Scene\SceneCamera.cpp">
       <Filter>src\Sand\Scene</Filter>
     </ClCompile>
-    <ClCompile Include="src\Sand\Scene\SceneRenderer.cpp">
-      <Filter>src\Sand\Scene</Filter>
-    </ClCompile>
     <ClCompile Include="src\Sand\Scene\SceneSerializer.cpp">
       <Filter>src\Sand\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Sand\Scripting\ScriptComponent.cpp">
+      <Filter>src\Sand\Scripting</Filter>
     </ClCompile>
     <ClCompile Include="src\Sand\Scripting\ScriptEngine.cpp">
       <Filter>src\Sand\Scripting</Filter>

@@ -52,33 +52,18 @@ namespace Sand
 		Application& app = Application::Get();
 		GLFWwindow* window = static_cast<GLFWwindow*>(app.GetWindow().GetNativeWindow());
 
-		if (RendererAPI::GetAPI() == RendererAPI::API::OpenGL)
-		{
-			ImGui_ImplGlfw_InitForOpenGL(window, true);
-			ImGui_ImplOpenGL3_Init("#version 410");
-		}
-		else if(RendererAPI::GetAPI() == RendererAPI::API::D3D11)
-		{
-			auto context = D3D11Context::GetInstance();
-			ImGui_ImplWin32_Init(glfwGetWin32Window(window));
-			ImGui_ImplDX11_Init(context->GetDevice(), context->GetDeviceContext());
-		}
+		SAND_CORE_ASSERT(RendererAPI::GetAPI() != RendererAPI::API::D3D11, "Direct3D 11 GUI not supported.");
+
+		ImGui_ImplGlfw_InitForOpenGL(window, true);
+		ImGui_ImplOpenGL3_Init("#version 410");
 	}
 
 	void ImGuiLayer::OnDetach()
 	{
 		SAND_PROFILE_FUNCTION();
 
-		if (RendererAPI::GetAPI() == RendererAPI::API::OpenGL)
-		{
-			ImGui_ImplOpenGL3_Shutdown();
-			ImGui_ImplGlfw_Shutdown();
-		}
-		else if (RendererAPI::GetAPI() == RendererAPI::API::D3D11)
-		{
-			ImGui_ImplDX11_Shutdown();
-			ImGui_ImplWin32_Shutdown();
-		}
+		ImGui_ImplOpenGL3_Shutdown();
+		ImGui_ImplGlfw_Shutdown();
 
 		ImGui::DestroyContext();
 	}
@@ -97,16 +82,8 @@ namespace Sand
 	{
 		SAND_PROFILE_FUNCTION();
 
-		if (RendererAPI::GetAPI() == RendererAPI::API::OpenGL)
-		{
-			ImGui_ImplOpenGL3_NewFrame();
-			ImGui_ImplGlfw_NewFrame();
-		}
-		else if (RendererAPI::GetAPI() == RendererAPI::API::D3D11)
-		{
-			ImGui_ImplDX11_NewFrame();
-			ImGui_ImplWin32_NewFrame();
-		}
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
 
 		ImGui::NewFrame();
 		ImGuizmo::BeginFrame();
@@ -121,16 +98,8 @@ namespace Sand
 		io.DisplaySize = ImVec2((float)app.GetWindow().GetWidth(), (float)app.GetWindow().GetHeight());
 
 		ImGui::Render();
-		if (RendererAPI::GetAPI() == RendererAPI::API::OpenGL)
-		{
-			ImGui_ImplGlfw_NewFrame();
-			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-		}
-		else if (RendererAPI::GetAPI() == RendererAPI::API::D3D11)
-		{
-			ImGui_ImplWin32_NewFrame();
-			ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
-		}
+		ImGui_ImplGlfw_NewFrame();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 		{

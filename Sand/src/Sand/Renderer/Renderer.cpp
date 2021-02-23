@@ -26,9 +26,8 @@ namespace Sand
 		SAND_PROFILE_FUNCTION();
 
 		RenderCommand::Init();
+		Renderer2D::Init();
 
-
-		//Renderer2D::Init();
 		//
 		//s_Data.CubeVertexArray = VertexArray::Create();
 		//

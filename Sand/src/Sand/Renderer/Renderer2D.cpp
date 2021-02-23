@@ -117,7 +117,7 @@ namespace Sand
 		delete[] s_Data.QuadVertexBufferBase;
 	}
 
-	void Renderer2D::BeginScene(const glm::mat4& proj, const glm::mat4& transform)
+	void Renderer2D::Begin(const glm::mat4& proj, const glm::mat4& transform)
 	{
 		SAND_PROFILE_FUNCTION();
 
@@ -132,7 +132,7 @@ namespace Sand
 		s_Data.TextureSlotIndex = 1;
 	}
 
-	void Renderer2D::BeginScene(const Camera& camera, const glm::mat4& transform)
+	void Renderer2D::Begin(const Camera& camera, const glm::mat4& transform)
 	{
 		SAND_PROFILE_FUNCTION();
 
@@ -147,7 +147,7 @@ namespace Sand
 		s_Data.TextureSlotIndex = 1;
 	}
 
-	void Renderer2D::BeginScene(const EditorCamera& camera)
+	void Renderer2D::Begin(const EditorCamera& camera)
 	{
 		SAND_PROFILE_FUNCTION();
 
@@ -162,7 +162,7 @@ namespace Sand
 		s_Data.TextureSlotIndex = 1;
 	}
 
-	void Renderer2D::EndScene()
+	void Renderer2D::End()
 	{
 		SAND_PROFILE_FUNCTION();
 
@@ -189,7 +189,7 @@ namespace Sand
 
 	void Renderer2D::FlushAndReset()
 	{
-		EndScene();
+		End();
 
 		s_Data.QuadIndexCount = 0;
 		s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;

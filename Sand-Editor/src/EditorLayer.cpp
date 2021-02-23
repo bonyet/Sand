@@ -2,10 +2,11 @@
 
 #include "Sand/Scene/SceneSerializer.h"
 #include "Sand/Utils/PlatformUtils.h"
-#include "Sand/Scene/SceneRenderer.h"
+#include "Sand/Renderer/Renderer2D.h"
 #include "Sand/ImGui/imgui_custom.h"
 #include "Sand/Debug/Debug.h"
 #include "Sand/Math/Math.h"
+#include "Sand/Scripting/ScriptEngine.h"
 
 #include <glm\glm\gtc\type_ptr.hpp>
 #include "ImGuizmo.h"
@@ -21,8 +22,6 @@ namespace Sand
 	void EditorLayer::OnAttach()
 	{
 		SAND_PROFILE_FUNCTION();
-
-		SceneRenderer::Init();
 
 		// Framebuffers
 		FramebufferSpecification fbSpec;
@@ -45,13 +44,14 @@ namespace Sand
 		Log::GetCoreLogger()->sinks().push_back(std::make_shared<ConsolePanel>());
 
 		m_EditorCamera.Use2DControls = false;
+
+		ScriptEngine::Init();
 	}
 
 	void EditorLayer::SetDarkTheme()
 	{
 		auto& style = ImGui::GetStyle();
 		style.FrameRounding = 10.0f;
-		style.WindowTitleAlign = { 0.5f, 0.5f };
 		style.WindowMenuButtonPosition = ImGuiDir_None;
 
 		auto& colors = style.Colors;
@@ -100,8 +100,9 @@ namespace Sand
 		colors[ImGuiCol_MenuBarBg] = ImVec4{ 0.14f, 0.14f, 0.14f, 1.0f };
 	}
 
-	void EditorLayer::OnDetach() 
+	void EditorLayer::OnDetach()
 	{
+		ScriptEngine::Cleanup();
 	}
 
 	void EditorLayer::OnUpdate(Timestep ts)
@@ -112,7 +113,6 @@ namespace Sand
 			m_EditorCamera.OnUpdate(ts);
 		}
 
-		SceneRenderer::ResetStats();
 		Renderer2D::ResetStats();
 
 		if (FramebufferSpecification spec = m_ViewportFramebuffer->GetSpecification();
@@ -130,7 +130,22 @@ namespace Sand
 		RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.12f, 1.0f });
 		RenderCommand::Clear();
 
-		m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);
+		if (Input::WasKeyPressed(Keycode::P))
+		{
+			if (m_ActiveScene->IsPlaying())
+			{
+				m_ActiveScene->EndPlay();
+			}
+			else
+			{
+				m_ActiveScene->BeginPlay();
+			}
+		}
+
+		if (!m_ActiveScene->IsPlaying())
+			m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);
+		else
+			m_ActiveScene->OnUpdateRuntime(ts);
 
 		{
 			bool shouldMousePick = !ImGuizmo::IsOver() && !ImGuizmo::IsUsing() && m_ViewportHovered;
@@ -254,7 +269,7 @@ namespace Sand
 
 		ImGui::Separator();
 		if (ImGui::TreeNodeEx("Renderer")) {
-			auto stats = SceneRenderer::GetStats();
+			auto stats = Renderer2D::GetStats();
 			ImGui::Text("Renderer2D:");
 			ImGui::Text("Draw Calls: %d", stats.DrawCalls);
 			ImGui::Text("Quads: %d", stats.QuadCount);

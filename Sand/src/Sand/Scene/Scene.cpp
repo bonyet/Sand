@@ -3,11 +3,9 @@
 
 #include "Sand/Renderer/Renderer2D.h"
 #include "Sand/Core/Application.h"
-#include "SceneRenderer.h"
+#include "Sand/Renderer/Renderer2D.h"
 #include "Components.h"
-
-#include <glad\glad.h>
-#include "Physics/PhysicsWorld.h"
+#include "Sand/Scripting/ScriptComponent.h"
 
 namespace Sand
 {
@@ -40,17 +38,17 @@ namespace Sand
 		// Render geometry
 
 		{
-			SceneRenderer::Begin(camera);
+			Renderer2D::Begin(camera);
 
 			auto group = m_Registry.group<SpriteRendererComponent>(entt::get<TransformComponent>);
 			for (auto actor : group)
 			{
 				auto [sprite, transform] = group.get<SpriteRendererComponent, TransformComponent>(actor);
 
-				SceneRenderer::Submit(transform.GetTransform(), sprite.Color, (uint32_t)actor);
+				Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color, (uint32_t)actor);
 			}
 
-			SceneRenderer::End();
+			Renderer2D::End();
 		}
 	}
 
@@ -58,22 +56,9 @@ namespace Sand
 	{
 		m_Playmode = true;
 
-		m_Registry.view<Rigidbody2DComponent>().each([=](auto actor, auto& body)
+		m_Registry.view<ScriptComponent>().each([=](auto actor, auto& sc)
 		{
-			Actor bodyActor = Actor{ actor, this };
-			
-			body.Create();
-			
-			if (bodyActor.HasComponent<BoxCollider2DComponent>()) {
-				bodyActor.GetComponent<BoxCollider2DComponent>().Apply(body.m_Body);
-			}
-		});
-
-		m_Registry.view<NativeScriptComponent>().each([=](auto actor, auto& nsc)
-		{
-			nsc.Instance = nsc.InstantiateScript();
-			nsc.Instance->m_Actor = Actor{ actor, this };
-			nsc.Instance->OnCreate();
+			sc.OnCreate();
 		});
 	}
 
@@ -81,10 +66,9 @@ namespace Sand
 	{
 		m_Playmode = false;
 
-		m_Registry.view<NativeScriptComponent>().each([=](auto actor, auto& nsc)
+		m_Registry.view<ScriptComponent>().each([=](auto actor, auto& sc)
 		{
-			nsc.Instance->OnDestroy();
-			nsc.DestroyScript(&nsc);
+			sc.OnDestroy();
 		});
 	}
 
@@ -92,9 +76,9 @@ namespace Sand
 	{
 		// scritps
 		{
-			m_Registry.view<NativeScriptComponent>().each([=](auto actor, auto& nsc)
+			m_Registry.view<ScriptComponent>().each([=](auto actor, auto& sc)
 			{
-				nsc.Instance->OnUpdate(ts);
+				sc.OnUpdate((float)ts);
 			});
 		}
 
@@ -124,17 +108,17 @@ namespace Sand
 
 		if (primaryCamera)
 		{
-			SceneRenderer::Begin(*primaryCamera, camTransform);
+			Renderer2D::Begin(*primaryCamera, camTransform);
 
 			auto group = m_Registry.group<SpriteRendererComponent>(entt::get<TransformComponent>);
 			for (auto actor : group)
 			{
 				auto [sprite, transform] = group.get<SpriteRendererComponent, TransformComponent>(actor);
 				
-				SceneRenderer::Submit(transform.GetTransform(), sprite.Color, (uint32_t)actor);
+				Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color, (uint32_t)actor);
 			}
 
-			SceneRenderer::End();
+			Renderer2D::End();
 		}
 	}
 
@@ -218,6 +202,11 @@ namespace Sand
 	}
 	template<>
 	void Scene::OnComponentAdded<NativeScriptComponent>(Actor actor, NativeScriptComponent& component)
+	{
+		component.owner = actor;
+	}
+	template<>
+	void Scene::OnComponentAdded<ScriptComponent>(Actor actor, ScriptComponent& component)
 	{
 		component.owner = actor;
 	}

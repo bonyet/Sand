@@ -13,10 +13,10 @@ namespace Sand
 		static void Init();
 		static void Shutdown();
 
-		static void BeginScene(const glm::mat4& proj, const glm::mat4& transform);
-		static void BeginScene(const Camera& camera, const glm::mat4& transform);
-		static void BeginScene(const EditorCamera& camera);
-		static void EndScene();
+		static void Begin(const glm::mat4& proj, const glm::mat4& transform);
+		static void Begin(const Camera& camera, const glm::mat4& transform);
+		static void Begin(const EditorCamera& camera);
+		static void End();
 		static void Flush();
 
 		// Primitives
