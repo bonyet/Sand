@@ -365,12 +365,15 @@ namespace Sand
 					component.Reset();
 
 				if (moduleExists && ImGui::IsKeyPressed((int)Keycode::Enter))
-				{
 					component.Init("Client", buffer);
-				}
 			});
 			
 			ImGui::PopStyleColor();
+
+			if (moduleExists)
+			{
+				component.RenderAllFields();
+			}
 		});
 	}
 

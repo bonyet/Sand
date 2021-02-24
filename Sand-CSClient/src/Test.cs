@@ -5,36 +5,23 @@ namespace Client
 
 	class Test
 	{
+		public float Value = 10.0f;
+		public int OtherThing = 5;
+
 		public void OnCreate()
 		{
-			Log.Warn("Hello from C# :)");
 		}
 
 		public void OnUpdate(float timestep)
 		{
-			Log.Warn("Bone apple tea from C# -_-");
+			if (Input.IsKeyPressed(Keycode.Space))
+			{
+				Log.Info(OtherThing.ToString());
+			}
 		}
 
 		public void OnDestroy()
 		{
-			Log.Warn("Goodbye from C# :(");
-		}
-	}
-
-	class Test2
-	{
-		public void OnCreate()
-		{
-			Log.Warn("aaaa from C# :)");
-		}
-
-		public void OnUpdate(float timestep)
-		{
-		}
-
-		public void OnDestroy()
-		{
-			Log.Warn("aaaa f erom C# :(");
 		}
 	}
 

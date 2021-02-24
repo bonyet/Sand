@@ -10,7 +10,6 @@
 namespace Sand
 {
 	Application* Application::s_Instance = nullptr;
-	float Time::m_Time;
 
 	Application::Application(const std::string& name)
 	{
@@ -84,7 +83,6 @@ namespace Sand
 			float time = (float)glfwGetTime(); // Lifetime of app
 			Timestep timestep = time - m_LastFrameTime; // Last frame
 			m_LastFrameTime = time;
-			Time::m_Time = time;
 
 			if (!m_Minimized)
 			{

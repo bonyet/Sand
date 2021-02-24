@@ -7,12 +7,8 @@
 #include <imgui.h>
 #include <examples/imgui_impl_glfw.h>
 #include <examples/imgui_impl_opengl3.h>
-#include <examples/imgui_impl_dx11.h>
-#include <examples/imgui_impl_win32.h>
 
 #include <GLFW/glfw3.h>
-#define GLFW_EXPOSE_NATIVE_WIN32
-#include <GLFW/glfw3native.h>
 #include <glad/glad.h>
 
 #include "ImGuizmo.h"
@@ -98,7 +94,6 @@ namespace Sand
 		io.DisplaySize = ImVec2((float)app.GetWindow().GetWidth(), (float)app.GetWindow().GetHeight());
 
 		ImGui::Render();
-		ImGui_ImplGlfw_NewFrame();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)

@@ -2,6 +2,7 @@
 
 #include "Sand/Scene/Actor.h"
 #include <mono/metadata/assembly.h>
+#include <mono/metadata/reflection.h>
 
 namespace Sand
 {
@@ -19,7 +20,7 @@ namespace Sand
 		MonoMethod* OnUpdateMethod = nullptr;
 		MonoMethod* OnDestroyMethod = nullptr;
 
-		void Init(const std::string& nameSpace, const std::string& moduleName, bool awareOfExistence = false);
+		void Init(const std::string& nameSpace, const std::string& moduleName, bool awareOfModuleExistence = false);
 
 		void OnCreate();
 		void OnUpdate(float ts);
@@ -27,11 +28,14 @@ namespace Sand
 
 		ScriptComponent() = default;
 		ScriptComponent(const ScriptComponent&) = default;
+		~ScriptComponent();
 
 		void Reset();
+		void RenderAllFields();
+		void RenderField(MonoType* fieldType, MonoClassField* field);
 
-		std::string GetModuleName() const 
-		{ 
+		std::string GetModuleName() const
+		{
 			return ModuleName; 
 		}
 	};

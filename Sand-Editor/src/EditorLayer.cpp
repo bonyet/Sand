@@ -53,9 +53,10 @@ namespace Sand
 		auto& style = ImGui::GetStyle();
 		style.FrameRounding = 10.0f;
 		style.WindowMenuButtonPosition = ImGuiDir_None;
-
+		
 		auto& colors = style.Colors;
 		colors[ImGuiCol_WindowBg] = ImVec4{ 0.15f, 0.15f, 0.15f, 1.0f };
+		colors[ImGuiCol_Border] = ImVec4{ 0.0f, 0.0f, 0.5f, 1.0f };
 
 		// Headers
 		colors[ImGuiCol_Header]        = ImVec4{ 0.20f, 0.20f, 0.20f, 1.0f };
@@ -73,22 +74,22 @@ namespace Sand
 		colors[ImGuiCol_FrameBgActive]    = ImVec4{ 0.15f, 0.15f, 0.15f, 1.0f };
 
 		// Child and popups and misc
-		colors[ImGuiCol_ChildBg] = ImVec4{ 0.0f, 0.0f, 0.0f, 0.0f };
-		colors[ImGuiCol_PopupBg] = ImVec4{ 0.0799999982f, 0.0799999982f, 0.0799999982f, 0.9399998f };
+		colors[ImGuiCol_ChildBg]   = ImVec4{ 0.0f, 0.0f, 0.0f, 0.0f };
+		colors[ImGuiCol_PopupBg]   = ImVec4{ 0.0799999982f, 0.0799999982f, 0.0799999982f, 0.9399998f };
 		colors[ImGuiCol_CheckMark] = ImVec4{ 0.259999990f, 0.589999974f, 0.980000019f, 1.0f };
 
 		// Tabs
-		colors[ImGuiCol_Tab]                = ImVec4{ 0.15f, 0.15f, 0.15f, 1.0f };
-		colors[ImGuiCol_TabHovered]         = ImVec4{ 0.38f, 0.38f, 0.38f, 1.0f };
-		colors[ImGuiCol_TabActive]          = ImVec4{ 0.28f, 0.28f, 0.28f, 1.0f };
-		colors[ImGuiCol_TabUnfocused]       = ImVec4{ 0.15f, 0.15f, 0.15f, 1.0f };
-		colors[ImGuiCol_TabUnfocusedActive] = ImVec4{ 0.20f, 0.20f, 0.20f, 1.0f };
+		colors[ImGuiCol_Tab]                = ImVec4{ 0.15f, 0.15f, 0.17f, 1.0f };
+		colors[ImGuiCol_TabHovered]         = ImVec4{ 0.38f, 0.38f, 0.39f, 1.0f };
+		colors[ImGuiCol_TabActive]          = ImVec4{ 0.28f, 0.28f, 0.30f, 1.0f };
+		colors[ImGuiCol_TabUnfocused]       = ImVec4{ 0.15f, 0.15f, 0.16f, 1.0f };
+		colors[ImGuiCol_TabUnfocusedActive] = ImVec4{ 0.20f, 0.20f, 0.21f, 1.0f };
 
 		// Title
-		colors[ImGuiCol_TitleBg]               = ImVec4{ 0.15f, 0.15f, 0.15f, 1.0f };
-		colors[ImGuiCol_TitleBgActive]         = ImVec4{ 0.15f, 0.15f, 0.15f, 1.0f };
-		colors[ImGuiCol_TitleBgCollapsed]      = ImVec4{ 0.15f, 0.15f, 0.15f, 1.0f };
-
+		colors[ImGuiCol_TitleBg]               = ImVec4{ 0.15f, 0.15f, 0.18f, 1.0f };
+		colors[ImGuiCol_TitleBgActive]         = ImVec4{ 0.15f, 0.15f, 0.2f, 1.0f };
+		colors[ImGuiCol_TitleBgCollapsed]      = ImVec4{ 0.15f, 0.15f, 0.17f, 1.0f };
+		
 		// Resize grip
 		colors[ImGuiCol_ResizeGrip]            = ImVec4{ 0.30f, 0.30f, 0.30f, 1.0f };
 		colors[ImGuiCol_ResizeGripHovered]     = ImVec4{ 0.35f, 0.35f, 0.35f, 1.0f };
@@ -127,7 +128,7 @@ namespace Sand
 
 		m_ViewportFramebuffer->Bind();
 
-		RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.12f, 1.0f });
+		RenderCommand::SetClearColor({ 0.12f, 0.12f, 0.12f, 1.0f });
 		RenderCommand::Clear();
 
 		if (Input::WasKeyPressed(Keycode::P))
@@ -289,8 +290,11 @@ namespace Sand
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
 		ImGui::Begin("Viewport", false, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoCollapse);
 		
-		auto viewportOffset = ImGui::GetCursorPos();
-		auto viewportScreenPos = ImGui::GetCursorScreenPos();
+		auto viewportMinRegion = ImGui::GetWindowContentRegionMin();
+		auto viewportMaxRegion = ImGui::GetWindowContentRegionMax();
+		auto viewportOffset = ImGui::GetWindowPos();
+		m_ViewportBounds[0] = { viewportMinRegion.x + viewportOffset.x, viewportMinRegion.y + viewportOffset.y };
+		m_ViewportBounds[1] = { viewportMaxRegion.x + viewportOffset.x, viewportMaxRegion.y + viewportOffset.y };
 
 		m_ViewportFocused = ImGui::IsWindowFocused();
 		m_ViewportHovered = ImGui::IsWindowHovered();
@@ -302,15 +306,6 @@ namespace Sand
 		uint32_t textureID = m_ViewportFramebuffer->GetColorAttachmentRendererID();
 		ImGui::Image(reinterpret_cast<void*>(textureID), viewportPanelSize, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 
-		auto windowSize = ImGui::GetWindowSize();
-		ImVec2 minBound = ImGui::GetWindowPos();
-		minBound.x += viewportOffset.x;
-		minBound.y += viewportOffset.y;
-
-		ImVec2 maxBound = { minBound.x + windowSize.x, minBound.y + windowSize.y };
-		m_ViewportBounds[0] = { minBound.x, minBound.y };
-		m_ViewportBounds[1] = { maxBound.x, maxBound.y };
-
 		// GIZMOS
 		Actor selectedActor = m_SceneHierarchyPanel.GetSelectedActor();
 
@@ -318,7 +313,8 @@ namespace Sand
 		{
 			ImGuizmo::SetDrawlist();
 			float windowWidth = ImGui::GetWindowWidth(), windowHeight = ImGui::GetWindowHeight();
-			ImGuizmo::SetRect(viewportScreenPos.x, viewportScreenPos.y, windowWidth, windowHeight);
+			ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
+			ImGuizmo::SetRect(m_ViewportBounds[0].x, m_ViewportBounds[0].y, m_ViewportBounds[1].x - m_ViewportBounds[0].x, m_ViewportBounds[1].y - m_ViewportBounds[0].y);
 
 			// Runtime camera
 			//auto cameraActor = m_ActiveScene->GetPrimaryCameraActor();
@@ -357,7 +353,6 @@ namespace Sand
 				transformComponent.Scale = scale;
 			}
 		}
-
 
 		ImGui::End();
 		ImGui::PopStyleVar();

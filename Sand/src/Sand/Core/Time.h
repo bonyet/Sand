@@ -21,15 +21,7 @@ namespace Sand
 
 			return ret;
 		}
-		static const float GetTime()
-		{
-			return m_Time;
-		}
-
-
 	private:
-		static float m_Time;
-
 		friend class Application;
 	};
 

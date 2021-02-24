@@ -7,6 +7,14 @@ namespace Sand
 
 	class ScriptRegistry;
 
+	enum class ScriptDataType
+	{
+		Float = 12, Double = 13,
+		Int16 = 6, Int32 = 8, Int64 = 10,
+		UInt16 = 7, UInt32 = 9, UInt64 = 11,
+		String = 14,
+	};
+
 	class ScriptEngine
 	{
 	public:
