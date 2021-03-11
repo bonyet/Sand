@@ -1,9 +1,9 @@
 # Binaries
 **/bin/
-#!vendor/premake/bin/
-bin-int/
+!vendor/premake/bin/
+/bin-int/
 
-# sand files
+# Sand files
 *.log
 
 # Visual Studio files and folder

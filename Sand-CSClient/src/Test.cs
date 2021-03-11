@@ -6,7 +6,7 @@ namespace Client
 	class Test
 	{
 		public float Value = 10.0f;
-		public int OtherThing = 5;
+		public uint OtherThing = 5;
 
 		public void OnCreate()
 		{
@@ -16,12 +16,13 @@ namespace Client
 		{
 			if (Input.IsKeyPressed(Keycode.Space))
 			{
-				Log.Info(OtherThing.ToString());
+				Log.Info("Stuff = " + OtherThing);
 			}
 		}
 
 		public void OnDestroy()
 		{
+			Log.Warn("Oh no... no you can't do this to me!");
 		}
 	}
 

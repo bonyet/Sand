@@ -1,12 +1,14 @@
 #include "PropertiesPanel.h"
 #include "Sand/Scene/Components.h"
 #include "Sand/ImGui/imgui_custom.h"
-#include "Sand/Scripting/ScriptComponent.h"
+
+#include "Sand/Scripting/ScriptData.h"
 #include "Sand/Scripting/ScriptEngine.h"
 #include "Sand/Core/KeyCodes.h"
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
+#include "Sand/Utils/PlatformUtils.h"
 
 #define SAND_LEFT_LABEL(func, label, code) ImGui::TextUnformatted(label); ImGui::NextColumn(); ImGui::SetNextItemWidth(-1); if(func) { code } ImGui::NextColumn();
 #define SAND_LEFT_LABEL_TOOLTIP(func, label, tooltip, code) ImGui::TextTooltip(label, tooltip); ImGui::NextColumn(); ImGui::SetNextItemWidth(-1); if(func) { code } ImGui::NextColumn();
@@ -80,10 +82,10 @@ namespace Sand
 		ImGui::PushID(label.c_str());
 
 		if (!tooltip.empty()) {
-			SAND_LEFT_LABEL_TOOLTIP(ImGui::DragFloat3("##Drag", glm::value_ptr(vector), 0.1f, 0.0f, 0.0f, "%.2f"), label.c_str(), tooltip.c_str(), );
+			SAND_LEFT_LABEL_TOOLTIP(ImGui::DragFloat3("##Drag", glm::value_ptr(vector), 0.05f, 0.0f, 0.0f, "%.2f"), label.c_str(), tooltip.c_str(), );
 		}
 		else {
-			SAND_LEFT_LABEL(ImGui::DragFloat3("##Drag", glm::value_ptr(vector), 0.1f, 0.0f, 0.0f, "%.2f"), label.c_str(), );
+			SAND_LEFT_LABEL(ImGui::DragFloat3("##Drag", glm::value_ptr(vector), 0.05f, 0.0f, 0.0f, "%.2f"), label.c_str(), );
 		}
 		
 		//ImGui::Text(label.c_str()); 
@@ -155,7 +157,8 @@ namespace Sand
 	{
 		if (ImGui::MenuItem(title.c_str()))
 		{
-			if (!actor.HasComponent<T>()) {
+			if (!actor.HasComponent<T>()) 
+			{
 				actor.AddComponent<T>((args)...);
 			}
 			else
@@ -174,19 +177,47 @@ namespace Sand
 		if (ImGui::Button("Add Component"))
 			ImGui::OpenPopup("AddComponent");
 
-		if (ImGui::BeginPopup("AddComponent"))
+		if (ImGui::BeginPopup("AddComponent", false))
 		{
-			DrawComponentMenuItem<CameraComponent>("Camera", actor);
-			DrawComponentMenuItem<TransformComponent>("Transform", actor);
-			DrawComponentMenuItem<SpriteRendererComponent>("Sprite Renderer", actor);
-			DrawComponentMenuItem<Rigidbody2DComponent>("Rigidbody2D", actor);
-			DrawComponentMenuItem<BoxCollider2DComponent>("Box Collider 2D", actor, actor.GetComponent<TransformComponent>().Scale);
+			// Misc / Base
+			if (ImGui::BeginMenu("Basic"))
+			{
+				DrawComponentMenuItem<TransformComponent>("Transform", actor);
+
+				ImGui::EndMenu();
+			}
+
+			// Graphics
+			if (ImGui::BeginMenu("Graphics"))
+			{
+				DrawComponentMenuItem<CameraComponent>("Camera", actor);
+				DrawComponentMenuItem<TextureComponent>("Texture", actor);
+				DrawComponentMenuItem<SpriteRendererComponent>("Sprite Renderer", actor);
+				
+				ImGui::EndMenu();
+			}
+
+			if (ImGui::BeginMenu("Physics"))
+			{
+				DrawComponentMenuItem<PhysicsComponent>("Physics", actor);
+
+				ImGui::EndMenu();
+			}
+
+			ImGui::Separator();
+
+			// Scripting
 			DrawComponentMenuItem<ScriptComponent>("Script", actor);
 
 			ImGui::EndPopup();
 		}
 
 		ImGui::PopItemWidth();
+	}
+
+	inline static void SetColumnsMinSpacing(float spacing) {
+		static ImGuiStyle& style = ImGui::GetStyle();
+		style.ColumnsMinSpacing = spacing;
 	}
 
 	void PropertiesPanel::DrawComponents(Actor actor)
@@ -198,6 +229,7 @@ namespace Sand
 			char buffer[256];
 			memset(buffer, 0, sizeof(buffer));
 			strcpy_s(buffer, sizeof(buffer), tag.c_str());
+			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvailWidth() - 150);
 			if (ImGui::InputText("##Tag", buffer, sizeof(buffer)))
 			{
 				tag = std::string(buffer);
@@ -208,173 +240,197 @@ namespace Sand
 		DrawComponentsMenu(actor);
 		ImGui::Separator();
 
+		float defaultColumnSpacing = ImGui::GetStyle().ColumnsMinSpacing;
+
+		SetColumnsMinSpacing(85.0f);
 		DrawComponent<TransformComponent>("Transform", actor, [](auto& component)
 		{
-			DrawVectorControl("Position", component.Position, 0.0f, 100.0f, "The world space position of this actor, in meters");
+			ImGuiIO& io = ImGui::GetIO();
+			auto boldFont = io.Fonts->Fonts[1];
 
-			// Rotation in euler angles for UI, radians internally so we convert
-			glm::vec3 eulerAngles = glm::degrees(component.Rotation);
-			DrawVectorControl("Rotation", eulerAngles, 0.0f, 100.0f, "The rotation of this actor in euler angles");
+			// Position
+			SAND_LEFT_LABEL_TOOLTIP(ImGui::DragFloat2("##Position", glm::value_ptr(component.Position), 0.05f, 0.0f, 0.0f, "%.2f"), "Position", "The world space position of this actor in meters", );
+
+			SAND_LEFT_LABEL_TOOLTIP(ImGui::DragFloat2("##Scale", glm::value_ptr(component.Scale), 0.05f, 0.05f, 0.0f, "%.2f"), "Scale", "The scale of this actor in meters", );
+
+			// Rotation
+			float eulerAngles = glm::degrees(component.Rotation);
+			SAND_LEFT_LABEL_TOOLTIP(ImGui::DragFloat("##Rotation", &eulerAngles, 0.1f, 0.0f, 0.0f, "%.2f"), "Rotation", "The rotation of this actor in euler angles", );
 			component.Rotation = glm::radians(eulerAngles);
-
-			DrawVectorControl("Scale", component.Scale, 1.0f, 100.0f, "The scale of this actor in meters");
 		});
-
+		SetColumnsMinSpacing(defaultColumnSpacing);
+		
+		SetColumnsMinSpacing(110.0f);
 		DrawComponent<CameraComponent>("Camera", actor, [](auto& component)
 		{
 			auto& camera = component.Camera;
 
 			SAND_LEFT_LABEL_TOOLTIP(ImGui::Checkbox("##Primary", &component.Primary), "Primary", "Primary cameras render the scene", );
 
-			const char* projectionTypeStrings[] = { "Perspective", "Orthographic" };
-			const char* currentProjectionTypeString = projectionTypeStrings[(int)camera.GetProjectionType()];
-			SAND_LEFT_LABEL_TOOLTIP(ImGui::BeginCombo("##Projection", currentProjectionTypeString), "Projection", "Perspective cameras are most commonly used in 3D environments, and Orthographic for 2D",
-			{
-				for (int i = 0; i < 2; i++)
-				{
-					bool isSelected = currentProjectionTypeString == projectionTypeStrings[i];
-					if (ImGui::Selectable(projectionTypeStrings[i], isSelected))
-					{
-						currentProjectionTypeString = projectionTypeStrings[i];
-						camera.SetProjectionType((SceneCamera::ProjectionType)i);
-					}
+			float orthoSize = camera.GetOrthographicSize();
+			SAND_LEFT_LABEL(ImGui::DragFloat("##Size", &orthoSize), "Size",
+				camera.SetOrthographicSize(orthoSize);
+			);
+			
+			float orthoNear = camera.GetOrthographicNearClip();
+			SAND_LEFT_LABEL_TOOLTIP(ImGui::DragFloat("##Near", &orthoNear), "Near", "Objects closer to the camera than this value will be clipped",
+				camera.SetOrthographicNearClip(orthoNear);
+			);
+			
+			float orthoFar = camera.GetOrthographicFarClip();
+			SAND_LEFT_LABEL_TOOLTIP(ImGui::DragFloat("##Far", &orthoFar), "Far", "Objects further from the camera than this value will be clipped",
+				camera.SetOrthographicFarClip(orthoFar);
+			);
+			
+			SAND_LEFT_LABEL_TOOLTIP(ImGui::Checkbox("##Fixed Aspect Ratio", &component.FixedAspectRatio), "Fixed Aspect Ratio", "If this is true the cameras aspect ratio will not adjust to the window scale", );
+		});
+		SetColumnsMinSpacing(defaultColumnSpacing);
 
-					if (isSelected)
-						ImGui::SetItemDefaultFocus();
+		SetColumnsMinSpacing(100.0f);
+		DrawComponent<TextureComponent>("Texture", actor, [](auto& component)
+		{
+			ImGui::Columns(1);
+			if (component.IsTextured())
+			{								
+				auto textureID = component.Texture->GetID();
+
+				if (ImGui::ImageButton((ImTextureID)textureID, { 100, 100 }, { 0, 1 }, { 1, 0 }))
+				{
+					std::string chosenFilepath = FileDialogs::OpenFile("Image (*.jpg);(*.png)\0*.png;*.jpg;\0");
+
+					if (!chosenFilepath.empty() && chosenFilepath != component.Texture->GetPath())
+						component.Texture = Texture2D::Create(chosenFilepath);
+				}
+				if (ImGui::IsItemHovered() && GImGui->HoveredIdTimer > 0.75f)
+				{
+					ImGui::BeginTooltip();
+					auto textureFilepath = component.Texture->GetPath();
+					ImGui::Text(textureFilepath.c_str());
+					ImGui::EndTooltip();
 				}
 
-				ImGui::EndCombo();
-			});
-
-			if (camera.GetProjectionType() == SceneCamera::ProjectionType::Perspective)
-			{
-				float perspectiveVerticalFov = glm::degrees(camera.GetPerspectiveFOV());
-				SAND_LEFT_LABEL_TOOLTIP(ImGui::DragFloat("##Vertical FOV", &perspectiveVerticalFov), "Vertical FOV", "Higher levels will cause more distortion",
-					camera.SetPerspectiveFOV(glm::radians(perspectiveVerticalFov));
-				);
-			
-				float perspectiveNear = camera.GetPerspectiveNearClip();
-				SAND_LEFT_LABEL_TOOLTIP(ImGui::DragFloat("##Near", &perspectiveNear), "Near", "Objects closer to the camera than this value will be clipped",
-					camera.SetPerspectiveNearClip(perspectiveNear);
-				);
-			
-				float perspectiveFar = camera.GetPerspectiveFarClip();
-				SAND_LEFT_LABEL_TOOLTIP(ImGui::DragFloat("##Far", &perspectiveFar), "Far", "Objects further from the camera than this value will be clipped",
-					camera.SetPerspectiveFarClip(perspectiveFar);
-				);
+				ImGui::Columns(2);
+				SAND_LEFT_LABEL(ImGui::DragFloat("##TilingFactor", &component.TilingFactor, 0.1f, 0.05f, 50.0f, "%.2f", 1.0f), "Tiling Factor", );
 			}
-			if (camera.GetProjectionType() == SceneCamera::ProjectionType::Orthographic)
+			else
 			{
-				float orthoSize = camera.GetOrthographicSize();
-				SAND_LEFT_LABEL(ImGui::DragFloat("##Size", &orthoSize), "Size",
-					camera.SetOrthographicSize(orthoSize);
-				);
-			
-				float orthoNear = camera.GetOrthographicNearClip();
-				SAND_LEFT_LABEL_TOOLTIP(ImGui::DragFloat("##Near", &orthoNear), "Near", "Objects closer to the camera than this value will be clipped",
-					camera.SetOrthographicNearClip(orthoNear);
-				);
-			
-				float orthoFar = camera.GetOrthographicFarClip();
-				SAND_LEFT_LABEL_TOOLTIP(ImGui::DragFloat("##Far", &orthoFar), "Far", "Objects further from the camera than this value will be clipped",
-					camera.SetOrthographicFarClip(orthoFar);
-				);
-			
-				SAND_LEFT_LABEL_TOOLTIP(ImGui::Checkbox("##Fixed Aspect Ratio", &component.FixedAspectRatio), "Fixed Aspect Ratio", "If this is true the cameras aspect ratio will not adjust to the window scale", );
+				ImGui::TextColored({ 0.9f, 0.3f, 0.2f, 1.0f }, "No Texture Active");
+				ImGui::SameLine();
+				if (ImGui::Button("Load one, then!", { 130, 25 }))
+				{
+					std::string chosenFilepath = FileDialogs::OpenFile("Image (*.jpg);(*.png)\0*.png;*.jpg;\0");
+					if (!chosenFilepath.empty())
+						component.Texture = Texture2D::Create(chosenFilepath);
+				}
 			}
 		});
+		SetColumnsMinSpacing(defaultColumnSpacing);
 
+		SetColumnsMinSpacing(80.0f);
 		DrawComponent<SpriteRendererComponent>("Sprite Renderer", actor, [](auto& component)
 		{
 			SAND_LEFT_LABEL(ImGui::ColorEdit4("##Color", glm::value_ptr(component.Color)), "Color", );
 		});
+		SetColumnsMinSpacing(defaultColumnSpacing);
 
-		DrawComponent<BoxCollider2DComponent>("Box Collider 2D", actor, [](auto& component)
+		DrawComponent<PhysicsComponent>("Physics", actor, [](auto& component)
 		{
-			glm::vec2 bounds = component.GetBounds();
-			SAND_LEFT_LABEL(ImGui::DragFloat2("##Bounds", glm::value_ptr(bounds)), "Bounds",
-			{
-				component.SetBounds(bounds);
-			});
+
 		});
 
-		DrawComponent<Rigidbody2DComponent>("Rigidbody2D", actor, [](auto& component)
-		{
-			{
-				const char* rigidbodyTypesStrings[] = { "Static", "Kinematic", "Dynamic" };
-				const char* currentRigidbodyTypeString = rigidbodyTypesStrings[(int)component.GetType()];
-			
-				SAND_LEFT_LABEL(ImGui::BeginCombo("##Type", currentRigidbodyTypeString), "Type",
-				{
-					for (int i = 0; i < 3; i++)
-					{
-						bool isSelected = currentRigidbodyTypeString == rigidbodyTypesStrings[i];
-						if (ImGui::Selectable(rigidbodyTypesStrings[i], isSelected))
-						{
-							currentRigidbodyTypeString = rigidbodyTypesStrings[i];
-							component.SetType((RigidbodyType)i);
-						}
-
-						if (isSelected)
-							ImGui::SetItemDefaultFocus();
-					}
-
-					ImGui::EndCombo();
-				});
-			}
-
-			ImGui::Spacing();
-			ImGui::Separator();
-			ImGui::Spacing();
-
-			float friction = component.GetFriction();
-			SAND_LEFT_LABEL(ImGui::InputFloat("##Friction", &friction, 0.0f, 0.0f, 2), "Friction",
-			{
-				component.SetFriction(friction);
-			});
-
-			float gravity = component.GetGravityScale();
-			SAND_LEFT_LABEL(ImGui::InputFloat("##GravityScale", &gravity, 0.0f, 0.0f, 2), "Gravity Scale",
-			{
-				component.SetGravityScale(gravity);
-			});
-
-			float restitution = component.GetRestitution();
-			SAND_LEFT_LABEL(ImGui::InputFloat("##Restitution", &restitution, 0.0f, 0.0f, 2), "Restitution",
-			{
-				component.SetRestitution(restitution);
-			});
-		});
-	
 		DrawComponent<ScriptComponent>("Script", actor, [](auto& component)
 		{
 			static bool moduleExists = false;
 
 			char buffer[50];
 			memset(buffer, 0, sizeof(buffer));
-			strcpy_s(buffer, sizeof(buffer), component.GetModuleName().c_str());
+			strcpy_s(buffer, sizeof(buffer), component.ModuleName.c_str());
 
 			ImVec4 textColor = moduleExists ? ImVec4{ 0.2f, 0.8f, 0.3f, 1.0f } : ImVec4{ 0.8f, 0.1f, 0.2f, 1.0f };
 			ImGui::PushStyleColor(ImGuiCol_Text, textColor);
 			
 			SAND_LEFT_LABEL(ImGui::InputText("##ModuleName", buffer, sizeof(buffer)), "ModuleName",
 			{
-				moduleExists = ScriptEngine::ModuleExists(buffer);
-
-				if (!moduleExists)
-					component.Reset();
-
-				if (moduleExists && ImGui::IsKeyPressed((int)Keycode::Enter))
-					component.Init("Client", buffer);
+				component.ModuleName = buffer;
+				moduleExists = ScriptEngine::ModuleExists(component.ModuleName);
 			});
+
+			if (moduleExists && ImGui::IsKeyPressed((int)Keycode::Enter, false) && !ScriptEngine::ModuleActive(component.ModuleName)) 
+			{
+				ScriptEngine::AddModule(component.ModuleName);
+			}
 			
 			ImGui::PopStyleColor();
 
 			if (moduleExists)
 			{
-				component.RenderAllFields();
+				const ScriptData* sdata = ScriptEngine::GetScriptData(component.ModuleName);
+				if (sdata)
+					RenderAllScriptFields(sdata);
 			}
 		});
+	}
+
+	static void RenderScriptField(const ScriptData* const scriptData, MonoType* type, MonoClassField* field);
+
+	static void RenderAllScriptFields(const ScriptData* const scriptData)
+	{
+		void* iterator = 0;
+		MonoClassField* field;
+		while (field = mono_class_get_fields(scriptData->Class, &iterator))
+		{
+			RenderScriptField(scriptData, mono_field_get_type(field), field);
+		}
+	}
+
+	static void RenderScriptField(const ScriptData* const scriptData, MonoType* type, MonoClassField* field)
+	{
+		const char* name = mono_field_get_name(field);
+
+		const std::string fieldIDStr = std::string("##") + std::string(name);
+		const char* fieldID = fieldIDStr.c_str();
+
+		ImGui::Columns(2);
+
+		const ScriptDataType dataType = (ScriptDataType)mono_type_get_type(type);
+		switch (dataType)
+		{
+		case ScriptDataType::Double:
+		case ScriptDataType::Float:
+		{
+			float value;
+			mono_field_get_value(scriptData->Object, field, &value);
+			SAND_LEFT_LABEL(ImGui::InputFloat(fieldID, &value, 0.5f, 1.0f), name,
+			{
+				mono_field_set_value(scriptData->Object, field, &value);
+			});
+			break;
+		}
+		case ScriptDataType::UInt16:
+		case ScriptDataType::UInt64:
+		case ScriptDataType::UInt32:
+		case ScriptDataType::Int16:
+		case ScriptDataType::Int64:
+		case ScriptDataType::Int32:
+		{
+			int value;
+			mono_field_get_value(scriptData->Object, field, &value);
+			SAND_LEFT_LABEL(ImGui::InputInt(fieldID, &value, 1), name,
+			{
+				mono_field_set_value(scriptData->Object, field, &value);
+			});
+			break;
+		}
+		case ScriptDataType::String:
+		default:
+		{
+			ImGui::PushStyleColor(ImGuiCol_Text, { 0.8f, 0.2f, 0.3f, 1.0f });
+			ImGui::Text("<Unknown data type>");
+			ImGui::PopStyleColor();
+		}
+		}
+
+		ImGui::Columns(1);
 	}
 
 }

@@ -26,7 +26,6 @@ IncludeDir["stb_image"] = "Sand/vendor/stb_image"
 IncludeDir["entt"]      = "Sand/vendor/entt/include"
 IncludeDir["yaml_cpp"]  = "Sand/vendor/yaml-cpp/include"
 IncludeDir["ImGuizmo"]  = "Sand/vendor/ImGuizmo"
-IncludeDir["Box2D"]     = "Sand/vendor/box2d/include"
 IncludeDir["Mono"]      = "Sand/vendor/Mono/include/mono-2.0"
 
 LibraryDir = {}
@@ -37,7 +36,6 @@ group "Dependencies"
 	include "Sand/vendor/Glad"
 	include "Sand/vendor/imgui"
 	include "Sand/vendor/yaml-cpp"
-	include "Sand/vendor/box2d"
 group ""
 
 project "Sand"
@@ -86,7 +84,6 @@ project "Sand"
 		"%{IncludeDir.entt}",
 		"%{IncludeDir.yaml_cpp}",
 		"%{IncludeDir.ImGuizmo}",
-		"%{IncludeDir.Box2D}",
 		"%{IncludeDir.Mono}",
 	}
 
@@ -96,7 +93,6 @@ project "Sand"
 		"Glad",
 		"ImGui",
 		"yaml-cpp",
-		"Box2D",
 		"%{LibraryDir.Mono}",
 		"opengl32.lib",
 	}
@@ -228,6 +224,7 @@ project "Sand-CSCore"
 		location "Sand-CSCore"
 		kind "SharedLib"
 		language "C#"
+		namespace "Sand"
 
 		targetdir ("bin/" .. outputdir .. "/%{prj.name}")
 		objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
@@ -241,9 +238,15 @@ project "Sand-CSClient"
 		location "Sand-CSClient"
 		kind "SharedLib"
 		language "C#"
+		namespace "Client"
 
 		targetdir ("bin/" .. outputdir .. "/%{prj.name}")
 		objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
+
+		files
+		{
+			"%{prj.name}/**.cs", 
+		}
 
 		links
 		{

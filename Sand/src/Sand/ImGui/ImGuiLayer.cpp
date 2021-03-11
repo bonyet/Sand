@@ -48,7 +48,7 @@ namespace Sand
 		Application& app = Application::Get();
 		GLFWwindow* window = static_cast<GLFWwindow*>(app.GetWindow().GetNativeWindow());
 
-		SAND_CORE_ASSERT(RendererAPI::GetAPI() != RendererAPI::API::D3D11, "Direct3D 11 GUI not supported.");
+		//SAND_CORE_ASSERT(RendererAPI::GetAPI() != RendererAPI::API::D3D11, "Direct3D 11 GUI not supported.");
 
 		ImGui_ImplGlfw_InitForOpenGL(window, true);
 		ImGui_ImplOpenGL3_Init("#version 410");

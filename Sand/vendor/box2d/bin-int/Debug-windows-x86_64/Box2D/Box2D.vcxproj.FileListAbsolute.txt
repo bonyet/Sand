@@ -1,2 +1,0 @@
-D:\dev\Sand\Sand\vendor\box2d\bin\Debug-windows-x86_64\Box2D\Box2D.pdb
-D:\dev\Sand\Sand\vendor\box2d\bin-int\Debug-windows-x86_64\Box2D\Box2D.pdb

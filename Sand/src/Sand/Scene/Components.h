@@ -8,12 +8,9 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 
-#include "../vendor/imgui/imgui.h"
 #include <glm\gtc\type_ptr.hpp>
 
-#include "Sand/Renderer/Renderer2D.h"
-
-#include "Sand/Scene/Physics/PhysicsWorld.h"
+#include "Sand/Renderer/Texture.h"
 
 namespace Sand
 {
@@ -36,13 +33,13 @@ namespace Sand
 	private:
 		glm::mat4 Transform{ glm::mat4(1.0f) };
 	public:
-		glm::vec3 Position{ 0.0f, 0.0f, 0.0f };
-		glm::vec3 Rotation{ 0.0f, 0.0f, 0.0f };
-		glm::vec3 Scale{ 1.0f, 1.0f, 1.0f };
+		glm::vec2 Position{ 0.0f, 0.0f };
+		float Rotation = 0.0f;
+		glm::vec2 Scale{ 1.0f, 1.0f };
 
 		TransformComponent() = default;
 		TransformComponent(const TransformComponent&) = default;
-		TransformComponent(const glm::vec3& pos, const glm::vec3& size, const glm::vec3& rot)
+		TransformComponent(const glm::vec2& pos, const glm::vec2& size, float rot)
 			: Position(pos), Scale(size), Rotation(rot) {}
 		TransformComponent(const glm::mat4& transform)
 			: Transform(transform) {}
@@ -51,9 +48,9 @@ namespace Sand
 		{
 			SAND_PROFILE_FUNCTION();
 
-			Transform = glm::translate(glm::mat4(1.0f), Position)
-				* glm::toMat4(glm::quat(Rotation))
-				* glm::scale(glm::mat4(1.0f), Scale);
+			Transform = glm::translate(glm::mat4(1.0f), glm::vec3(Position, 0.0f))
+				* glm::rotate(glm::mat4(1.0f), Rotation, { 0, 0, 1 })
+				* glm::scale(glm::mat4(1.0f), glm::vec3(Scale, 1.0f));
 
 			return Transform;
 		}
@@ -62,9 +59,28 @@ namespace Sand
 	public:
 		void Reset()
 		{
-			Position = { 0.0f, 0.0f, 0.0f };
-			Rotation = { 0.0f, 0.0f, 0.0f };
-			Scale = { 1.0f, 1.0f, 1.0f };
+			Position = { 0.0f, 0.0f };
+			Scale = { 1.0f, 1.0f };
+			Rotation = 0.0f;
+		}
+	};
+
+	struct TextureComponent
+	{
+		Actor owner{};
+	public:
+		Ref<Texture2D> Texture = nullptr;
+		float TilingFactor = 1;
+
+		inline bool IsTextured() const { return Texture != nullptr; }
+
+		TextureComponent() {}
+		TextureComponent(const TextureComponent&) = default;
+
+		void Reset()
+		{
+			Texture.reset();
+			TilingFactor = 1;
 		}
 	};
 
@@ -73,7 +89,7 @@ namespace Sand
 		Actor owner{};
 	public:
 		glm::vec4 Color{ 1.0f, 1.0f, 1.0f, 1.0f };
-		
+
 		SpriteRendererComponent() {}
 		SpriteRendererComponent(const glm::vec4& color) : Color(color) {}
 		SpriteRendererComponent(const SpriteRendererComponent&) = default;
@@ -99,11 +115,7 @@ namespace Sand
 		void Reset()
 		{
 			Camera.SetOrthographicFarClip(1.0f);
-			Camera.SetOrthographicNearClip(-1.0f);
-			Camera.SetPerspectiveFarClip(1000.0f);
-			Camera.SetPerspectiveNearClip(0.1f);
-			
-			Camera.SetPerspectiveFOV(45.0f);
+			Camera.SetOrthographicNearClip(-1.0f);			
 			Camera.SetOrthographicSize(10.0f);
 		}
 	};
@@ -125,164 +137,46 @@ namespace Sand
 		}
 	};
 
-	struct BoxCollider2DComponent
+	struct ScriptComponent
 	{
 		Actor owner{};
-	private:
-		glm::vec2 m_Bounds;
 	public:
-		void* Fixture = nullptr;
+		std::string ModuleName;
 
-		BoxCollider2DComponent() = default;
-		BoxCollider2DComponent(const BoxCollider2DComponent&) = default;
-		BoxCollider2DComponent(const glm::vec2& dimensions)
-			: m_Bounds(dimensions)
-		{
-		}
-
-		void SetWidth(float width)
-		{
-			m_Bounds.x = width;
-		}
-		void SetHeight(float height)
-		{
-			m_Bounds.y = height;
-		}
-		void SetBounds(const glm::vec2& bounds)
-		{
-			m_Bounds = bounds;
-		}
-		glm::vec2 GetBounds() const
-		{
-			return m_Bounds;
-		}
+		ScriptComponent() {}
+		ScriptComponent(const std::string& moduleName) : ModuleName(moduleName) {}
+		ScriptComponent(const ScriptComponent&) = default;
 
 		void Reset()
 		{
-			Fixture = nullptr;
+			ModuleName = "";
 		}
-	private:
-		void Apply(b2Body* body)
-		{
-			b2PolygonShape boxShape;
-			boxShape.SetAsBox(m_Bounds.x / 2.0f, m_Bounds.y / 2.0f);
-
-			b2FixtureDef fixtureDef;
-			fixtureDef.shape = &boxShape;
-			fixtureDef.density = 1.0f;
-			fixtureDef.friction = 0.0f;
-			fixtureDef.restitution = 0.0f;
-
-			Fixture = body->CreateFixture(&fixtureDef);
-		}
-
-		friend class Scene;
 	};
 
-	enum class RigidbodyType
+	struct PhysicsComponent
 	{
-		Static,
-		Kinematic,
-		Dynamic,
-	};
-
-	struct Rigidbody2DComponent
-	{
+	public:
 		Actor owner{};
 	public:
-		Rigidbody2DComponent() = default;
-		Rigidbody2DComponent(const Rigidbody2DComponent&) = default;
-		
-		// Getters and setters
-		void SetType(RigidbodyType type) { m_Type = type; }
-		RigidbodyType GetType() { return m_Type; }
+		PhysicsComponent() = default;
+		PhysicsComponent(const PhysicsComponent&) = default;
 
-		glm::vec3 GetPosition() const
+		void Reset()
 		{
-			auto pos = m_Body->GetPosition();
-			return { pos.x, pos.y, 0.0f };
-		}
-		float GetRotationRadians() const
-		{
-			return m_Body->GetAngle();
+			mLastAcceleration = { 0.0f, 0.0f };
+			mLinearVelocity = { 0.0f, 0.0f };
+			mAcceleration = { 0.0f, 0.0f };
 		}
 
-		void SetGravityScale(float gravScale)
-		{
-			m_GravityScale = gravScale;
-
-			if (m_Body)
-				m_Body->SetGravityScale(gravScale);
-		}
-		float GetGravityScale() const { return m_GravityScale; }
-
-		void SetFriction(float friction)
-		{
-			m_Friction = friction;
-
-			if (m_Body)
-				m_Body->GetFixtureList()->SetFriction(friction);
-		}
-		float GetFriction() const { return m_Friction;  }
-
-		void SetRestitution(float restitution)
-		{
-			m_Restitution = restitution;
-
-			if (m_Body)
-				m_Body->GetFixtureList()->SetRestitution(restitution);
-		}
-		float GetRestitution() const { return m_Restitution; }
-
-		void ApplyForce(const glm::vec2& force, bool wake)
-		{
-			m_Body->ApplyForceToCenter({ force.x, force.y }, wake);
-		}
-		void ApplyImpulse(const glm::vec2& impulse, bool wake)
-		{
-			m_Body->ApplyLinearImpulseToCenter({ impulse.x, impulse.y }, wake);
-		}
-		void ApplyAngularImpulse(float impulse, bool wake)
-		{
-			m_Body->ApplyAngularImpulse(impulse, wake);
-		}
-
-		void Reset() {}// TODO: make
+		float Mass = 1.0f;
 	private:
-		void Create()
-		{
-			auto& tc = owner.GetComponent<TransformComponent>();
-			auto& position = tc.Position;
-			float rotation = tc.Rotation.z;
+		void Init();
+		void SimulateStep(PhysicsWorld* const physicsWorld, Timestep timestep);
 
-			b2BodyDef bodyDef;
-			bodyDef.type = (b2BodyType)m_Type;
-			bodyDef.position.Set(position.x, position.y);
-			bodyDef.enabled = true;
-			bodyDef.gravityScale = m_GravityScale;
-			bodyDef.angle = rotation;
+		glm::vec2 mAcceleration = { 0, 0 }, mLastAcceleration = { 0, 0 };
+		glm::vec2 mLinearVelocity = { 0.0f, 0.0f };
 
-			m_Body = PhysicsWorld::CreateBody(&bodyDef);			
-		}
-		void Destroy()
-		{
-			PhysicsWorld::DestroyBody(m_Body);
-			m_Body = nullptr;
-		}
-
-		void UpdateTransform()
-		{
-			auto& transform = owner.GetComponent<TransformComponent>();
-			transform.Position = GetPosition();
-			transform.Rotation.z = GetRotationRadians();
-		}
-	private:
-		b2Body* m_Body = nullptr;
-		RigidbodyType m_Type = RigidbodyType::Static;
-
-		float m_Friction = 0.0f, m_GravityScale = 1.0f, m_Restitution = 0.0f;
-
-		friend class Scene;
+		friend class PhysicsWorld;
 	};
 
 }

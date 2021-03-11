@@ -5,7 +5,7 @@ namespace Sand
 {
 
 	Actor::Actor(entt::entity handle, Scene* scene)
-		: m_EntityHandle(handle), m_Scene(scene)
+		: mEntityHandle(handle), mScene(scene)
 	{
 	}
 

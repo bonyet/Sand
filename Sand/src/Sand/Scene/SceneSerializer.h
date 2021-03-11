@@ -16,7 +16,7 @@ namespace Sand
 		bool Deserialize(const std::string& filepath); //  yaml
 		bool DeserializeRuntime(const std::string& filepath); //  binary
 	private:
-		Ref<Scene> m_Scene;
+		Ref<Scene> mScene;
 	};
 
 }

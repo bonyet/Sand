@@ -34,14 +34,14 @@
     <Filter Include="src\Sand\Math">
       <UniqueIdentifier>{BB97697B-2758-E5B1-F092-2E2F5C122A8E}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Sand\Physics">
+      <UniqueIdentifier>{14E3A179-00DC-C0CB-290E-A6501566A0D7}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Sand\Renderer">
       <UniqueIdentifier>{8817B984-F42D-B71A-3DA5-423CA9FA87A2}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\Sand\Scene">
       <UniqueIdentifier>{3FFC09E9-2BCA-FDEE-145E-6E1500CBD953}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\Sand\Scene\Physics">
-      <UniqueIdentifier>{B1CE9575-9DC8-BEC7-8635-55D872CE2434}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\Sand\Scripting">
       <UniqueIdentifier>{24C52FF8-10A9-F04D-7909-EBA0650CDBCF}</UniqueIdentifier>
@@ -177,6 +177,9 @@
     <ClInclude Include="src\Sand\Math\Math.h">
       <Filter>src\Sand\Math</Filter>
     </ClInclude>
+    <ClInclude Include="src\Sand\Physics\PhysicsWorld.h">
+      <Filter>src\Sand\Physics</Filter>
+    </ClInclude>
     <ClInclude Include="src\Sand\Renderer\Buffer.h">
       <Filter>src\Sand\Renderer</Filter>
     </ClInclude>
@@ -190,6 +193,9 @@
       <Filter>src\Sand\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Sand\Renderer\GraphicsContext.h">
+      <Filter>src\Sand\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Sand\Renderer\Material.h">
       <Filter>src\Sand\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\Sand\Renderer\RenderCommand.h">
@@ -222,9 +228,6 @@
     <ClInclude Include="src\Sand\Scene\Components.h">
       <Filter>src\Sand\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="src\Sand\Scene\Physics\PhysicsWorld.h">
-      <Filter>src\Sand\Scene\Physics</Filter>
-    </ClInclude>
     <ClInclude Include="src\Sand\Scene\Scene.h">
       <Filter>src\Sand\Scene</Filter>
     </ClInclude>
@@ -237,7 +240,7 @@
     <ClInclude Include="src\Sand\Scene\ScriptableActor.h">
       <Filter>src\Sand\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="src\Sand\Scripting\ScriptComponent.h">
+    <ClInclude Include="src\Sand\Scripting\ScriptData.h">
       <Filter>src\Sand\Scripting</Filter>
     </ClInclude>
     <ClInclude Include="src\Sand\Scripting\ScriptEngine.h">
@@ -1571,6 +1574,9 @@
     <ClCompile Include="src\Sand\Math\Math.cpp">
       <Filter>src\Sand\Math</Filter>
     </ClCompile>
+    <ClCompile Include="src\Sand\Physics\PhysicsWorld.cpp">
+      <Filter>src\Sand\Physics</Filter>
+    </ClCompile>
     <ClCompile Include="src\Sand\Renderer\Buffer.cpp">
       <Filter>src\Sand\Renderer</Filter>
     </ClCompile>
@@ -1581,6 +1587,9 @@
       <Filter>src\Sand\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="src\Sand\Renderer\GraphicsContext.cpp">
+      <Filter>src\Sand\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Sand\Renderer\Material.cpp">
       <Filter>src\Sand\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="src\Sand\Renderer\RenderCommand.cpp">
@@ -1610,8 +1619,8 @@
     <ClCompile Include="src\Sand\Scene\Actor.cpp">
       <Filter>src\Sand\Scene</Filter>
     </ClCompile>
-    <ClCompile Include="src\Sand\Scene\Physics\PhysicsWorld.cpp">
-      <Filter>src\Sand\Scene\Physics</Filter>
+    <ClCompile Include="src\Sand\Scene\Components.cpp">
+      <Filter>src\Sand\Scene</Filter>
     </ClCompile>
     <ClCompile Include="src\Sand\Scene\Scene.cpp">
       <Filter>src\Sand\Scene</Filter>
@@ -1622,7 +1631,7 @@
     <ClCompile Include="src\Sand\Scene\SceneSerializer.cpp">
       <Filter>src\Sand\Scene</Filter>
     </ClCompile>
-    <ClCompile Include="src\Sand\Scripting\ScriptComponent.cpp">
+    <ClCompile Include="src\Sand\Scripting\ScriptData.cpp">
       <Filter>src\Sand\Scripting</Filter>
     </ClCompile>
     <ClCompile Include="src\Sand\Scripting\ScriptEngine.cpp">

@@ -30,7 +30,7 @@ namespace Sand
 
 		Ref<VertexArray> QuadVertexArray;
 		Ref<VertexBuffer> QuadVertexBuffer;
-		Ref<Shader> QuadShader;
+		Ref<Material> QuadMaterial;
 		Ref<Texture2D> WhiteTexture;
 
 		uint32_t QuadIndexCount = 0;
@@ -102,9 +102,10 @@ namespace Sand
 		for (uint32_t i = 0; i < s_Data.MaxTextureSlots; i++)
 			samplers[i] = i;
 
-		s_Data.QuadShader = Shader::Create("assets/shaders/Texture.glsl");
-		s_Data.QuadShader->Bind();
-		s_Data.QuadShader->SetIntArray("u_Textures", samplers, s_Data.MaxTextureSlots);
+		auto quadShader = Shader::Create("assets/shaders/Texture.glsl");
+		s_Data.QuadMaterial = Material::Create(quadShader);
+		s_Data.QuadMaterial->GetShader()->Bind();
+		s_Data.QuadMaterial->SetIntArray("u_Textures", samplers, s_Data.MaxTextureSlots);
 
 		// Set all texture slots to 0
 		s_Data.TextureSlots[0] = s_Data.WhiteTexture;
@@ -123,8 +124,8 @@ namespace Sand
 
 		glm::mat4 viewProj = proj * glm::inverse(transform);
 
-		s_Data.QuadShader->Bind();
-		s_Data.QuadShader->SetMat4("u_ViewProjection", viewProj);
+		s_Data.QuadMaterial->GetShader()->Bind();
+		s_Data.QuadMaterial->SetMat4("u_ViewProjection", viewProj);
 
 		s_Data.QuadIndexCount = 0;
 		s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
@@ -138,8 +139,8 @@ namespace Sand
 
 		glm::mat4 viewProj = camera.GetProjection() * glm::inverse(transform);
 
-		s_Data.QuadShader->Bind();
-		s_Data.QuadShader->SetMat4("u_ViewProjection", viewProj);
+		s_Data.QuadMaterial->GetShader()->Bind();
+		s_Data.QuadMaterial->SetMat4("u_ViewProjection", viewProj);
 
 		s_Data.QuadIndexCount = 0;
 		s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
@@ -153,8 +154,8 @@ namespace Sand
 
 		glm::mat4 viewProj = camera.GetViewProjection();
 
-		s_Data.QuadShader->Bind();
-		s_Data.QuadShader->SetMat4("u_ViewProjection", viewProj);
+		s_Data.QuadMaterial->GetShader()->Bind();
+		s_Data.QuadMaterial->SetMat4("u_ViewProjection", viewProj);
 
 		s_Data.QuadIndexCount = 0;
 		s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
@@ -219,9 +220,9 @@ namespace Sand
 
 		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
 			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
-		DrawQuad(transform, texture, tilingFactor, tintColor);
+		DrawQuad(transform, 0, texture, tilingFactor, tintColor);
 	}
-	void Renderer2D::DrawQuad(const glm::mat4& transform, const glm::vec4& color, uint32_t entityID)
+	void Renderer2D::DrawQuad(const glm::mat4& transform, const glm::vec4& color, uint32_t actorID)
 	{
 		SAND_PROFILE_FUNCTION();		
 
@@ -240,7 +241,7 @@ namespace Sand
 			s_Data.QuadVertexBufferPtr->TexCoord = textureCoords[i];
 			s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
 			s_Data.QuadVertexBufferPtr->TilingFactor = tilingFactor;
-			s_Data.QuadVertexBufferPtr->ObjectID = entityID;
+			s_Data.QuadVertexBufferPtr->ObjectID = actorID;
 			s_Data.QuadVertexBufferPtr++;
 		}
 
@@ -248,7 +249,7 @@ namespace Sand
 
 		s_Data.Stats.QuadCount++;
 	}
-	void Renderer2D::DrawQuad(const glm::mat4& transform, const Ref<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
+	void Renderer2D::DrawQuad(const glm::mat4& transform, uint32_t actorID, const Ref<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
 	{
 		SAND_PROFILE_FUNCTION();
 
@@ -285,6 +286,7 @@ namespace Sand
 			s_Data.QuadVertexBufferPtr->TexCoord = textureCoords[i];
 			s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
 			s_Data.QuadVertexBufferPtr->TilingFactor = tilingFactor;
+			s_Data.QuadVertexBufferPtr->ObjectID = actorID;
 			s_Data.QuadVertexBufferPtr++;
 		}
 
@@ -384,9 +386,9 @@ namespace Sand
 		return s_Data.WhiteTexture;
 	}
 
-	Ref<Shader> Renderer2D::GetShader()
+	Ref<Material> Renderer2D::GetMaterial()
 	{
-		return s_Data.QuadShader;
+		return s_Data.QuadMaterial;
 	}
 
 	void Renderer2D::ResetStats()

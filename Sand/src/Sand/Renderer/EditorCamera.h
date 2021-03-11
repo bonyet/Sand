@@ -19,16 +19,19 @@ namespace Sand
 		void OnUpdate(Timestep ts);
 		void OnEvent(Event& e);
 
-		inline float GetDistance() const { return m_Distance; }
-		inline void SetDistance(float distance) { m_Distance = distance; }
+		const glm::vec3& GetFocalPoint() const { return m_FocalPoint; }
+		void SetFocalPoint(const glm::vec3& fpoint) { m_FocalPoint = fpoint; }
+
+		float GetDistance() const { return m_Distance; }
+		void SetDistance(float distance) { m_Distance = distance; }
 		
-		inline void SetVerticalFOV(float fov) { m_FOV = fov; UpdateProjection(); }
-		inline void SetNearClip(float nearclip) { m_NearClip = nearclip; UpdateProjection(); }
-		inline void SetFarClip(float farclip) { m_FarClip = farclip; UpdateProjection(); }
+		void SetVerticalFOV(float fov) { m_FOV = fov; UpdateProjection(); }
+		void SetNearClip(float nearclip) { m_NearClip = nearclip; UpdateProjection(); }
+		void SetFarClip(float farclip) { m_FarClip = farclip; UpdateProjection(); }
 
-		inline void SetRotation(float pitch, float yaw) { m_Pitch = pitch, m_Yaw = yaw; }
+		void SetRotation(float pitch, float yaw) { m_Pitch = pitch, m_Yaw = yaw; }
 
-		inline void SetViewportSize(float width, float height) { m_ViewportWidth = width; m_ViewportHeight = height; UpdateProjection(); }
+		void SetViewportSize(float width, float height) { m_ViewportWidth = width; m_ViewportHeight = height; UpdateProjection(); }
 
 		const glm::mat4& GetViewMatrix() const { return m_ViewMatrix; }
 		glm::mat4 GetViewProjection() const { return m_Projection * m_ViewMatrix; }

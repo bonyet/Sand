@@ -12,7 +12,7 @@ namespace Sand
 	public:
 		enum class API
 		{
-			None = 0, OpenGL = 1, D3D11 = 2,
+			None = 0, OpenGL = 1/*, D3D11 = 2,*/
 		};
 	public:
 		virtual ~RendererAPI() {}

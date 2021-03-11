@@ -28,7 +28,7 @@ namespace Sand
 
 		ImGui::Begin("Scene Hierarchy", &m_ShowWindow);
 
-		m_Context->m_Registry.each([&](auto entityID)
+		m_Context->mRegistry.each([&](auto entityID)
 		{
 			Actor entity{ entityID, m_Context.get() };
 			DrawActorNode(entity);

@@ -7,7 +7,7 @@
     <ProjectGuid>{CDED5B7F-39AE-D7B5-02E9-20336E681C92}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Sand-CSClient</RootNamespace>
+    <RootNamespace>Client</RootNamespace>
     <AssemblyName>Sand-CSClient</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -49,6 +49,7 @@
   <ItemGroup>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="src\Test.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Sand-CSCore\Sand-CSCore.csproj">

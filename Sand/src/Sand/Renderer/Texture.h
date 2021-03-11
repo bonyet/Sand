@@ -1,7 +1,6 @@
 #pragma once
 
 #include <string>
-
 #include "Sand/Core/Base.h"
 
 namespace Sand 

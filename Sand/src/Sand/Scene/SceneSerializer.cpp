@@ -105,7 +105,7 @@ namespace Sand
 	}
 
 	SceneSerializer::SceneSerializer(const Ref<Scene>& scene)
-		: m_Scene(scene)
+		: mScene(scene)
 	{
 	}
 
@@ -146,10 +146,6 @@ namespace Sand
 
 			out << YAML::Key << "Camera" << YAML::Value;
 			out << YAML::BeginMap; // Camera
-			out << YAML::Key << "ProjectionType" << YAML::Value << (int)camera.GetProjectionType();
-			out << YAML::Key << "PerspectiveFOV" << YAML::Value << camera.GetPerspectiveFOV();
-			out << YAML::Key << "PerspectiveNear" << YAML::Value << camera.GetPerspectiveNearClip();
-			out << YAML::Key << "PerspectiveFar" << YAML::Value << camera.GetPerspectiveFarClip();
 			out << YAML::Key << "OrthographicSize" << YAML::Value << camera.GetOrthographicSize();
 			out << YAML::Key << "OrthographicNear" << YAML::Value << camera.GetOrthographicNearClip();
 			out << YAML::Key << "OrthographicFar" << YAML::Value << camera.GetOrthographicFarClip();
@@ -172,18 +168,28 @@ namespace Sand
 
 			out << YAML::EndMap; // SpriteRendererComponent
 		}
-		if (actor.HasComponent<Rigidbody2DComponent>())
+		if (actor.HasComponent<TextureComponent>())
 		{
-			out << YAML::Key << "Rigidbody2DComponent";
-			out << YAML::BeginMap; // Rigidbody2DComponent
+			out << YAML::Key << "TextureComponent";
+			out << YAML::BeginMap; // TextureComponent
 
-			auto& rigidbody = actor.GetComponent<Rigidbody2DComponent>();
+			auto& texture = actor.GetComponent<TextureComponent>();
 
-			out << YAML::Key << "Type" << YAML::Value << (int)rigidbody.GetType();
-			out << YAML::Key << "Friction" << YAML::Value << rigidbody.GetFriction();
-			out << YAML::Key << "Gravity Scale" << YAML::Value << rigidbody.GetGravityScale();
+			out << YAML::Key << "TextureFilepath" << YAML::Value << (texture.Texture ? texture.Texture->GetPath() : "");
+			out << YAML::Key << "TilingFactor" << YAML::Value << texture.TilingFactor;
 
-			out << YAML::EndMap; // Rigidbody2DComponent
+			out << YAML::EndMap; // TextureComponent
+		}
+		if (actor.HasComponent<PhysicsComponent>())
+		{
+			out << YAML::Key << "PhysicsComponent";
+			out << YAML::BeginMap; // TextureComponent
+
+			auto& physics = actor.GetComponent<PhysicsComponent>();
+
+			out << YAML::Key << "Some random shit.";
+
+			out << YAML::EndMap; // PhysicsComponent
 		}
 
 		out << YAML::EndMap; // Actor
@@ -195,9 +201,9 @@ namespace Sand
 		out << YAML::BeginMap;
 		out << YAML::Key << "Scene" << YAML::Value << "Unnamed Scene";
 		out << YAML::Key << "Actors" << YAML::Value << YAML::BeginSeq;
-		m_Scene->m_Registry.each([&](auto entityID)
+		mScene->mRegistry.each([&](auto entityID)
 		{
-			Actor actor = { entityID, m_Scene.get() };
+			Actor actor = { entityID, mScene.get() };
 			if (!actor)
 				return;
 
@@ -253,15 +259,15 @@ namespace Sand
 
 				SAND_CORE_TRACE("Deserialized actor with ID = {0}, name = {1}", uuid, name);
 
-				Actor deserializedActor = m_Scene->CreateActor(name);
+				Actor deserializedActor = mScene->CreateActor(name);
 
 				auto transformComponent = actor["TransformComponent"];
 				if (transformComponent)
 				{
 					auto& tc = deserializedActor.GetComponent<TransformComponent>(); // always has transform
-					tc.Position = transformComponent["Position"].as<glm::vec3>();
-					tc.Rotation = transformComponent["Rotation"].as<glm::vec3>();
-					tc.Scale = transformComponent["Scale"].as<glm::vec3>();
+					tc.Position = transformComponent["Position"].as<glm::vec2>();
+					tc.Rotation = transformComponent["Rotation"].as<float>();
+					tc.Scale = transformComponent["Scale"].as<glm::vec2>();
 				}
 				auto cameraComponent = actor["CameraComponent"];
 				if (cameraComponent)
@@ -269,11 +275,6 @@ namespace Sand
 					auto& cc = deserializedActor.AddComponent<CameraComponent>();
 
 					auto& cameraProps = cameraComponent["Camera"];
-					cc.Camera.SetProjectionType((SceneCamera::ProjectionType)cameraProps["ProjectionType"].as<int>());
-
-					cc.Camera.SetPerspectiveFOV(cameraProps["PerspectiveFOV"].as<float>());
-					cc.Camera.SetPerspectiveNearClip(cameraProps["PerspectiveNear"].as<float>());
-					cc.Camera.SetPerspectiveFarClip(cameraProps["PerspectiveFar"].as<float>());
 
 					cc.Camera.SetOrthographicSize(cameraProps["OrthographicSize"].as<float>());
 					cc.Camera.SetOrthographicNearClip(cameraProps["OrthographicNear"].as<float>());
@@ -282,7 +283,6 @@ namespace Sand
 					cc.Primary = cameraComponent["Primary"].as<bool>();
 					cc.FixedAspectRatio = cameraComponent["FixedAspectRatio"].as<bool>();
 				}
-
 				auto spriteRendererComponent = actor["SpriteRendererComponent"];
 				if (spriteRendererComponent)
 				{
@@ -290,17 +290,20 @@ namespace Sand
 
 					src.Color = spriteRendererComponent["Color"].as<glm::vec4>();
 				}
-
-				auto rigidbody2DComponent = actor["Rigidbody2DComponent"];
-				if (rigidbody2DComponent)
+				auto textureComponent = actor["TextureComponent"];
+				if (textureComponent)
 				{
-					auto& rbc = deserializedActor.AddComponent<Rigidbody2DComponent>();
+					auto& tc = deserializedActor.AddComponent<TextureComponent>();
 
-					rbc.SetType((RigidbodyType)rigidbody2DComponent["Type"].as<int>());
-					rbc.SetFriction(rigidbody2DComponent["Friction"].as<float>());
-					rbc.SetGravityScale(rigidbody2DComponent["Gravity Scale"].as<float>());
+					std::string path = textureComponent["TextureFilepath"].as<std::string>();
+					tc.Texture = !path.empty() ? Texture2D::Create(path) : nullptr;
+					tc.TilingFactor = textureComponent["TilingFactor"].as<float>();
 				}
-
+				auto physicsComponent = actor["PhysicsComponent"];
+				if (physicsComponent)
+				{
+					deserializedActor.AddComponent<PhysicsComponent>();
+				}
 			}
 		}
 

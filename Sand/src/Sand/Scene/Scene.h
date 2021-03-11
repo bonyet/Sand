@@ -8,6 +8,8 @@
 
 #include "entt.hpp"
 
+#include "Sand/Physics/PhysicsWorld.h"
+
 namespace Sand
 {
 	class Actor;
@@ -15,7 +17,7 @@ namespace Sand
 	class Scene
 	{
 	public:
-		Scene() {}
+		Scene();
 		~Scene();
 		
 		Actor CreateActor(const std::string& name = std::string());
@@ -25,26 +27,30 @@ namespace Sand
 
 		void BeginPlay();
 		void EndPlay();
-		bool IsPlaying() const { return m_Playmode; }
+		bool IsPlaying() const { return mPlaymode; }
 
 		void OnUpdateEditor(Timestep ts, EditorCamera& camera);
 		void OnUpdateRuntime(Timestep ts);
 
 		Actor GetPrimaryCameraActor();
 		Actor FindActor(const std::string& name);
-		const uint32_t GetNumberOfActors() const { return (uint32_t)m_Registry.alive(); }
+		const uint32_t GetNumberOfActors() const { return (uint32_t)mRegistry.alive(); }
+
+		PhysicsWorld& GetPhysicsWorld() { return mPhysicsWorld; }
 	private:
 		template<typename T>
 		void OnComponentAdded(Actor entity, T& component);
 	private:
-		entt::registry m_Registry;
+		PhysicsWorld mPhysicsWorld;
+		entt::registry mRegistry;
 
-		bool m_Playmode = false;
-		float m_ViewportWidth = 5, m_ViewportHeight = 5;
+		bool mPlaymode = false;
+		float mViewportWidth = 5, mViewportHeight = 5;
 
 		friend class Actor;
 		friend class SceneHierarchyPanel;
 		friend class SceneSerializer;
+		friend class PhysicsWorld;
 	};
 
 }

@@ -77,7 +77,7 @@
       <PrecompiledHeaderFile>sandpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;GLFW_INCLUDE_NONE;SAND_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;vendor\spdlog\include;vendor\GLFW\include;vendor\Glad\include;vendor\imgui;vendor\glm;vendor\stb_image;vendor\entt\include;vendor\yaml-cpp\include;vendor\ImGuizmo;vendor\box2d\include;vendor\Mono\include\mono-2.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;vendor\spdlog\include;vendor\GLFW\include;vendor\Glad\include;vendor\imgui;vendor\glm;vendor\stb_image;vendor\entt\include;vendor\yaml-cpp\include;vendor\ImGuizmo;vendor\Mono\include\mono-2.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -99,7 +99,7 @@
       <PrecompiledHeaderFile>sandpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;GLFW_INCLUDE_NONE;SAND_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;vendor\spdlog\include;vendor\GLFW\include;vendor\Glad\include;vendor\imgui;vendor\glm;vendor\stb_image;vendor\entt\include;vendor\yaml-cpp\include;vendor\ImGuizmo;vendor\box2d\include;vendor\Mono\include\mono-2.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;vendor\spdlog\include;vendor\GLFW\include;vendor\Glad\include;vendor\imgui;vendor\glm;vendor\stb_image;vendor\entt\include;vendor\yaml-cpp\include;vendor\ImGuizmo;vendor\Mono\include\mono-2.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -124,7 +124,7 @@
       <PrecompiledHeaderFile>sandpch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;GLFW_INCLUDE_NONE;SAND_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;vendor\spdlog\include;vendor\GLFW\include;vendor\Glad\include;vendor\imgui;vendor\glm;vendor\stb_image;vendor\entt\include;vendor\yaml-cpp\include;vendor\ImGuizmo;vendor\box2d\include;vendor\Mono\include\mono-2.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;vendor\spdlog\include;vendor\GLFW\include;vendor\Glad\include;vendor\imgui;vendor\glm;vendor\stb_image;vendor\entt\include;vendor\yaml-cpp\include;vendor\ImGuizmo;vendor\Mono\include\mono-2.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -177,11 +177,13 @@
     <ClInclude Include="src\Sand\ImGui\ImGuiLayer.h" />
     <ClInclude Include="src\Sand\ImGui\imgui_custom.h" />
     <ClInclude Include="src\Sand\Math\Math.h" />
+    <ClInclude Include="src\Sand\Physics\PhysicsWorld.h" />
     <ClInclude Include="src\Sand\Renderer\Buffer.h" />
     <ClInclude Include="src\Sand\Renderer\Camera.h" />
     <ClInclude Include="src\Sand\Renderer\EditorCamera.h" />
     <ClInclude Include="src\Sand\Renderer\Framebuffer.h" />
     <ClInclude Include="src\Sand\Renderer\GraphicsContext.h" />
+    <ClInclude Include="src\Sand\Renderer\Material.h" />
     <ClInclude Include="src\Sand\Renderer\RenderCommand.h" />
     <ClInclude Include="src\Sand\Renderer\Renderer.h" />
     <ClInclude Include="src\Sand\Renderer\Renderer2D.h" />
@@ -192,12 +194,11 @@
     <ClInclude Include="src\Sand\Renderer\VertexArray.h" />
     <ClInclude Include="src\Sand\Scene\Actor.h" />
     <ClInclude Include="src\Sand\Scene\Components.h" />
-    <ClInclude Include="src\Sand\Scene\Physics\PhysicsWorld.h" />
     <ClInclude Include="src\Sand\Scene\Scene.h" />
     <ClInclude Include="src\Sand\Scene\SceneCamera.h" />
     <ClInclude Include="src\Sand\Scene\SceneSerializer.h" />
     <ClInclude Include="src\Sand\Scene\ScriptableActor.h" />
-    <ClInclude Include="src\Sand\Scripting\ScriptComponent.h" />
+    <ClInclude Include="src\Sand\Scripting\ScriptData.h" />
     <ClInclude Include="src\Sand\Scripting\ScriptEngine.h" />
     <ClInclude Include="src\Sand\Utils\PlatformUtils.h" />
     <ClInclude Include="src\sandpch.h" />
@@ -643,10 +644,12 @@
     <ClCompile Include="src\Sand\ImGui\ImGuiLayer.cpp" />
     <ClCompile Include="src\Sand\ImGui\imgui_custom.cpp" />
     <ClCompile Include="src\Sand\Math\Math.cpp" />
+    <ClCompile Include="src\Sand\Physics\PhysicsWorld.cpp" />
     <ClCompile Include="src\Sand\Renderer\Buffer.cpp" />
     <ClCompile Include="src\Sand\Renderer\EditorCamera.cpp" />
     <ClCompile Include="src\Sand\Renderer\Framebuffer.cpp" />
     <ClCompile Include="src\Sand\Renderer\GraphicsContext.cpp" />
+    <ClCompile Include="src\Sand\Renderer\Material.cpp" />
     <ClCompile Include="src\Sand\Renderer\RenderCommand.cpp" />
     <ClCompile Include="src\Sand\Renderer\Renderer.cpp" />
     <ClCompile Include="src\Sand\Renderer\Renderer2D.cpp" />
@@ -656,11 +659,11 @@
     <ClCompile Include="src\Sand\Renderer\Texture.cpp" />
     <ClCompile Include="src\Sand\Renderer\VertexArray.cpp" />
     <ClCompile Include="src\Sand\Scene\Actor.cpp" />
-    <ClCompile Include="src\Sand\Scene\Physics\PhysicsWorld.cpp" />
+    <ClCompile Include="src\Sand\Scene\Components.cpp" />
     <ClCompile Include="src\Sand\Scene\Scene.cpp" />
     <ClCompile Include="src\Sand\Scene\SceneCamera.cpp" />
     <ClCompile Include="src\Sand\Scene\SceneSerializer.cpp" />
-    <ClCompile Include="src\Sand\Scripting\ScriptComponent.cpp" />
+    <ClCompile Include="src\Sand\Scripting\ScriptData.cpp" />
     <ClCompile Include="src\Sand\Scripting\ScriptEngine.cpp" />
     <ClCompile Include="src\sandpch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
@@ -682,9 +685,6 @@
     </ProjectReference>
     <ProjectReference Include="vendor\yaml-cpp\yaml-cpp.vcxproj">
       <Project>{88F1A057-74BE-FB62-9DD7-E90A890331F1}</Project>
-    </ProjectReference>
-    <ProjectReference Include="vendor\box2d\Box2D.vcxproj">
-      <Project>{A434E80C-1049-10BE-D9CA-B31D459E0CEF}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

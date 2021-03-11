@@ -4,11 +4,17 @@
 #include "Sand/Renderer/Renderer2D.h"
 #include "Sand/Core/Application.h"
 #include "Sand/Renderer/Renderer2D.h"
+
+#include "../Scripting/ScriptEngine.h"
+
 #include "Components.h"
-#include "Sand/Scripting/ScriptComponent.h"
 
 namespace Sand
 {
+	Scene::Scene()
+	{
+		mPhysicsWorld.SetGravity({ 0.0f, -10.0f });
+	}
 
 	Scene::~Scene()
 	{
@@ -18,7 +24,7 @@ namespace Sand
 	{
 		SAND_PROFILE_FUNCTION();
 
-		Actor actor = { m_Registry.create(), this };
+		Actor actor = { mRegistry.create(), this };
 		auto& transform = actor.AddComponent<TransformComponent>();
 		auto& tag = actor.AddComponent<TagComponent>();
 		tag.Name = name.empty() ? "Actor" : name;
@@ -30,7 +36,7 @@ namespace Sand
 	{
 		SAND_PROFILE_FUNCTION();
 
-		m_Registry.destroy(actor);
+		mRegistry.destroy(actor);
 	}
 
 	void Scene::OnUpdateEditor(Timestep ts, EditorCamera& camera)
@@ -40,12 +46,32 @@ namespace Sand
 		{
 			Renderer2D::Begin(camera);
 
-			auto group = m_Registry.group<SpriteRendererComponent>(entt::get<TransformComponent>);
+			auto group = mRegistry.group<SpriteRendererComponent>(entt::get<TransformComponent>);
 			for (auto actor : group)
 			{
 				auto [sprite, transform] = group.get<SpriteRendererComponent, TransformComponent>(actor);
 
-				Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color, (uint32_t)actor);
+				// Render the sprite
+				{
+					bool hasTextureComponent = mRegistry.has<TextureComponent>(actor);
+					if (hasTextureComponent)
+					{
+						auto& texComponent = mRegistry.get<TextureComponent>(actor);
+						if (texComponent.IsTextured()) {
+							Renderer2D::DrawQuad(transform.GetTransform(), (uint32_t)actor, texComponent.Texture, texComponent.TilingFactor, sprite.Color);
+						}
+						else
+						{
+							// TODO: make good
+							constexpr glm::vec4 MISSING_TEXTURE_COLOR = { 1.0f, 0.0f, 1.0f, 1.0f };
+							Renderer2D::DrawQuad(transform.GetTransform(), MISSING_TEXTURE_COLOR, (uint32_t)actor);
+						}
+					}
+					else if (!hasTextureComponent) 
+					{
+						Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color, (uint32_t)actor);
+					}
+				}
 			}
 
 			Renderer2D::End();
@@ -54,38 +80,32 @@ namespace Sand
 
 	void Scene::BeginPlay()
 	{
-		m_Playmode = true;
+		mPlaymode = true;
 
-		m_Registry.view<ScriptComponent>().each([=](auto actor, auto& sc)
-		{
-			sc.OnCreate();
-		});
+		mPhysicsWorld.InitializeBodies(this);
+		ScriptEngine::CreateAll();
 	}
 
 	void Scene::EndPlay()
 	{
-		m_Playmode = false;
+		mPlaymode = false;
 
-		m_Registry.view<ScriptComponent>().each([=](auto actor, auto& sc)
-		{
-			sc.OnDestroy();
-		});
+		ScriptEngine::DestroyAll();
 	}
 
 	void Scene::OnUpdateRuntime(Timestep ts)
 	{
+		mPhysicsWorld.Step(this, ts);
+
 		// scritps
 		{
-			m_Registry.view<ScriptComponent>().each([=](auto actor, auto& sc)
-			{
-				sc.OnUpdate((float)ts);
-			});
+			ScriptEngine::UpdateAll(ts);
 		}
 
 		Camera* primaryCamera = nullptr;
 		glm::mat4 camTransform;
 
-		auto group = m_Registry.group<TransformComponent, CameraComponent>();
+		auto group = mRegistry.group<TransformComponent, CameraComponent>();
 		for (auto actor : group)
 		{
 			auto [transform, camera] = group.get<TransformComponent, CameraComponent>(actor);				
@@ -97,25 +117,35 @@ namespace Sand
 			}
 		}
 
-		{
-			PhysicsWorld::Step();
-			// rigidbodies
-			m_Registry.view<Rigidbody2DComponent>().each([=](auto actor, auto& body)
-			{
-				body.UpdateTransform();
-			});
-		}
-
 		if (primaryCamera)
 		{
 			Renderer2D::Begin(*primaryCamera, camTransform);
 
-			auto group = m_Registry.group<SpriteRendererComponent>(entt::get<TransformComponent>);
+			auto group = mRegistry.group<SpriteRendererComponent>(entt::get<TransformComponent>);
 			for (auto actor : group)
 			{
 				auto [sprite, transform] = group.get<SpriteRendererComponent, TransformComponent>(actor);
 				
-				Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color, (uint32_t)actor);
+				// Render the sprite
+				{
+					bool hasTextureComponent = mRegistry.has<TextureComponent>(actor);
+					if (hasTextureComponent)
+					{
+						auto& texComponent = mRegistry.get<TextureComponent>(actor);
+						if (texComponent.IsTextured()) {
+							Renderer2D::DrawQuad(transform.GetTransform(), (uint32_t)actor, texComponent.Texture, texComponent.TilingFactor, sprite.Color);
+						}
+						else
+						{
+							// TODO: make good
+							constexpr glm::vec4 MISSING_TEXTURE_COLOR = { 1.0f, 0.0f, 1.0f, 1.0f };
+							Renderer2D::DrawQuad(transform.GetTransform(), MISSING_TEXTURE_COLOR, (uint32_t)actor);
+						}
+					}
+					else if (!hasTextureComponent) {
+						Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color, (uint32_t)actor);
+					}
+				}
 			}
 
 			Renderer2D::End();
@@ -124,7 +154,7 @@ namespace Sand
 
 	Actor Scene::GetPrimaryCameraActor()
 	{
-		auto view = m_Registry.view<CameraComponent>();
+		auto view = mRegistry.view<CameraComponent>();
 		for (auto actor : view) {
 			const auto& camera = view.get<CameraComponent>(actor);
 			if (camera.Primary)
@@ -135,7 +165,7 @@ namespace Sand
 
 	Actor Scene::FindActor(const std::string& name)
 	{
-		auto view = m_Registry.view<TagComponent>();
+		auto view = mRegistry.view<TagComponent>();
 		for (auto actor : view)
 		{
 			auto& tag = view.get(actor);
@@ -151,10 +181,10 @@ namespace Sand
 
 	void Scene::OnViewportResize(float x, float y)
 	{
-		m_ViewportWidth = x;
-		m_ViewportHeight = y;
+		mViewportWidth = x;
+		mViewportHeight = y;
 
-		auto view = m_Registry.view<CameraComponent>();
+		auto view = mRegistry.view<CameraComponent>();
 		for (auto actor : view)
 		{
 			auto& cameraComponent = view.get<CameraComponent>(actor);
@@ -168,7 +198,6 @@ namespace Sand
 	{
 		static_assert(false);
 	}
-
 	template<>
 	void Scene::OnComponentAdded<TagComponent>(Actor actor, TagComponent& component)
 	{
@@ -176,6 +205,11 @@ namespace Sand
 	}
 	template<>
 	void Scene::OnComponentAdded<TransformComponent>(Actor actor, TransformComponent& component)
+	{
+		component.owner = actor;
+	}
+	template<>
+	void Scene::OnComponentAdded<TextureComponent>(Actor actor, TextureComponent& component)
 	{
 		component.owner = actor;
 	}
@@ -188,17 +222,11 @@ namespace Sand
 	void Scene::OnComponentAdded<CameraComponent>(Actor actor, CameraComponent& component)
 	{
 		component.owner = actor;
-		component.Camera.SetViewportSize(m_ViewportWidth, m_ViewportHeight);
+		component.Camera.SetViewportSize(mViewportWidth, mViewportHeight);
 	}
 	template<>
-	void Scene::OnComponentAdded<BoxCollider2DComponent>(Actor actor, BoxCollider2DComponent& component)
+	void Scene::OnComponentAdded<PhysicsComponent>(Actor actor, PhysicsComponent& component)
 	{
-		component.owner = actor;
-	}
-	template<>
-	void Scene::OnComponentAdded<Rigidbody2DComponent>(Actor actor, Rigidbody2DComponent& component)
-	{
-		component.owner = actor;
 	}
 	template<>
 	void Scene::OnComponentAdded<NativeScriptComponent>(Actor actor, NativeScriptComponent& component)

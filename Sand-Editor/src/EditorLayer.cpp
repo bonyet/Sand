@@ -9,6 +9,8 @@
 #include "Sand/Scripting/ScriptEngine.h"
 
 #include <glm\glm\gtc\type_ptr.hpp>
+
+#include <imgui/imgui.h>
 #include "ImGuizmo.h"
 
 namespace Sand
@@ -28,22 +30,22 @@ namespace Sand
 		fbSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RED_INTEGER, FramebufferTextureFormat::Depth };
 		fbSpec.Width = 1280;
 		fbSpec.Height = 720;
-		m_ViewportFramebuffer = Framebuffer::Create(fbSpec);
+		mViewportFramebuffer = Framebuffer::Create(fbSpec);
 
-		m_ActiveScene = CreateRef<Scene>();
+		mActiveScene = CreateRef<Scene>();
 
-		m_EditorCamera = EditorCamera(30.0f, 1.778f, 0.1f, 1000.0f);
+		mEditorCamera = EditorCamera(30.0f, 1.778f, 0.1f, 1000.0f);
 
-		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+		mSceneHierarchyPanel.SetContext(mActiveScene);
 
 		SetDarkTheme();
 
 		ImGuizmo::SetOrthographic(false);
 
 		// Make sure our engine logs go to the editor console as well
-		Log::GetCoreLogger()->sinks().push_back(std::make_shared<ConsolePanel>());
+		Log::GetCoreLogger()->sinks().push_back(CreateRef<ConsolePanel>());
 
-		m_EditorCamera.Use2DControls = false;
+		mEditorCamera.Use2DControls = false;
 
 		ScriptEngine::Init();
 	}
@@ -53,10 +55,11 @@ namespace Sand
 		auto& style = ImGui::GetStyle();
 		style.FrameRounding = 10.0f;
 		style.WindowMenuButtonPosition = ImGuiDir_None;
-		
+		style.ScrollbarSize -= 2;
+
 		auto& colors = style.Colors;
-		colors[ImGuiCol_WindowBg] = ImVec4{ 0.15f, 0.15f, 0.15f, 1.0f };
-		colors[ImGuiCol_Border] = ImVec4{ 0.0f, 0.0f, 0.5f, 1.0f };
+		colors[ImGuiCol_WindowBg] = ImVec4{ 0.15f, 0.15f, 0.16f, 1.0f };
+		colors[ImGuiCol_Border]   = ImVec4{ 0.0f, 0.0f, 0.5f, 1.0f };
 
 		// Headers
 		colors[ImGuiCol_Header]        = ImVec4{ 0.20f, 0.20f, 0.20f, 1.0f };
@@ -64,19 +67,19 @@ namespace Sand
 		colors[ImGuiCol_HeaderActive]  = ImVec4{ 0.15f, 0.15f, 0.15f, 1.0f };
 
 		// Buttons
-		colors[ImGuiCol_Button]        = ImVec4{ 0.20f, 0.20f, 0.20f, 1.0f };
-		colors[ImGuiCol_ButtonHovered] = ImVec4{ 0.30f, 0.30f, 0.30f, 1.0f };
-		colors[ImGuiCol_ButtonActive]  = ImVec4{ 0.15f, 0.15f, 0.15f, 1.0f };
+		colors[ImGuiCol_Button]        = ImVec4{ 0.20f, 0.20f, 0.30f, 1.0f };
+		colors[ImGuiCol_ButtonHovered] = ImVec4{ 0.30f, 0.30f, 0.40f, 1.0f };
+		colors[ImGuiCol_ButtonActive]  = ImVec4{ 0.15f, 0.15f, 0.20f, 1.0f };
 
 		// Frame BG
-		colors[ImGuiCol_FrameBg]          = ImVec4{ 0.20f, 0.20f, 0.20f, 1.0f };
-		colors[ImGuiCol_FrameBgHovered]   = ImVec4{ 0.30f, 0.30f, 0.30f, 1.0f };
-		colors[ImGuiCol_FrameBgActive]    = ImVec4{ 0.15f, 0.15f, 0.15f, 1.0f };
+		colors[ImGuiCol_FrameBg]          = ImVec4{ 0.25f, 0.25f, 0.25f, 1.0f };
+		colors[ImGuiCol_FrameBgHovered]   = ImVec4{ 0.35f, 0.35f, 0.35f, 1.0f };
+		colors[ImGuiCol_FrameBgActive]    = ImVec4{ 0.20f, 0.20f, 0.20f, 1.0f };
 
 		// Child and popups and misc
-		colors[ImGuiCol_ChildBg]   = ImVec4{ 0.0f, 0.0f, 0.0f, 0.0f };
-		colors[ImGuiCol_PopupBg]   = ImVec4{ 0.0799999982f, 0.0799999982f, 0.0799999982f, 0.9399998f };
-		colors[ImGuiCol_CheckMark] = ImVec4{ 0.259999990f, 0.589999974f, 0.980000019f, 1.0f };
+		colors[ImGuiCol_ChildBg]   = ImVec4{ 0.00f, 0.00f, 0.00f, 0.0f };
+		colors[ImGuiCol_PopupBg]   = ImVec4{ 0.08f, 0.08f, 0.08f, 0.9f };
+		colors[ImGuiCol_CheckMark] = ImVec4{ 0.25f, 0.60f, 1.00f, 1.0f };
 
 		// Tabs
 		colors[ImGuiCol_Tab]                = ImVec4{ 0.15f, 0.15f, 0.17f, 1.0f };
@@ -95,10 +98,10 @@ namespace Sand
 		colors[ImGuiCol_ResizeGripHovered]     = ImVec4{ 0.35f, 0.35f, 0.35f, 1.0f };
 		colors[ImGuiCol_ResizeGripActive]      = ImVec4{ 0.30f, 0.30f, 0.30f, 1.0f };
 
-		colors[ImGuiCol_Text] = ImVec4{ 1.0f, 1.0f, 1.0f, 1.0f };
+		colors[ImGuiCol_Text]                 = ImVec4{ 1.0f, 1.0f, 1.0f, 1.0f };
 		colors[ImGuiCol_ModalWindowDarkening] = ImVec4{ 0.2f, 0.2f, 0.2f, 0.5f };
-		colors[ImGuiCol_DockingPreview] = ImVec4{ 0.45f, 0.45f, 0.45f, 1.0f };
-		colors[ImGuiCol_MenuBarBg] = ImVec4{ 0.14f, 0.14f, 0.14f, 1.0f };
+		colors[ImGuiCol_DockingPreview]       = ImVec4{ 0.45f, 0.45f, 0.45f, 1.0f };
+		colors[ImGuiCol_MenuBarBg]            = ImVec4{ 0.14f, 0.14f, 0.14f, 1.0f };
 	}
 
 	void EditorLayer::OnDetach()
@@ -110,79 +113,48 @@ namespace Sand
 	{
 		SAND_PROFILE_FUNCTION();
 
-		if (m_ViewportHovered) {
-			m_EditorCamera.OnUpdate(ts);
+		if (mViewportHovered) {
+			mEditorCamera.OnUpdate(ts);
 		}
 
 		Renderer2D::ResetStats();
 
-		if (FramebufferSpecification spec = m_ViewportFramebuffer->GetSpecification();
-			m_ViewportSize.x > 0 && m_ViewportSize.y > 0 && // zero sized framebuffer is invalid
-			(spec.Width != m_ViewportSize.x || spec.Height != m_ViewportSize.y))
+		if (FramebufferSpecification spec = mViewportFramebuffer->GetSpecification();
+			mViewportSize.x > 0 && mViewportSize.y > 0 && // zero sized framebuffer is invalid
+			(spec.Width != mViewportSize.x || spec.Height != mViewportSize.y))
 		{
-			m_ViewportFramebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+			mViewportFramebuffer->Resize((uint32_t)mViewportSize.x, (uint32_t)mViewportSize.y);
 
-			m_EditorCamera.SetViewportSize(m_ViewportSize.x, m_ViewportSize.y);
-			m_ActiveScene->OnViewportResize(m_ViewportSize.x, m_ViewportSize.y);
+			mEditorCamera.SetViewportSize(mViewportSize.x, mViewportSize.y);
+			mActiveScene->OnViewportResize(mViewportSize.x, mViewportSize.y);
 		}
 
-		m_ViewportFramebuffer->Bind();
+		mViewportFramebuffer->Bind();
 
 		RenderCommand::SetClearColor({ 0.12f, 0.12f, 0.12f, 1.0f });
 		RenderCommand::Clear();
 
 		if (Input::WasKeyPressed(Keycode::P))
 		{
-			if (m_ActiveScene->IsPlaying())
+			if (mActiveScene->IsPlaying())
 			{
-				m_ActiveScene->EndPlay();
+				mActiveScene->EndPlay();
 			}
 			else
 			{
-				m_ActiveScene->BeginPlay();
+				mActiveScene->BeginPlay();
 			}
 		}
 
-		if (!m_ActiveScene->IsPlaying())
-			m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);
+		if (!mActiveScene->IsPlaying())
+			mActiveScene->OnUpdateEditor(ts, mEditorCamera);
 		else
-			m_ActiveScene->OnUpdateRuntime(ts);
+			mActiveScene->OnUpdateRuntime(ts);
 
-		{
-			bool shouldMousePick = !ImGuizmo::IsOver() && !ImGuizmo::IsUsing() && m_ViewportHovered;
-			if (Input::WasKeyPressed(Mousecode::Left) && shouldMousePick)
-			{
-				auto [mx, my] = ImGui::GetMousePos();
-				mx -= m_ViewportBounds[0].x;
-				my -= m_ViewportBounds[0].y;
-				glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
-				my = viewportSize.y - my;
+		if (Input::WasKeyPressed(Mousecode::Left))
+			MousePick();
 
-				int mouseX = (int)mx;
-				int mouseY = (int)my;
-
-				if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
-				{
-					int pixelData = m_ViewportFramebuffer->ReadPixel(1, mouseX, mouseY);
-
-					if (pixelData < 0 || pixelData > m_ActiveScene->GetNumberOfActors())
-					{
-						pixelData = -1;
-						m_SceneHierarchyPanel.SetSelectedActor({});
-					}
-
-					if (pixelData != -1)
-					{
-						Actor clickedActor = Actor{ (entt::entity)pixelData, m_ActiveScene.get() };
-						m_SceneHierarchyPanel.SetSelectedActor(clickedActor);
-
-						SAND_CORE_INFO(clickedActor.GetComponent<TagComponent>().Name);
-					}
-				}
-			}
-		}
-
-		m_ViewportFramebuffer->Unbind();
+		mViewportFramebuffer->Unbind();
 	}
 
 	void EditorLayer::OnGuiRender()
@@ -239,13 +211,13 @@ namespace Sand
 			if (ImGui::BeginMenu("Tabs"))
 			{
 				if (ImGui::MenuItem("Hierarchy")) {
-					m_SceneHierarchyPanel.Show();
+					mSceneHierarchyPanel.Show();
 				}
 				if (ImGui::MenuItem("Properties")) {
-					m_PropertiesPanel.Show();
+					mPropertiesPanel.Show();
 				}
 				if (ImGui::MenuItem("Console")) {
-					m_ConsolePanel.Show();
+					mConsolePanel.Show();
 				}
 
 				ImGui::EndMenu();
@@ -282,39 +254,41 @@ namespace Sand
 
 		ImGui::End();
 
-		m_SceneHierarchyPanel.OnGuiRender();
-		m_PropertiesPanel.SetSelection(m_SceneHierarchyPanel.GetSelectedActor());
-		m_PropertiesPanel.OnGuiRender();
-		m_ConsolePanel.OnGuiRender();
-		
+		mSceneHierarchyPanel.OnGuiRender();
+		mPropertiesPanel.SetSelection(mSceneHierarchyPanel.GetSelectedActor());
+		mPropertiesPanel.OnGuiRender();
+		mConsolePanel.OnGuiRender();
+
+		mActiveScene->GetPhysicsWorld().ShowDebugWindow(mActiveScene.get());
+
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
 		ImGui::Begin("Viewport", false, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoCollapse);
 		
 		auto viewportMinRegion = ImGui::GetWindowContentRegionMin();
 		auto viewportMaxRegion = ImGui::GetWindowContentRegionMax();
 		auto viewportOffset = ImGui::GetWindowPos();
-		m_ViewportBounds[0] = { viewportMinRegion.x + viewportOffset.x, viewportMinRegion.y + viewportOffset.y };
-		m_ViewportBounds[1] = { viewportMaxRegion.x + viewportOffset.x, viewportMaxRegion.y + viewportOffset.y };
+		mViewportBounds[0] = { viewportMinRegion.x + viewportOffset.x, viewportMinRegion.y + viewportOffset.y };
+		mViewportBounds[1] = { viewportMaxRegion.x + viewportOffset.x, viewportMaxRegion.y + viewportOffset.y };
 
-		m_ViewportFocused = ImGui::IsWindowFocused();
-		m_ViewportHovered = ImGui::IsWindowHovered();
+		mViewportFocused = ImGui::IsWindowFocused();
+		mViewportHovered = ImGui::IsWindowHovered();
 
 		//Application::Get().GetImGuiLayer()->BlockEvents(!m_ViewportFocused && !m_ViewportHovered);
 		ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
-		m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
+		mViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
 
-		uint32_t textureID = m_ViewportFramebuffer->GetColorAttachmentRendererID();
+		uint32_t textureID = mViewportFramebuffer->GetColorAttachmentRendererID();
 		ImGui::Image(reinterpret_cast<void*>(textureID), viewportPanelSize, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 
 		// GIZMOS
-		Actor selectedActor = m_SceneHierarchyPanel.GetSelectedActor();
+		Actor selectedActor = mSceneHierarchyPanel.GetSelectedActor();
 
-		if (selectedActor && m_GizmoType != -1)
+		if (selectedActor && mGizmoType != -1)
 		{
 			ImGuizmo::SetDrawlist();
 			float windowWidth = ImGui::GetWindowWidth(), windowHeight = ImGui::GetWindowHeight();
 			ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
-			ImGuizmo::SetRect(m_ViewportBounds[0].x, m_ViewportBounds[0].y, m_ViewportBounds[1].x - m_ViewportBounds[0].x, m_ViewportBounds[1].y - m_ViewportBounds[0].y);
+			ImGuizmo::SetRect(mViewportBounds[0].x, mViewportBounds[0].y, mViewportBounds[1].x - mViewportBounds[0].x, mViewportBounds[1].y - mViewportBounds[0].y);
 
 			// Runtime camera
 			//auto cameraActor = m_ActiveScene->GetPrimaryCameraActor();
@@ -323,8 +297,8 @@ namespace Sand
 			//glm::mat4 cameraView = glm::inverse(cameraActor.GetComponent<TransformComponent>().GetTransform());
 
 			// Editor camera
-			const glm::mat4& cameraProjection = m_EditorCamera.GetProjection();
-			glm::mat4 cameraView = m_EditorCamera.GetViewMatrix();
+			const glm::mat4& cameraProjection = mEditorCamera.GetProjection();
+			glm::mat4 cameraView = mEditorCamera.GetViewMatrix();
 
 			// Actor transform
 			auto& transformComponent = selectedActor.GetComponent<TransformComponent>();
@@ -334,20 +308,21 @@ namespace Sand
 			bool snap = Input::IsKeyPressed(Keycode::LeftControl);
 			float snapValue = 0.5f; // 0.5m for translation and scale
 			// Snap to 15 degrees for rotation
-			if (m_GizmoType == ImGuizmo::OPERATION::ROTATE)
+			if (mGizmoType == ImGuizmo::OPERATION::ROTATE)
 				snapValue = 15.0f;
 			float snapValues[3] = { snapValue, snapValue, snapValue };
 
 			ImGuizmo::Manipulate(glm::value_ptr(cameraView), glm::value_ptr(cameraProjection),
-				(ImGuizmo::OPERATION)m_GizmoType, ImGuizmo::MODE::LOCAL, glm::value_ptr(transform), 
+				(ImGuizmo::OPERATION)mGizmoType, ImGuizmo::MODE::LOCAL, glm::value_ptr(transform), 
 				nullptr, snap ? snapValues : nullptr);
 
 			if (ImGuizmo::IsUsing() && !Input::IsKeyPressed(Mousecode::Right))
 			{
-				glm::vec3 translation, rotation, scale;
-				Math::DecomposeTransform(transform, translation, rotation, scale);
+				glm::vec2 translation, scale;
+				float rotation;
+				Math::DecomposeTransform(transform, translation, scale, rotation);
 
-				glm::vec3 deltaRotation = rotation - transformComponent.Rotation;
+				float deltaRotation = rotation - transformComponent.Rotation;
 				transformComponent.Position = translation;
 				transformComponent.Rotation += deltaRotation;
 				transformComponent.Scale = scale;
@@ -364,8 +339,8 @@ namespace Sand
 	{
 		EventDispatcher dispatcher(e);
 
-		if (m_ViewportHovered)
-			m_EditorCamera.OnEvent(e);
+		if (mViewportHovered)
+			mEditorCamera.OnEvent(e);
 
 		dispatcher.Dispatch<KeyPressedEvent>(SAND_BIND_EVENT_FN(EditorLayer::OnKeyPressed));
 		dispatcher.Dispatch<MouseButtonPressedEvent>(SAND_BIND_EVENT_FN(EditorLayer::OnMouseButtonPressed));
@@ -373,9 +348,40 @@ namespace Sand
 
 	bool EditorLayer::OnMouseButtonPressed(MouseButtonPressedEvent& e)
 	{
-		
-
 		return false;
+	}
+
+	void EditorLayer::MousePick()
+	{
+		bool shouldPick = !ImGuizmo::IsOver() && !ImGuizmo::IsUsing() && mViewportHovered;
+		if (!shouldPick)
+			return;
+
+		auto [mx, my] = ImGui::GetMousePos();
+		mx -= mViewportBounds[0].x;
+		my -= mViewportBounds[0].y;
+		glm::vec2 viewportSize = mViewportBounds[1] - mViewportBounds[0];
+		my = viewportSize.y - my;
+
+		int mouseX = (int)mx;
+		int mouseY = (int)my;
+
+		if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
+		{
+			int pixelData = mViewportFramebuffer->ReadPixel(1, mouseX, mouseY);
+
+			if (pixelData < 0 || pixelData > mActiveScene->GetNumberOfActors())
+			{
+				pixelData = -1;
+				mSceneHierarchyPanel.SetSelectedActor({});
+			}
+
+			if (pixelData != -1)
+			{
+				Actor clickedActor = Actor{ (entt::entity)pixelData, mActiveScene.get() };
+				mSceneHierarchyPanel.SetSelectedActor(clickedActor);
+			}
+		}
 	}
 
 	bool EditorLayer::OnKeyPressed(KeyPressedEvent& e)
@@ -410,39 +416,65 @@ namespace Sand
 			// GIZMOS YEA
 			case Keycode::Q:
 			{
-				if (!m_ViewportHovered || ImGuizmo::IsUsing())
+				if (!mViewportHovered || ImGuizmo::IsUsing())
 					break;
 
-				m_GizmoType = -1;
+				mGizmoType = -1;
 				break;
 			}
 			case Keycode::W:
 			{
-				if (!m_ViewportHovered || ImGuizmo::IsUsing())
+				if (!mViewportHovered || ImGuizmo::IsUsing())
 					break;
 
-				m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
+				mGizmoType = ImGuizmo::OPERATION::TRANSLATE;
 				break;
 			}
 			case Keycode::E: 
 			{
-				if (!m_ViewportHovered || ImGuizmo::IsUsing())
+				if (!mViewportHovered || ImGuizmo::IsUsing())
 					break;
 
-				m_GizmoType = ImGuizmo::OPERATION::ROTATE;
+				mGizmoType = ImGuizmo::OPERATION::ROTATE;
 				break;
 			}
 			case Keycode::R:
 			{
-				if (!m_ViewportHovered || ImGuizmo::IsUsing())
+				if (!mViewportHovered || ImGuizmo::IsUsing())
 					break;
 
-				m_GizmoType = ImGuizmo::OPERATION::SCALE;
+				mGizmoType = ImGuizmo::OPERATION::SCALE;
 				break;
 			}
 
-			// MISC KEY COMBOS
-			
+			// CAMERA STUFF
+			case Keycode::KP_0:
+			{
+				if (!mViewportHovered)
+					break;
+
+				mEditorCamera.Use2DControls = !mEditorCamera.Use2DControls;
+				break;
+			}			
+
+			// RANDOM EDITOR KEYBINDS
+			case Keycode::F:
+			{
+				Actor focused = mSceneHierarchyPanel.GetSelectedActor();
+				if (!mSceneHierarchyPanel.GetSelectedActor())
+					break;
+
+				const auto& tc = focused.GetComponent<TransformComponent>();
+				const auto& position = tc.Position;
+				const auto& rotation = tc.Rotation;
+
+				mEditorCamera.SetRotation(0.0f, 0.0f);
+				mEditorCamera.SetFocalPoint({ position, 0.0f });
+				mEditorCamera.SetDistance(10.0f);
+
+				break;
+			}
+
 		}
 
 		return false;
@@ -450,9 +482,9 @@ namespace Sand
 
 	void EditorLayer::NewScene()
 	{
-		m_ActiveScene = CreateRef<Scene>();
-		m_ActiveScene->OnViewportResize(m_ViewportSize.x, m_ViewportSize.y);
-		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+		mActiveScene = CreateRef<Scene>();
+		mActiveScene->OnViewportResize(mViewportSize.x, mViewportSize.y);
+		mSceneHierarchyPanel.SetContext(mActiveScene);
 	}
 
 	void EditorLayer::SaveSceneAs()
@@ -460,7 +492,7 @@ namespace Sand
 		std::string filepath = FileDialogs::SaveFile("Sand Scene (*.sscene)\0*.sscene\0");
 		if (!filepath.empty())
 		{
-			SceneSerializer serializer(m_ActiveScene);
+			SceneSerializer serializer(mActiveScene);
 			serializer.Serialize(filepath);
 		}
 	}
@@ -469,11 +501,11 @@ namespace Sand
 		std::string filepath = FileDialogs::OpenFile("Sand Scene (*.sscene)\0*.sscene\0");
 		if (!filepath.empty())
 		{
-			m_ActiveScene = CreateRef<Scene>();
-			m_ActiveScene->OnViewportResize(m_ViewportSize.x, m_ViewportSize.y);
-			m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+			mActiveScene = CreateRef<Scene>();
+			mActiveScene->OnViewportResize(mViewportSize.x, mViewportSize.y);
+			mSceneHierarchyPanel.SetContext(mActiveScene);
 
-			SceneSerializer serializer(m_ActiveScene);
+			SceneSerializer serializer(mActiveScene);
 			serializer.Deserialize(filepath);
 		}
 	}

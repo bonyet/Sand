@@ -28,26 +28,27 @@ namespace Sand
 		void SetDarkTheme();
 		bool OnKeyPressed(KeyPressedEvent& e);
 		bool OnMouseButtonPressed(MouseButtonPressedEvent& e);
+		void MousePick();
 
 		void NewScene();
 		void SaveSceneAs();
 		void OpenScene();
 	private:
-		Ref<Framebuffer> m_ViewportFramebuffer;
+		Ref<Framebuffer> mViewportFramebuffer;
 
-		Ref<Scene> m_ActiveScene;
+		Ref<Scene> mActiveScene;
 
-		SceneHierarchyPanel m_SceneHierarchyPanel;
-		PropertiesPanel m_PropertiesPanel;
-		ConsolePanel m_ConsolePanel;
+		SceneHierarchyPanel mSceneHierarchyPanel;
+		PropertiesPanel mPropertiesPanel;
+		ConsolePanel mConsolePanel;
 
-		EditorCamera m_EditorCamera;
+		EditorCamera mEditorCamera;
 
-		int m_GizmoType = -1;
+		int mGizmoType = -1;
 
-		glm::vec2 m_ViewportBounds[2]{};
-		bool m_ViewportFocused = false, m_ViewportHovered = false;
-		glm::vec2 m_ViewportSize = { 0, 0 };
+		glm::vec2 mViewportBounds[2]{};
+		bool mViewportFocused = false, mViewportHovered = false;
+		glm::vec2 mViewportSize = { 0, 0 };
 	};
 
 }

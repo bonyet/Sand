@@ -28,8 +28,18 @@ namespace Sand
 		static void* GetClientAssembly();
 
 		static bool ModuleExists(const std::string& moduleName);
+		static bool ModuleActive(const std::string& moduleName);
+		static void AddModule(const std::string& moduleName);
+
+		static struct ScriptData* GetScriptData(const std::string& moduleName);
+	private:
+		static void CreateAll();
+		static void UpdateAll(Timestep ts);
+		static void DestroyAll();
 	private:
 		static void SetupInternalCalls();
+
+		friend class Scene;
 	};
 
 }
