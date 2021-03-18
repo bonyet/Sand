@@ -1,52 +1,30 @@
 #include "sandpch.h"
 #include "PhysicsWorld.h"
 
-#include "Sand/Scene/Scene.h"
-#include "Sand/Scene/Components.h"
-
-#include <imgui.h>
-
 namespace Sand
 {
-	void PhysicsWorld::ShowDebugWindow(Scene* const scene)
+
+	PhysicsWorld::PhysicsWorld(const glm::vec2& gravity)
 	{
-		ImGui::Begin("Physics Debug");
-
-		auto view = scene->mRegistry.view<PhysicsComponent>();
-		for (auto entity : view)
-		{
-			Actor actor = { entity, scene };
-			auto& physics = view.get<PhysicsComponent>(entity);
-
-			ImGui::Text("Entity '%s' :: %d", actor.GetComponent<TagComponent>().Name.c_str(), (uint32_t)actor);
-		}
-
-		ImGui::End();
 	}
 
-	void PhysicsWorld::InitializeBodies(Scene* const scene)
+	void PhysicsWorld::Create(const glm::vec2& gravity)
 	{
-		// Create all physics bodies
-		auto view = scene->mRegistry.view<PhysicsComponent>();
-		for (auto entity : view)
-		{
-			auto& physics = view.get<PhysicsComponent>(entity);
-			physics.owner = { entity, scene };
-
-			SAND_CORE_INFO("Init {0}", physics.owner.GetComponent<TagComponent>().Name);
-
-			physics.Init();
-		}
+		m_World = new b2World({ gravity.x, gravity.y });
 	}
 
-	void PhysicsWorld::Step(class Scene* const scene, Timestep timestep)
+	void PhysicsWorld::Step()
 	{
-		// Update all physics bodies
-		auto view = scene->mRegistry.view<PhysicsComponent>();
-		for (auto entity : view)
-		{
-			view.get<PhysicsComponent>(entity).SimulateStep(this, timestep);
-		}
+		SAND_PROFILE_FUNCTION();
+
+		constexpr int velocityIterations = 8, positionIterations = 3;
+
+		m_World->Step(m_FixedTimestep, velocityIterations, positionIterations);
+	}
+
+	void PhysicsWorld::Destroy()
+	{
+		delete m_World;
 	}
 
 }

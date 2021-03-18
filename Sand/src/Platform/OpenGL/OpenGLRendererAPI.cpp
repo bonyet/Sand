@@ -7,6 +7,8 @@
 
 namespace Sand 
 {
+
+	static TopologyType s_TopologyType = TopologyType::Triangles;
 	
 	void OpenGLMessageCallback(
 		unsigned source, unsigned type, unsigned id, unsigned severity, 
@@ -58,8 +60,20 @@ namespace Sand
 	void OpenGLRendererAPI::DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount)
 	{
 		uint32_t count = indexCount ? indexCount : vertexArray->GetIndexBuffer()->GetCount();
-		glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr);
+		
+		glDrawElements(s_TopologyType == TopologyType::Lines ? GL_LINE_STRIP : GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr);
+
 		glBindTexture(GL_TEXTURE_2D, 0);
+	}
+
+	void OpenGLRendererAPI::SetTopology(TopologyType type)
+	{
+		s_TopologyType = type;
+	}
+
+	void OpenGLRendererAPI::SetLineWidth(float width)
+	{
+		glLineWidth(width);
 	}
 
 }

@@ -2,10 +2,10 @@
 #include "Sand/Core/Application.h"
 
 #include "Sand/Renderer/Renderer.h"
-
 #include <GLFW/glfw3.h>
 
 #include "Sand/Scene/Scene.h"
+#include "Sand/Scripting/ScriptEngine.h"
 
 namespace Sand
 {
@@ -23,6 +23,7 @@ namespace Sand
 		m_Window->SetVSync(true);
 
 		Renderer::Init();
+		ScriptEngine::Init();
 
 		m_UILayer = new ImGuiLayer();
 		PushOverlay(m_UILayer);
@@ -33,6 +34,7 @@ namespace Sand
 		SAND_PROFILE_FUNCTION();
 
 		Renderer::Shutdown();
+		ScriptEngine::Shutdown();
 	}
 
 	void Application::PushLayer(Layer* layer)

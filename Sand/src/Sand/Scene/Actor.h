@@ -17,7 +17,7 @@ namespace Sand
 		{
 			SAND_CORE_ASSERT(!HasComponent<T>(), "Actor already has component.");
 
-			T& component = mScene->mRegistry.emplace<T>(mEntityHandle, std::forward<Args>(args)...);
+			T& component = mScene->m_CurrentRegistry->emplace<T>(mEntityHandle, std::forward<Args>(args)...);
 			mScene->OnComponentAdded<T>(*this, component);
 
 			return component;
@@ -26,18 +26,23 @@ namespace Sand
 		T& GetComponent()
 		{
 			SAND_CORE_ASSERT(HasComponent<T>(), "Actor does not have component.");
-			return mScene->mRegistry.get<T>(mEntityHandle);
+			return mScene->m_CurrentRegistry->get<T>(mEntityHandle);
 		}
 		template<typename T>
 		bool HasComponent()
 		{
-			return mScene->mRegistry.has<T>(mEntityHandle);
+			return mScene->m_CurrentRegistry->has<T>(mEntityHandle);
 		}
 		template<typename T>
 		void RemoveComponent()
 		{
 			SAND_CORE_ASSERT(HasComponent<T>(), "Actor does not have component.");
-			mScene->mRegistry.remove<T>(mEntityHandle);
+
+			// I know this is horrid but it kinda just works
+			if constexpr (std::is_base_of_v<T, ScriptComponent>)
+				mScene->m_CurrentRegistry->get<T>(mEntityHandle).Deactivate();
+
+			mScene->m_CurrentRegistry->remove<T>(mEntityHandle);
 		}
 
 		operator bool() const { return mEntityHandle != entt::null; }

@@ -2,5 +2,3 @@ D:\dev\SandEngine\Hazel\Hazel\vendor\Glad\bin\Debug-windows-x86_64\Glad\Glad.pdb
 D:\dev\SandEngine\Hazel\Hazel\vendor\Glad\bin-int\Debug-windows-x86_64\Glad\Glad.pdb
 D:\dev\SandEngine\Hazel\Sand\vendor\Glad\bin\Debug-windows-x86_64\Glad\Glad.pdb
 D:\dev\SandEngine\Hazel\Sand\vendor\Glad\bin-int\Debug-windows-x86_64\Glad\Glad.pdb
-D:\dev\Sand\Sand\vendor\Glad\bin\Debug-windows-x86_64\Glad\Glad.pdb
-D:\dev\Sand\Sand\vendor\Glad\bin-int\Debug-windows-x86_64\Glad\Glad.pdb

@@ -13,6 +13,7 @@ namespace Sand
 
 		virtual void OnGuiRender() override;
 		void SetSelection(Actor actor) { m_SelectionContext = actor; }
+		Actor GetSelection() const { return m_SelectionContext; }
 	private:
 		void DrawComponents(Actor actor);
 		void DrawComponentsMenu(Actor actor);

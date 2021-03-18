@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Sand/Core/Time.h"
 #include <glm/glm.hpp>
+#include <box2d/box2d.h>
 
 namespace Sand
 {
@@ -11,18 +11,17 @@ namespace Sand
 	class PhysicsWorld
 	{
 	public:
-		PhysicsWorld() = default;
+		PhysicsWorld(const glm::vec2& gravity = { 0, 0 });
 
-		void SetGravity(const glm::vec2& gravity) { mGravity = gravity; }
-		glm::vec2& GetGravity() { return mGravity; }
-
-		void ShowDebugWindow(Scene* const scene);
+		b2World* GetWorld() { return m_World; }
 	private:
-		void InitializeBodies(Scene* const scene);
-
-		void Step(Scene* const scene, Timestep timestep);
+		void Create(const glm::vec2& gravity = { 0.0f, -10.0f });
+		void Step();
+		void Destroy();
 	private:
-		glm::vec2 mGravity = { 0.0f, 0.0f };
+		b2World* m_World = nullptr;
+		float m_FixedTimestep = 1.0f / 60.0f;
+
 		friend class Scene;
 	};
 

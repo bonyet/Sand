@@ -32,6 +32,16 @@ namespace Sand
 		{
 			s_RendererAPI->DrawIndexed(vertexArray, count);
 		}
+
+		static void SetTopology(TopologyType type)
+		{
+			s_RendererAPI->SetTopology(type);
+		}
+
+		static void SetLineWidth(float width)
+		{
+			s_RendererAPI->SetLineWidth(width);
+		}
 	private:
 		static Scope<RendererAPI> s_RendererAPI;
 	};

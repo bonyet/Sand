@@ -19,6 +19,9 @@
     <Filter Include="src\Sand">
       <UniqueIdentifier>{A25D25CF-8E2A-80DA-B743-6E82A36FB568}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Sand\Animation">
+      <UniqueIdentifier>{1109BD41-FDEC-7D97-664D-78EA52506819}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\Sand\Core">
       <UniqueIdentifier>{3A57647B-A617-E0B1-6F52-292FDBD1248E}</UniqueIdentifier>
     </Filter>
@@ -113,6 +116,12 @@
     </ClInclude>
     <ClInclude Include="src\Sand.h">
       <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Sand\Animation\Animation.h">
+      <Filter>src\Sand\Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Sand\Animation\Animator.h">
+      <Filter>src\Sand\Animation</Filter>
     </ClInclude>
     <ClInclude Include="src\Sand\Core\Application.h">
       <Filter>src\Sand\Core</Filter>
@@ -1506,6 +1515,8 @@
     <ClInclude Include="vendor\stb_image\stb_image.h">
       <Filter>vendor\stb_image</Filter>
     </ClInclude>
+    <ClInclude Include="src\Sand\Physics\PhysicsBody.h" />
+    <ClInclude Include="src\Sand\Events\SceneEvent.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Platform\D3D11\D3D11Context.cpp">
@@ -1543,6 +1554,12 @@
     </ClCompile>
     <ClCompile Include="src\Platform\Windows\WindowsWindow.cpp">
       <Filter>src\Platform\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Sand\Animation\Animation.cpp">
+      <Filter>src\Sand\Animation</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Sand\Animation\Animator.cpp">
+      <Filter>src\Sand\Animation</Filter>
     </ClCompile>
     <ClCompile Include="src\Sand\Core\Application.cpp">
       <Filter>src\Sand\Core</Filter>
@@ -1631,9 +1648,6 @@
     <ClCompile Include="src\Sand\Scene\SceneSerializer.cpp">
       <Filter>src\Sand\Scene</Filter>
     </ClCompile>
-    <ClCompile Include="src\Sand\Scripting\ScriptData.cpp">
-      <Filter>src\Sand\Scripting</Filter>
-    </ClCompile>
     <ClCompile Include="src\Sand\Scripting\ScriptEngine.cpp">
       <Filter>src\Sand\Scripting</Filter>
     </ClCompile>
@@ -1646,5 +1660,6 @@
     <ClCompile Include="vendor\stb_image\stb_image.cpp">
       <Filter>vendor\stb_image</Filter>
     </ClCompile>
+    <ClCompile Include="src\Sand\Physics\PhysicsBody.cpp" />
   </ItemGroup>
 </Project>

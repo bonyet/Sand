@@ -180,16 +180,16 @@ namespace Sand
 
 			out << YAML::EndMap; // TextureComponent
 		}
-		if (actor.HasComponent<PhysicsComponent>())
+		if (actor.HasComponent<ScriptComponent>())
 		{
-			out << YAML::Key << "PhysicsComponent";
-			out << YAML::BeginMap; // TextureComponent
+			out << YAML::Key << "ScriptComponent";
+			out << YAML::BeginMap; // ScriptComponent
 
-			auto& physics = actor.GetComponent<PhysicsComponent>();
+			auto& script = actor.GetComponent<ScriptComponent>();
 
-			out << YAML::Key << "Some random shit.";
+			out << YAML::Key << "ModuleName" << YAML::Value << script.ModuleName;
 
-			out << YAML::EndMap; // PhysicsComponent
+			out << YAML::EndMap; // ScriptComponent
 		}
 
 		out << YAML::EndMap; // Actor
@@ -201,7 +201,7 @@ namespace Sand
 		out << YAML::BeginMap;
 		out << YAML::Key << "Scene" << YAML::Value << "Unnamed Scene";
 		out << YAML::Key << "Actors" << YAML::Value << YAML::BeginSeq;
-		mScene->mRegistry.each([&](auto entityID)
+		mScene->m_Registry.each([&](auto entityID)
 		{
 			Actor actor = { entityID, mScene.get() };
 			if (!actor)
@@ -299,10 +299,12 @@ namespace Sand
 					tc.Texture = !path.empty() ? Texture2D::Create(path) : nullptr;
 					tc.TilingFactor = textureComponent["TilingFactor"].as<float>();
 				}
-				auto physicsComponent = actor["PhysicsComponent"];
-				if (physicsComponent)
+				auto scriptComponent = actor["ScriptComponent"];
+				if (scriptComponent)
 				{
-					deserializedActor.AddComponent<PhysicsComponent>();
+					auto& script = deserializedActor.AddComponent<ScriptComponent>();
+
+					script.ModuleName = scriptComponent["ModuleName"].as<std::string>();
 				}
 			}
 		}

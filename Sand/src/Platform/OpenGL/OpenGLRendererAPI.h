@@ -17,6 +17,12 @@ namespace Sand
 		virtual void Clear() override;
 
 		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount = 0) override;
+
+		// Inherited via RendererAPI
+		virtual void SetTopology(TopologyType type) override;
+
+		// Inherited via RendererAPI
+		virtual void SetLineWidth(float width) override;
 	};
 
 

@@ -1,26 +1,22 @@
 #include "sandpch.h"
 #include "Components.h"
 
+#include "Sand/Scripting/ScriptEngine.h"
+
 namespace Sand
 {
 
-	void PhysicsComponent::Init()
+	void ScriptComponent::Activate()
 	{
+		if (!ScriptEngine::ModuleExists(ModuleName))
+			return;
+
+		ScriptEngine::AddModule(owner, ModuleName);
 	}
 
-	void PhysicsComponent::SimulateStep(PhysicsWorld* const world, Timestep timestep)
+	void ScriptComponent::Deactivate()
 	{
-		glm::vec2 force = world->GetGravity();
-
-		mLastAcceleration = mAcceleration;
-
-		// Move
-		auto& position = owner.GetComponent<TransformComponent>().Position;
-		position += mLinearVelocity * (float)timestep + (0.5f * mLastAcceleration * (timestep * timestep));
-		// Find acceleration
-		mAcceleration = force / Mass;
-		auto avgAcceleration = (mLastAcceleration + mAcceleration) / 2.0f;
-		mLinearVelocity += avgAcceleration * (float)timestep;
+		ScriptEngine::DeactivateModule(owner);
 	}
 
 }

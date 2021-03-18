@@ -1,28 +1,42 @@
 ﻿using Sand;
+using Sand.Math;
+using Sand.Scene;
 
 namespace Client
 {
 
-	class Test
+	public class Test : ScriptableActor
 	{
-		public float Value = 10.0f;
-		public uint OtherThing = 5;
+		private Vector2 position;
+		public Color color;
 
-		public void OnCreate()
+		private void OnCreate()
 		{
+			color = Color.White;
+
+			position = Transformation.GetPosition();
+
+			Log.Info(Tag.Name);
 		}
 
-		public void OnUpdate(float timestep)
+		private void OnUpdate(float timestep)
 		{
-			if (Input.IsKeyPressed(Keycode.Space))
-			{
-				Log.Info("Stuff = " + OtherThing);
-			}
+			if (Input.IsKeyPressed(Keycode.W))
+				position.y += 0.1f;
+			else if (Input.IsKeyPressed(Keycode.S))
+				position.y -= 0.1f;
+			if (Input.IsKeyPressed(Keycode.D))
+				position.x += 0.1f;
+			else if (Input.IsKeyPressed(Keycode.A))
+				position.x -= 0.1f;
+
+			Transformation.SetPosition(position);
+			
+			GetComponent<SpriteRendererComponent>().SetColor(color);
 		}
 
-		public void OnDestroy()
+		private void OnDestroy()
 		{
-			Log.Warn("Oh no... no you can't do this to me!");
 		}
 	}
 

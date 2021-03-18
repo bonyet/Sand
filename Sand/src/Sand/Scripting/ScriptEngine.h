@@ -1,41 +1,51 @@
 #pragma once
 
 #include "Sand/Core/Time.h"
+#include "Sand/Scene/Actor.h"
 
 namespace Sand
 {
 
-	class ScriptRegistry;
-
 	enum class ScriptDataType
 	{
-		Float = 12, Double = 13,
-		Int16 = 6, Int32 = 8, Int64 = 10,
-		UInt16 = 7, UInt32 = 9, UInt64 = 11,
-		String = 14,
+		Unknown,
+
+		Float, Double, Int, UInt,
+		Vector2, Vector3, Vector4,
+
+		Color,
 	};
+
+	class Scene;
 
 	class ScriptEngine
 	{
 	public:
 		static void Init();
-		static void Cleanup();
+		static void Shutdown();
 
-		static void LoadClientAssembly();
+		static void SetActiveScene(Scene* const scene);
 
-		// void* cause I'm too lazy to sort out include paths
-		static void* GetCoreAssembly();
-		static void* GetClientAssembly();
+		static void ReloadClientAssembly();
 
+		static void AddModule(uint32_t actorID, const std::string& moduleName);
+		static void DeactivateModule(Actor actor);
+		static bool ModuleActive(Actor actor);
 		static bool ModuleExists(const std::string& moduleName);
-		static bool ModuleActive(const std::string& moduleName);
-		static void AddModule(const std::string& moduleName);
 
-		static struct ScriptData* GetScriptData(const std::string& moduleName);
+		static struct ScriptData* GetScriptData(uint32_t actor, const std::string& moduleName);
+
+		static ScriptDataType MonoTypeToScriptDataType(void* type);
+		static bool MonoFieldIsPublic(void* field);
+
+		// void* is actually MonoClass! wow! same but different   !
+		static std::vector<void*> GetCachedClientScripts();
 	private:
 		static void CreateAll();
 		static void UpdateAll(Timestep ts);
 		static void DestroyAll();
+
+		static void LoadClientAssembly();
 	private:
 		static void SetupInternalCalls();
 

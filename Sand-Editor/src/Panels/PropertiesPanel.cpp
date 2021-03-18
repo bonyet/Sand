@@ -26,7 +26,12 @@ namespace Sand
 		auto& component = Actor.GetComponent<T>();
 		ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
 
-		bool open = ImGui::TreeNodeEx((void*)typeid(T).hash_code(), treeNodeFlags, name.c_str());
+		std::string nodeName = name;
+		if constexpr (std::is_base_of_v<T, ScriptComponent>)
+			nodeName = component.ModuleName + " :: (Script)";
+		
+		bool open = ImGui::TreeNodeEx((void*)typeid(T).hash_code(), treeNodeFlags, nodeName.c_str());
+
 		ImGui::Tooltip("Right click for more actions", 1.1f);
 
 		if (ImGui::IsItemClicked(1))
@@ -153,13 +158,15 @@ namespace Sand
 	}
 
 	template<typename T, typename... Args>
-	static void DrawComponentMenuItem(const std::string& title, Actor actor, Args&&... args)
+	static bool DrawComponentMenuItem(const std::string& title, Actor actor, Args&&... args)
 	{
+		bool result = false;
 		if (ImGui::MenuItem(title.c_str()))
 		{
 			if (!actor.HasComponent<T>()) 
 			{
 				actor.AddComponent<T>((args)...);
+				result = true;
 			}
 			else
 			{
@@ -168,14 +175,22 @@ namespace Sand
 
 			ImGui::CloseCurrentPopup();
 		}
+
+		return result;
 	}
 
 	void PropertiesPanel::DrawComponentsMenu(Actor actor)
 	{
+		SAND_PROFILE_FUNCTION();
+
 		ImGui::PushItemWidth(-1);
 
+		ImGui::PushStyleColor(ImGuiCol_Button,        { 0.20f, 0.40f, 0.30f, 1.0f });
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, { 0.10f, 0.30f, 0.20f, 1.0f });
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive,  { 0.15f, 0.35f, 0.25f, 1.0f });
 		if (ImGui::Button("Add Component"))
 			ImGui::OpenPopup("AddComponent");
+		ImGui::PopStyleColor(3);
 
 		if (ImGui::BeginPopup("AddComponent", false))
 		{
@@ -207,7 +222,30 @@ namespace Sand
 			ImGui::Separator();
 
 			// Scripting
-			DrawComponentMenuItem<ScriptComponent>("Script", actor);
+			if (ImGui::BeginMenu("Scripts"))
+			{
+				for (auto pKlass : ScriptEngine::GetCachedClientScripts())
+				{
+					MonoClass* klass = (MonoClass*)pKlass;
+					const char* name = mono_class_get_name(klass);
+
+					if (DrawComponentMenuItem<ScriptComponent>(name, actor))
+					{
+						auto& addedScript = actor.GetComponent<ScriptComponent>();
+						addedScript.ModuleName = name;
+						addedScript.Activate();
+					}
+				}
+
+				ImGui::EndMenu();
+			}
+
+			if (ImGui::BeginMenu("Misc"))
+			{
+				DrawComponentMenuItem<AnimatorComponent>("Animator", actor);
+
+				ImGui::EndMenu();
+			}
 
 			ImGui::EndPopup();
 		}
@@ -222,6 +260,9 @@ namespace Sand
 
 	void PropertiesPanel::DrawComponents(Actor actor)
 	{
+		SAND_PROFILE_FUNCTION();
+
+		float itemWidth = 0.0f;
 		if (actor.HasComponent<TagComponent>())
 		{
 			auto& tag = actor.GetComponent<TagComponent>().Name;
@@ -234,9 +275,17 @@ namespace Sand
 			{
 				tag = std::string(buffer);
 			}
+
+			itemWidth = ImGui::CalcItemWidth();
+			ImGui::SameLine(ImGui::GetContentRegionAvailWidth() - 180);
+			ImGui::PushStyleColor(ImGuiCol_Text, { 1.0f, 1.0f, 1.0f, 0.7f });
+
+			ImGui::Text(("= " + std::to_string((uint32_t)actor)).c_str());
+			
+			ImGui::PopStyleColor();
 		}
 
-		ImGui::SameLine();
+		ImGui::SameLine(ImGui::GetContentRegionAvailWidth() - 140);
 		DrawComponentsMenu(actor);
 		ImGui::Separator();
 
@@ -333,101 +382,184 @@ namespace Sand
 		});
 		SetColumnsMinSpacing(defaultColumnSpacing);
 
+		DrawComponent<ScriptComponent>("Script", actor, [=](auto& component)
+		{
+			const ScriptData* sdata = ScriptEngine::GetScriptData(actor, component.ModuleName);
+			RenderAllScriptFields(sdata);
+		});
+	
 		DrawComponent<PhysicsComponent>("Physics", actor, [](auto& component)
 		{
+			auto& body = component.Body;
+
+			{
+				const char* items[] = { "Static", "Kinematic", "Dynamic" };
+				const char* currentItem = items[(int)body.GetType()];
+
+				SAND_LEFT_LABEL(ImGui::BeginCombo("##Type", currentItem), "Type",
+				{
+					for (int n = 0; n < IM_ARRAYSIZE(items); n++)
+					{
+						bool isSelected = (currentItem == items[n]);
+						if (ImGui::Selectable(items[n], isSelected))
+						{
+							currentItem = items[n];
+							if (isSelected)
+								ImGui::SetItemDefaultFocus();
+
+							body.SetType((PhysicsBodyType)n);
+						}
+					}
+					ImGui::EndCombo();
+				});
+			}
+
+			ImGui::Separator();
+			float gravity = body.GetGravityScale();
+			SAND_LEFT_LABEL(ImGui::InputFloat("##GravityScale", &gravity), "Gravity Scale",
+				body.SetGravityScale(gravity);
+			);
+			float friction = body.GetFriction();
+			SAND_LEFT_LABEL(ImGui::InputFloat("##Friction", &friction), "Friction",
+				body.SetFriction(friction);
+			);
+			float mass = body.GetMass();
+			SAND_LEFT_LABEL(ImGui::InputFloat("##Mass", &mass), "Mass",
+				body.SetMass(mass);
+			);
+			ImGui::Separator();
+
+			bool fixedRotation = body.GetFixedRotation();
+			SAND_LEFT_LABEL(ImGui::Checkbox("##FixedRotation", &fixedRotation), "Fixed Rotation",
+				body.SetFixedRotation(fixedRotation);
+			);
 
 		});
 
-		DrawComponent<ScriptComponent>("Script", actor, [](auto& component)
+		DrawComponent<AnimatorComponent>("Animator", actor, [](auto& component)
 		{
-			static bool moduleExists = false;
-
-			char buffer[50];
-			memset(buffer, 0, sizeof(buffer));
-			strcpy_s(buffer, sizeof(buffer), component.ModuleName.c_str());
-
-			ImVec4 textColor = moduleExists ? ImVec4{ 0.2f, 0.8f, 0.3f, 1.0f } : ImVec4{ 0.8f, 0.1f, 0.2f, 1.0f };
-			ImGui::PushStyleColor(ImGuiCol_Text, textColor);
+			auto& animator = component.Animator;
+			uint32_t fps = animator.GetAnimation().GetFPS();
 			
-			SAND_LEFT_LABEL(ImGui::InputText("##ModuleName", buffer, sizeof(buffer)), "ModuleName",
 			{
-				component.ModuleName = buffer;
-				moduleExists = ScriptEngine::ModuleExists(component.ModuleName);
-			});
+				constexpr uint32_t framerates[] = { 10, 16, 24, 30, 60 };
+				
+				const char* items[] = { "10", "16", "24", "30", "60" };
+				static const char* currentItem = NULL;
 
-			if (moduleExists && ImGui::IsKeyPressed((int)Keycode::Enter, false) && !ScriptEngine::ModuleActive(component.ModuleName)) 
-			{
-				ScriptEngine::AddModule(component.ModuleName);
-			}
-			
-			ImGui::PopStyleColor();
+				SAND_LEFT_LABEL(ImGui::BeginCombo("##FPS", currentItem), "Frames Per Second",
+				{
+					for (int n = 0; n < IM_ARRAYSIZE(items); n++)
+					{
+						bool isSelected = (currentItem == items[n]);
+						if (ImGui::Selectable(items[n], isSelected))
+						{
+							currentItem = items[n];
+							if (isSelected)
+								ImGui::SetItemDefaultFocus();
 
-			if (moduleExists)
-			{
-				const ScriptData* sdata = ScriptEngine::GetScriptData(component.ModuleName);
-				if (sdata)
-					RenderAllScriptFields(sdata);
+							animator.GetAnimation().SetFPS(framerates[n]);
+						}
+					}
+					ImGui::EndCombo();
+				});
 			}
+
+			ImGui::Separator();
+			SAND_LEFT_LABEL_TOOLTIP(ImGui::Checkbox("##Loop", &animator.Loop), "Loop", "Whether or not this animation will loop", );
 		});
 	}
 
-	static void RenderScriptField(const ScriptData* const scriptData, MonoType* type, MonoClassField* field);
+	static void RenderScriptField(const ScriptField& field, const ScriptData* const scriptData);
 
 	static void RenderAllScriptFields(const ScriptData* const scriptData)
 	{
-		void* iterator = 0;
-		MonoClassField* field;
-		while (field = mono_class_get_fields(scriptData->Class, &iterator))
+		for (auto field : scriptData->Fields)
 		{
-			RenderScriptField(scriptData, mono_field_get_type(field), field);
+			if (!field.IsPublic())
+				continue; // dont show private fields in inspector
+
+			RenderScriptField(field, scriptData);
 		}
 	}
 
-	static void RenderScriptField(const ScriptData* const scriptData, MonoType* type, MonoClassField* field)
+	static void RenderScriptField(const ScriptField& field, const ScriptData* const scriptData)
 	{
-		const char* name = mono_field_get_name(field);
+		SAND_PROFILE_FUNCTION();
 
-		const std::string fieldIDStr = std::string("##") + std::string(name);
+		const std::string fieldIDStr = std::string("##") + std::string(field.GetName());
 		const char* fieldID = fieldIDStr.c_str();
 
 		ImGui::Columns(2);
 
-		const ScriptDataType dataType = (ScriptDataType)mono_type_get_type(type);
-		switch (dataType)
+		switch (field.GetType())
 		{
-		case ScriptDataType::Double:
-		case ScriptDataType::Float:
-		{
-			float value;
-			mono_field_get_value(scriptData->Object, field, &value);
-			SAND_LEFT_LABEL(ImGui::InputFloat(fieldID, &value, 0.5f, 1.0f), name,
+			case ScriptDataType::Double:
+			case ScriptDataType::Float:
 			{
-				mono_field_set_value(scriptData->Object, field, &value);
-			});
-			break;
-		}
-		case ScriptDataType::UInt16:
-		case ScriptDataType::UInt64:
-		case ScriptDataType::UInt32:
-		case ScriptDataType::Int16:
-		case ScriptDataType::Int64:
-		case ScriptDataType::Int32:
-		{
-			int value;
-			mono_field_get_value(scriptData->Object, field, &value);
-			SAND_LEFT_LABEL(ImGui::InputInt(fieldID, &value, 1), name,
+				float value;
+				mono_field_get_value(scriptData->Object, field.GetField(), &value);
+				SAND_LEFT_LABEL(ImGui::InputFloat(fieldID, &value, 0.5f, 1.0f), field.GetName(),
+				{
+					mono_field_set_value(scriptData->Object, field.GetField(), &value);
+				});
+				break;
+			}
+			case ScriptDataType::UInt:
+			case ScriptDataType::Int:
 			{
-				mono_field_set_value(scriptData->Object, field, &value);
-			});
-			break;
-		}
-		case ScriptDataType::String:
-		default:
-		{
-			ImGui::PushStyleColor(ImGuiCol_Text, { 0.8f, 0.2f, 0.3f, 1.0f });
-			ImGui::Text("<Unknown data type>");
-			ImGui::PopStyleColor();
-		}
+				int value;
+				mono_field_get_value(scriptData->Object, field.GetField(), &value);
+				SAND_LEFT_LABEL(ImGui::InputInt(fieldID, &value, 1), field.GetName(),
+				{
+					mono_field_set_value(scriptData->Object, field.GetField(), &value);
+				});
+				break;
+			}
+			case ScriptDataType::Vector2:
+			{
+				glm::vec2 value;
+				mono_field_get_value(scriptData->Object, field.GetField(), &value);
+				SAND_LEFT_LABEL(ImGui::DragFloat2(fieldID, glm::value_ptr(value), 0.5f), field.GetName(),
+				{
+					mono_field_set_value(scriptData->Object, field.GetField(), &value);
+				});
+				break;
+			}
+			case ScriptDataType::Vector3:
+			{
+				glm::vec3 value;
+				mono_field_get_value(scriptData->Object, field.GetField(), &value);
+				SAND_LEFT_LABEL(ImGui::DragFloat3(fieldID, glm::value_ptr(value), 0.5f), field.GetName(),
+				{
+					mono_field_set_value(scriptData->Object, field.GetField(), &value);
+				});
+				break;
+			}
+			case ScriptDataType::Vector4:
+			{
+				glm::vec4 value;
+				mono_field_get_value(scriptData->Object, field.GetField(), &value);
+				SAND_LEFT_LABEL(ImGui::DragFloat4(fieldID, glm::value_ptr(value), 0.5f), field.GetName(),
+				{
+					mono_field_set_value(scriptData->Object, field.GetField(), &value);
+				});
+				break;
+			}
+			case ScriptDataType::Color:
+			{
+				glm::vec4 value;
+				mono_field_get_value(scriptData->Object, field.GetField(), &value);
+				SAND_LEFT_LABEL(ImGui::ColorEdit4(fieldID, glm::value_ptr(value)), field.GetName(),
+				{
+					mono_field_set_value(scriptData->Object, field.GetField(), &value);
+				});
+				break;
+			}
+			case ScriptDataType::Unknown:
+			{
+				ImGui::Text("Unknown data type.");
+			}
 		}
 
 		ImGui::Columns(1);

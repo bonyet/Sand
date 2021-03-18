@@ -1,2 +1,0 @@
-D:\dev\Sand\Sand\vendor\imgui\bin\Debug-windows-x86_64\ImGui\ImGui.pdb
-D:\dev\Sand\Sand\vendor\imgui\bin-int\Debug-windows-x86_64\ImGui\ImGui.pdb

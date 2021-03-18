@@ -3,7 +3,7 @@
 
 	public abstract class Component
 	{
-		public Actor actor { get; protected set; }
+		public Actor actor { get; set; }
 	}
 
 }

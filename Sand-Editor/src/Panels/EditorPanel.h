@@ -1,7 +1,5 @@
 #pragma once
 
-#include <spdlog/sinks/base_sink.h>
-
 namespace Sand
 {
 

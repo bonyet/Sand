@@ -28,7 +28,7 @@ namespace Sand
 
 		ImGui::Begin("Scene Hierarchy", &m_ShowWindow);
 
-		m_Context->mRegistry.each([&](auto entityID)
+		m_Context->m_CurrentRegistry->each([&](auto entityID)
 		{
 			Actor entity{ entityID, m_Context.get() };
 			DrawActorNode(entity);
@@ -53,10 +53,19 @@ namespace Sand
 	{
 		auto& tag = entity.GetComponent<TagComponent>().Name;
 
-		ImGuiTreeNodeFlags flags = ((m_SelectionContext == entity) ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
-		flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, { 3.0f, 3.0f });
+
+		ImVec4 textColor = m_SelectionContext == entity ? ImVec4(0.2f, 0.8f, 0.3f, 1.0f) : ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+		ImGui::PushStyleColor(ImGuiCol_Text, textColor);
+
+		ImGuiTreeNodeFlags flags = ((m_SelectionContext == entity) ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
+		flags |= ImGuiTreeNodeFlags_Framed;
 		bool opened = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)entity, flags, tag.c_str());
 		
+		ImGui::PopStyleColor();
+		ImGui::PopStyleVar(2);
+
 		if (ImGui::IsItemClicked())
 			m_SelectionContext = entity;
 

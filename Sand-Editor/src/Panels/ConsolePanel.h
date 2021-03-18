@@ -4,6 +4,8 @@
 #include "Sand/Renderer/Texture.h"
 #include <array>
 
+#include <spdlog/sinks/base_sink.h>
+
 namespace Sand
 {
 	 

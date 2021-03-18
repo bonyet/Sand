@@ -79,7 +79,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>SAND_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\Sand\vendor\spdlog\include;..\Sand\src;..\Sand\vendor;..\Sand\vendor\entt\include;..\Sand\vendor\glm;..\Sand\vendor\ImGuizmo;..;..\Sand\vendor\Mono\include\mono-2.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Sand\vendor\spdlog\include;..\Sand\src;..\Sand\vendor;..\Sand\vendor\entt\include;..\Sand\vendor\glm;..\Sand\vendor\ImGuizmo;..\Sand\vendor\box2d\include;..\Sand\vendor\Mono\include\mono-2.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -97,7 +97,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>SAND_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\Sand\vendor\spdlog\include;..\Sand\src;..\Sand\vendor;..\Sand\vendor\entt\include;..\Sand\vendor\glm;..\Sand\vendor\ImGuizmo;..;..\Sand\vendor\Mono\include\mono-2.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Sand\vendor\spdlog\include;..\Sand\src;..\Sand\vendor;..\Sand\vendor\entt\include;..\Sand\vendor\glm;..\Sand\vendor\ImGuizmo;..\Sand\vendor\box2d\include;..\Sand\vendor\Mono\include\mono-2.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -118,7 +118,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>SAND_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\Sand\vendor\spdlog\include;..\Sand\src;..\Sand\vendor;..\Sand\vendor\entt\include;..\Sand\vendor\glm;..\Sand\vendor\ImGuizmo;..;..\Sand\vendor\Mono\include\mono-2.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Sand\vendor\spdlog\include;..\Sand\src;..\Sand\vendor;..\Sand\vendor\entt\include;..\Sand\vendor\glm;..\Sand\vendor\ImGuizmo;..\Sand\vendor\box2d\include;..\Sand\vendor\Mono\include\mono-2.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -136,6 +136,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\EditorLayer.h" />
+    <ClInclude Include="src\Panels\AssetManagerPanel.h" />
     <ClInclude Include="src\Panels\ConsolePanel.h" />
     <ClInclude Include="src\Panels\EditorPanel.h" />
     <ClInclude Include="src\Panels\PropertiesPanel.h" />
@@ -144,6 +145,7 @@
   <ItemGroup>
     <ClCompile Include="src\EditorApp.cpp" />
     <ClCompile Include="src\EditorLayer.cpp" />
+    <ClCompile Include="src\Panels\AssetManagerPanel.cpp" />
     <ClCompile Include="src\Panels\ConsolePanel.cpp" />
     <ClCompile Include="src\Panels\PropertiesPanel.cpp" />
     <ClCompile Include="src\Panels\SceneHierarchyPanel.cpp" />

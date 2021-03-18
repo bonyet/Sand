@@ -5,9 +5,12 @@
 #include "Panels/SceneHierarchyPanel.h"
 #include "Panels/PropertiesPanel.h"
 #include "Panels/ConsolePanel.h"
+#include "Panels/AssetManagerPanel.h"
+
 #include "Sand/Renderer/EditorCamera.h"
 
 #include "Sand/Renderer/Texture.h"
+#include "Sand/Events/SceneEvent.h"
 
 namespace Sand
 {
@@ -25,30 +28,32 @@ namespace Sand
 		virtual void OnGuiRender() override;
 		virtual void OnEvent(Event& e) override;
 	private:
-		void SetDarkTheme();
+		void SetupGUITheme();
 		bool OnKeyPressed(KeyPressedEvent& e);
 		bool OnMouseButtonPressed(MouseButtonPressedEvent& e);
+		bool OnSceneEndPlay(SceneEndPlayEvent& e);
 		void MousePick();
 
 		void NewScene();
 		void SaveSceneAs();
 		void OpenScene();
 	private:
-		Ref<Framebuffer> mViewportFramebuffer;
+		Ref<Framebuffer> m_ViewportFramebuffer;
 
-		Ref<Scene> mActiveScene;
+		Ref<Scene> m_ActiveScene;
 
-		SceneHierarchyPanel mSceneHierarchyPanel;
-		PropertiesPanel mPropertiesPanel;
-		ConsolePanel mConsolePanel;
+		SceneHierarchyPanel m_SceneHierarchyPanel;
+		PropertiesPanel m_PropertiesPanel;
+		ConsolePanel m_ConsolePanel;
+		AssetManagerPanel m_AssetManagerPanel;
 
-		EditorCamera mEditorCamera;
+		EditorCamera m_EditorCamera;
 
-		int mGizmoType = -1;
+		int m_GizmoType = -1;
 
-		glm::vec2 mViewportBounds[2]{};
-		bool mViewportFocused = false, mViewportHovered = false;
-		glm::vec2 mViewportSize = { 0, 0 };
+		glm::vec2 m_ViewportBounds[2]{};
+		bool m_ViewportFocused = false, m_ViewportHovered = false;
+		glm::vec2 m_ViewportSize = { 0, 0 };
 	};
 
 }

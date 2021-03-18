@@ -1,2 +1,0 @@
-D:\dev\Sand\bin\Debug-windows-x86_64\Sand\Sand.pdb
-D:\dev\Sand\bin-int\Debug-windows-x86_64\Sand\Sand.pdb

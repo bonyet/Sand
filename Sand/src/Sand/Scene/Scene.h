@@ -27,25 +27,33 @@ namespace Sand
 
 		void BeginPlay();
 		void EndPlay();
-		bool IsPlaying() const { return mPlaymode; }
+		bool IsPlaying() const { return m_Playmode; }
 
 		void OnUpdateEditor(Timestep ts, EditorCamera& camera);
 		void OnUpdateRuntime(Timestep ts);
 
-		Actor GetPrimaryCameraActor();
 		Actor FindActor(const std::string& name);
-		const uint32_t GetNumberOfActors() const { return (uint32_t)mRegistry.alive(); }
+		int FindActorID(const std::string& name);
 
-		PhysicsWorld& GetPhysicsWorld() { return mPhysicsWorld; }
+		Actor DuplicateActor(Actor original);
+		void SwitchToRuntimeRegistry();
+		void SwitchToEditorRegistry();
+
+		Actor GetPrimaryCameraActor();
+		PhysicsWorld& GetPhysicsWorld() { return m_PhysicsWorld; }
+		const uint32_t GetNumberOfActors() const { return (uint32_t)m_Registry.alive(); }
+
+		bool ContainsActor(Actor actor);
 	private:
 		template<typename T>
 		void OnComponentAdded(Actor entity, T& component);
-	private:
-		PhysicsWorld mPhysicsWorld;
-		entt::registry mRegistry;
-
-		bool mPlaymode = false;
-		float mViewportWidth = 5, mViewportHeight = 5;
+		PhysicsWorld m_PhysicsWorld;
+		entt::registry m_Registry;
+		entt::registry m_RuntimeRegistry;
+		entt::registry* m_CurrentRegistry = nullptr;
+		
+		bool m_Playmode = false;
+		float m_ViewportWidth = 5, m_ViewportHeight = 5;
 
 		friend class Actor;
 		friend class SceneHierarchyPanel;
