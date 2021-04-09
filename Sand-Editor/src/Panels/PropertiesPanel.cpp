@@ -25,12 +25,8 @@ namespace Sand
 
 		auto& component = Actor.GetComponent<T>();
 		ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
-
-		std::string nodeName = name;
-		if constexpr (std::is_base_of_v<T, ScriptComponent>)
-			nodeName = component.ModuleName + " :: (Script)";
 		
-		bool open = ImGui::TreeNodeEx((void*)typeid(T).hash_code(), treeNodeFlags, nodeName.c_str());
+		bool open = ImGui::TreeNodeEx((void*)typeid(T).hash_code(), treeNodeFlags, name.c_str());
 
 		ImGui::Tooltip("Right click for more actions", 1.1f);
 
@@ -215,34 +211,22 @@ namespace Sand
 			if (ImGui::BeginMenu("Physics"))
 			{
 				DrawComponentMenuItem<PhysicsComponent>("Physics", actor);
+				DrawComponentMenuItem<BoxColliderComponent>("Box Collider", actor);
+
+				ImGui::EndMenu();
+			}
+
+			if (ImGui::BeginMenu("Audio"))
+			{
+				DrawComponentMenuItem<AudioSourceComponent>("Audio Source", actor);
 
 				ImGui::EndMenu();
 			}
 
 			ImGui::Separator();
 
-			// Scripting
-			if (ImGui::BeginMenu("Scripts"))
-			{
-				for (auto pKlass : ScriptEngine::GetCachedClientScripts())
-				{
-					MonoClass* klass = (MonoClass*)pKlass;
-					const char* name = mono_class_get_name(klass);
-
-					if (DrawComponentMenuItem<ScriptComponent>(name, actor))
-					{
-						auto& addedScript = actor.GetComponent<ScriptComponent>();
-						addedScript.ModuleName = name;
-						addedScript.Activate();
-					}
-				}
-
-				ImGui::EndMenu();
-			}
-
 			if (ImGui::BeginMenu("Misc"))
 			{
-				DrawComponentMenuItem<AnimatorComponent>("Animator", actor);
 
 				ImGui::EndMenu();
 			}
@@ -298,14 +282,21 @@ namespace Sand
 			auto boldFont = io.Fonts->Fonts[1];
 
 			// Position
-			SAND_LEFT_LABEL_TOOLTIP(ImGui::DragFloat2("##Position", glm::value_ptr(component.Position), 0.05f, 0.0f, 0.0f, "%.2f"), "Position", "The world space position of this actor in meters", );
+			glm::vec2 position = component.GetPosition();
+			SAND_LEFT_LABEL_TOOLTIP(ImGui::DragFloat2("##Position", glm::value_ptr(position), 0.05f, 0.0f, 0.0f, "%.2f"), "Position", "The world space position of this actor in meters",
+				component.SetPosition(position);
+			);
 
-			SAND_LEFT_LABEL_TOOLTIP(ImGui::DragFloat2("##Scale", glm::value_ptr(component.Scale), 0.05f, 0.05f, 0.0f, "%.2f"), "Scale", "The scale of this actor in meters", );
+			glm::vec2 scale = component.GetScale();
+			SAND_LEFT_LABEL_TOOLTIP(ImGui::DragFloat2("##Scale", glm::value_ptr(scale), 0.05f, 0.05f, 0.0f, "%.2f"), "Scale", "The scale of this actor in meters",
+				component.SetScale(scale);
+			);
 
 			// Rotation
-			float eulerAngles = glm::degrees(component.Rotation);
-			SAND_LEFT_LABEL_TOOLTIP(ImGui::DragFloat("##Rotation", &eulerAngles, 0.1f, 0.0f, 0.0f, "%.2f"), "Rotation", "The rotation of this actor in euler angles", );
-			component.Rotation = glm::radians(eulerAngles);
+			float eulerAngles = glm::degrees(component.GetRotation());
+			SAND_LEFT_LABEL_TOOLTIP(ImGui::DragFloat("##Rotation", &eulerAngles, 0.1f, 0.0f, 0.0f, "%.2f"), "Rotation", "The rotation of this actor in euler angles",
+				component.SetRotation(glm::radians(eulerAngles));
+			);
 		});
 		SetColumnsMinSpacing(defaultColumnSpacing);
 		
@@ -316,19 +307,19 @@ namespace Sand
 
 			SAND_LEFT_LABEL_TOOLTIP(ImGui::Checkbox("##Primary", &component.Primary), "Primary", "Primary cameras render the scene", );
 
-			float orthoSize = camera.GetOrthographicSize();
+			float orthoSize = camera.GetSize();
 			SAND_LEFT_LABEL(ImGui::DragFloat("##Size", &orthoSize), "Size",
-				camera.SetOrthographicSize(orthoSize);
+				camera.SetSize(orthoSize);
 			);
 			
-			float orthoNear = camera.GetOrthographicNearClip();
+			float orthoNear = camera.GetNearClip();
 			SAND_LEFT_LABEL_TOOLTIP(ImGui::DragFloat("##Near", &orthoNear), "Near", "Objects closer to the camera than this value will be clipped",
-				camera.SetOrthographicNearClip(orthoNear);
+				camera.SetNearClip(orthoNear);
 			);
 			
-			float orthoFar = camera.GetOrthographicFarClip();
+			float orthoFar = camera.GetFarClip();
 			SAND_LEFT_LABEL_TOOLTIP(ImGui::DragFloat("##Far", &orthoFar), "Far", "Objects further from the camera than this value will be clipped",
-				camera.SetOrthographicFarClip(orthoFar);
+				camera.SetFarClip(orthoFar);
 			);
 			
 			SAND_LEFT_LABEL_TOOLTIP(ImGui::Checkbox("##Fixed Aspect Ratio", &component.FixedAspectRatio), "Fixed Aspect Ratio", "If this is true the cameras aspect ratio will not adjust to the window scale", );
@@ -381,13 +372,29 @@ namespace Sand
 			SAND_LEFT_LABEL(ImGui::ColorEdit4("##Color", glm::value_ptr(component.Color)), "Color", );
 		});
 		SetColumnsMinSpacing(defaultColumnSpacing);
-
-		DrawComponent<ScriptComponent>("Script", actor, [=](auto& component)
-		{
-			const ScriptData* sdata = ScriptEngine::GetScriptData(actor, component.ModuleName);
-			RenderAllScriptFields(sdata);
-		});
 	
+		DrawComponent<BoxColliderComponent>("Box Collider", actor, [=](auto& component)
+		{
+			glm::vec2 scale = component.GetScale();
+			SAND_LEFT_LABEL(ImGui::DragFloat2("##Scale", glm::value_ptr(scale), 0.05f, 0.05f, 0.0f, "%.2f"), "Scale",
+				component.SetScale(scale);
+			);
+
+			float restitution = component.GetRestitution();
+			SAND_LEFT_LABEL(ImGui::InputFloat("##Restitution", &restitution, 0.0f, 0.0f, 2), "Restitution",
+				component.SetRestitution(restitution);
+			);
+			float friction = component.GetFriction();
+			SAND_LEFT_LABEL(ImGui::InputFloat("##Friction", &friction, 0.0f, 0.0f, 2), "Friction",
+				component.SetFriction(friction);
+			);
+
+			bool observer = component.IsObserver();
+			SAND_LEFT_LABEL(ImGui::Checkbox("##Observer", &observer), "Observer",
+				component.SetObserver(observer);
+			);
+		});
+
 		DrawComponent<PhysicsComponent>("Physics", actor, [](auto& component)
 		{
 			auto& body = component.Body;
@@ -414,20 +421,14 @@ namespace Sand
 				});
 			}
 
-			ImGui::Separator();
 			float gravity = body.GetGravityScale();
-			SAND_LEFT_LABEL(ImGui::InputFloat("##GravityScale", &gravity), "Gravity Scale",
+			SAND_LEFT_LABEL(ImGui::InputFloat("##GravityScale", &gravity, 0.0f, 0.0f, 2), "Gravity Scale",
 				body.SetGravityScale(gravity);
 			);
-			float friction = body.GetFriction();
-			SAND_LEFT_LABEL(ImGui::InputFloat("##Friction", &friction), "Friction",
-				body.SetFriction(friction);
-			);
 			float mass = body.GetMass();
-			SAND_LEFT_LABEL(ImGui::InputFloat("##Mass", &mass), "Mass",
+			SAND_LEFT_LABEL(ImGui::InputFloat("##Mass", &mass, 0.0f, 0.0f, 2), "Mass",
 				body.SetMass(mass);
 			);
-			ImGui::Separator();
 
 			bool fixedRotation = body.GetFixedRotation();
 			SAND_LEFT_LABEL(ImGui::Checkbox("##FixedRotation", &fixedRotation), "Fixed Rotation",
@@ -436,45 +437,50 @@ namespace Sand
 
 		});
 
-		DrawComponent<AnimatorComponent>("Animator", actor, [](auto& component)
+		DrawComponent<AudioSourceComponent>("Audio Source", actor, [](auto& component)
 		{
-			auto& animator = component.Animator;
-			uint32_t fps = animator.GetAnimation().GetFPS();
-			
-			{
-				constexpr uint32_t framerates[] = { 10, 16, 24, 30, 60 };
-				
-				const char* items[] = { "10", "16", "24", "30", "60" };
-				static const char* currentItem = NULL;
+			auto& source = component.Source;
 
-				SAND_LEFT_LABEL(ImGui::BeginCombo("##FPS", currentItem), "Frames Per Second",
-				{
-					for (int n = 0; n < IM_ARRAYSIZE(items); n++)
-					{
-						bool isSelected = (currentItem == items[n]);
-						if (ImGui::Selectable(items[n], isSelected))
-						{
-							currentItem = items[n];
-							if (isSelected)
-								ImGui::SetItemDefaultFocus();
+			// Gain
+			float gain = source.GetGain();
+			SAND_LEFT_LABEL(ImGui::DragFloat("##Gain", &gain, 0.025f, 0.0f, 1.0f, "%.2f"), "Gain",
+				source.SetGain(gain);
+			);
 
-							animator.GetAnimation().SetFPS(framerates[n]);
-						}
-					}
-					ImGui::EndCombo();
-				});
-			}
+			// Pitch
+			float pitch = source.GetPitch();
+			SAND_LEFT_LABEL(ImGui::DragFloat("##Pitch", &pitch, 0.05f, 0.0f, 10.0f, "%.2f"), "Pitch",
+				source.SetPitch(pitch);
+			);
 
+			// Spatial
+			bool spatial = source.IsSpatial();
+			SAND_LEFT_LABEL(ImGui::Checkbox("##Spatial", &spatial), "Spatial",
+				source.SetSpatial(spatial);
+			);
+
+			ImGui::Spacing();
 			ImGui::Separator();
-			SAND_LEFT_LABEL_TOOLTIP(ImGui::Checkbox("##Loop", &animator.Loop), "Loop", "Whether or not this animation will loop", );
+			ImGui::Spacing();
+
+			if (ImGui::Button("Load Audio Clip"))
+			{
+				std::string chosenFilepath = FileDialogs::OpenFile("Sound (*.mp3);(*.wav)\0*.mp3;\0");
+
+				if (!chosenFilepath.empty() && chosenFilepath != component.Clip.Filepath)
+					component.Clip.Filepath = chosenFilepath;
+			}
+			if (!component.Clip.Filepath.empty())
+			{
+				ImGui::Text("Current Filepath: '%s'", component.Clip.Filepath.c_str());
+			}
 		});
 	}
 
-	static void RenderScriptField(const ScriptField& field, const ScriptData* const scriptData);
-
+#if 0
 	static void RenderAllScriptFields(const ScriptData* const scriptData)
 	{
-		for (auto field : scriptData->Fields)
+		for (const ScriptField& field : scriptData->Fields)
 		{
 			if (!field.IsPublic())
 				continue; // dont show private fields in inspector
@@ -564,5 +570,6 @@ namespace Sand
 
 		ImGui::Columns(1);
 	}
+#endif
 
 }

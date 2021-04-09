@@ -11,25 +11,26 @@ namespace Sand
 		SceneCamera();
 		virtual ~SceneCamera() = default;
 
-		void SetOrthographic(float size, float nearClip, float farClip);
-
 		void SetViewportSize(float width, float height);
 
-		float GetOrthographicSize() const { return mOrthographicSize; }
-		void SetOrthographicSize(float size) { mOrthographicSize = size; RecalculateProjection(); }
-		float GetOrthographicNearClip() const { return mOrthographicNear; }
-		void SetOrthographicNearClip(float clip) { mOrthographicNear = clip; RecalculateProjection(); }
-		float GetOrthographicFarClip() const { return mOrthographicFar; }
-		void SetOrthographicFarClip(float clip) { mOrthographicFar = clip; RecalculateProjection(); }
+		float GetSize() const { return m_Size; }
+		void SetSize(float size) { m_Size = size; RecalculateProjection(); }
+		float GetNearClip() const { return m_Near; }
+		void SetNearClip(float clip) { m_Near = clip; RecalculateProjection(); }
+		float GetFarClip() const { return m_Far; }
+		void SetFarClip(float clip) { m_Far = clip; RecalculateProjection(); }
 
-		float GetAspectRatio() const { return mAspectRatio; }
+		float GetAspectRatio() const { return m_AspectRatio; }
+
+		void ScreenToWorldPoint(glm::vec2& worldPoint, const glm::mat4& view);
+		void WorldToScreenPoint(glm::vec2& worldPoint, const glm::mat4& view);
 	private:
 		void RecalculateProjection();
 	private:
-		float mOrthographicSize = 10.0f;
-		float mOrthographicNear = -1.0f, mOrthographicFar = 1.0f;
+		float m_Size = 10.0f;
+		float m_Near = -1.0f, m_Far = 1.0f;
 
-		float mAspectRatio = 0.0f;
+		float m_AspectRatio = 0.0f;
 
 		friend class EditorCamera;
 	};

@@ -16,7 +16,6 @@ workspace "Sand"
 
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
--- Include directories relative to root folder (solution directory)
 IncludeDir = {}
 IncludeDir["GLFW"]      = "Sand/vendor/GLFW/include"
 IncludeDir["Glad"]      = "Sand/vendor/Glad/include"
@@ -28,9 +27,13 @@ IncludeDir["yaml_cpp"]  = "Sand/vendor/yaml-cpp/include"
 IncludeDir["ImGuizmo"]  = "Sand/vendor/ImGuizmo"
 IncludeDir["Mono"]      = "Sand/vendor/Mono/include/mono-2.0"
 IncludeDir["Box2D"]     = "Sand/vendor/box2d/include"
-
+IncludeDir["SandAudio"] = "Sand/vendor/SandAudio/include"
+IncludeDir["OpenAL"]    = "Sand/vendor/openal-soft/include"
+IncludeDir["minimp3"]   = "Sand/vendor/minimp3"
+ 
 LibraryDir = {}
-LibraryDir["Mono"] = "%{wks.location}/Sand/vendor/Mono/lib/mono-2.0-sgen.lib"
+LibraryDir["Mono"]      = "%{wks.location}/Sand/vendor/Mono/lib/mono-2.0-sgen.lib"
+LibraryDir["OpenAL"]    = "%{wks.location}/Sand/vendor/openal-soft/build/Release/OpenAL32.lib"
 
 group "Dependencies"
 	include "Sand/vendor/GLFW"
@@ -88,6 +91,8 @@ project "Sand"
 		"%{IncludeDir.ImGuizmo}",
 		"%{IncludeDir.Mono}",
 		"%{IncludeDir.Box2D}",
+		"%{IncludeDir.OpenAL}",
+		"%{IncludeDir.minimp3}",
 	}
 
 	links 
@@ -98,6 +103,7 @@ project "Sand"
 		"yaml-cpp",
 		"Box2D",
 		"%{LibraryDir.Mono}",
+		"%{LibraryDir.OpenAL}",
 		"opengl32.lib",
 	}
 
@@ -147,6 +153,8 @@ project "Sandbox"
 		"%{IncludeDir.glm}",
 		"%{IncludeDir.Box2D}",
 		"%{IncludeDir.Mono}",
+		"%{IncludeDir.OpenAL}",
+		"%{IncludeDir.minimp3}",
 	}
 
 	links
@@ -198,6 +206,8 @@ project "Sand-Editor"
 			"%{IncludeDir.ImGuizmo}",
 			"%{IncludeDir.Box2D}",
 			"%{IncludeDir.Mono}",
+			"%{IncludeDir.OpenAL}",
+			"%{IncludeDir.minimp3}",
 		}
 	
 		links

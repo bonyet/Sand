@@ -27,17 +27,6 @@ namespace Sand
 
 		m_Body = physicsWorld->GetWorld()->CreateBody(&bodyDef);
 
-		// Shape stuff
-		b2PolygonShape shape;
-		shape.SetAsBox((description.Scale.x / 2.0f) - shape.m_radius, (description.Scale.y / 2.0f) - shape.m_radius);
-		// Fixture stuff
-		b2FixtureDef fixtureDef;
-		fixtureDef.shape = &shape;
-		fixtureDef.density = 1.0f;
-		fixtureDef.friction = 0.3f;
-
-		m_Body->CreateFixture(&fixtureDef);
-
 		b2MassData massData;
 		m_Body->GetMassData(&massData);
 		massData.mass = m_Mass;
@@ -84,19 +73,6 @@ namespace Sand
 	float PhysicsBody::GetGravityScale() const
 	{
 		return m_GravityScale;
-	}
-
-	void PhysicsBody::SetFriction(float friction)
-	{
-		m_Friction = friction;
-
-		if (m_Body)
-			m_Body->GetFixtureList()->SetFriction(friction);
-	}
-
-	float PhysicsBody::GetFriction() const
-	{
-		return m_Friction;
 	}
 
 	void PhysicsBody::SetFixedRotation(bool rotation)

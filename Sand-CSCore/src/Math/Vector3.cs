@@ -214,6 +214,11 @@ namespace Sand.Math
 			return new Vector3(a.x - b.x, a.y - b.y, a.x - b.x);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Vector3 operator *(Vector3 a, float b)
+		{
+			return new Vector3(a.x * b, a.y * b, a.z * b);
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Vector3 operator /(Vector3 a, double divisor)
 		{
 			return new Vector3(a.x / divisor, a.y / divisor, a.z / divisor);

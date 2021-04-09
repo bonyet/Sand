@@ -20,8 +20,7 @@
     <OutputPath>..\bin\Debug-windows-x86_64\Sand-CSCore\</OutputPath>
     <BaseIntermediateOutputPath>..\bin-int\Debug-windows-x86_64\Sand-CSCore\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)</IntermediateOutputPath>
-    <DefineConstants>
-    </DefineConstants>
+    <DefineConstants></DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -32,8 +31,7 @@
     <OutputPath>..\bin\Release-windows-x86_64\Sand-CSCore\</OutputPath>
     <BaseIntermediateOutputPath>..\bin-int\Release-windows-x86_64\Sand-CSCore\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)</IntermediateOutputPath>
-    <DefineConstants>
-    </DefineConstants>
+    <DefineConstants></DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -44,8 +42,7 @@
     <OutputPath>..\bin\Dist-windows-x86_64\Sand-CSCore\</OutputPath>
     <BaseIntermediateOutputPath>..\bin-int\Dist-windows-x86_64\Sand-CSCore\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)</IntermediateOutputPath>
-    <DefineConstants>
-    </DefineConstants>
+    <DefineConstants></DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -54,8 +51,10 @@
   <ItemGroup>
     <Compile Include="src\Actor.cs" />
     <Compile Include="src\Color.cs" />
+    <Compile Include="src\Components\BoxColliderComponent.cs" />
     <Compile Include="src\Components\CameraComponent.cs" />
     <Compile Include="src\Components\Component.cs" />
+    <Compile Include="src\Components\PhysicsComponent.cs" />
     <Compile Include="src\Components\SpriteRendererComponent.cs" />
     <Compile Include="src\Components\TagComponent.cs" />
     <Compile Include="src\Components\TransformComponent.cs" />
@@ -68,6 +67,7 @@
     <Compile Include="src\Random.cs" />
     <Compile Include="src\Scene\Scene.cs" />
     <Compile Include="src\ScriptableActor.cs" />
+    <Compile Include="src\Texture.cs" />
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>

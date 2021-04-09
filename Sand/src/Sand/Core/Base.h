@@ -8,11 +8,6 @@
 	#ifdef _WIN64
 		/* Windows x64  */
 		#define SAND_PLATFORM_WINDOWS
-		#ifdef SAND_DEBUG
-			#define D3D11_CALL(hrcall) {HRESULT hr = (hrcall); if (FAILED(hr)) {SAND_CORE_ERROR("Direct3D call failed: {0}, {1}, {2}", __FILE__, __LINE__, ((const char*)_com_error(hr).ErrorMessage())); __debugbreak(); }}
-		#else
-			#define D3D11_CALL(hrcall)
-		#endif
 	#else
 		/* Windows x86 */
 		#error "x86 Builds are not supported!"
@@ -64,10 +59,8 @@
 
 // TODO: an assert with no arguments except condition
 #ifdef SAND_ENABLE_ASSERTS
-	#define SAND_ASSERT(x, ...) { if(!(x)) { SAND_ERROR("Assertion Failed: {0}", __VA_ARGS__); SAND_DEBUGBREAK(); } }
 	#define SAND_CORE_ASSERT(x, ...) { if(!(x)) { SAND_CORE_ERROR("Assertion Failed: {0}", __VA_ARGS__); SAND_DEBUGBREAK(); } }
 #else
-	#define SAND_ASSERT(x, ...)
 	#define SAND_CORE_ASSERT(x, ...)
 #endif
 

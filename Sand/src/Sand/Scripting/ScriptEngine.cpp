@@ -25,8 +25,6 @@ namespace Sand
 	static MonoImage* s_ClientMonoImage = nullptr;
 
 	// Script shit
-	static Scene* s_ActiveScene = nullptr;
-
 	static std::unordered_map<uint32_t, ScriptData> s_ScriptDatas = {};
 
 	static MonoClass* s_ScriptableActorClass = nullptr;
@@ -58,7 +56,9 @@ namespace Sand
 
 		RegisterComponent(TagComponent);
 		RegisterComponent(CameraComponent);
+		RegisterComponent(PhysicsComponent);
 		RegisterComponent(TransformComponent);
+		RegisterComponent(BoxColliderComponent);
 		RegisterComponent(SpriteRendererComponent);
 	}
 #undef RegisterComponent
@@ -94,27 +94,6 @@ namespace Sand
 		mono_jit_cleanup(s_MonoDomain);
 	}
 
-	void ScriptEngine::SetActiveScene(Scene* const scene)
-	{
-		s_ActiveScene = scene;
-	}
-
-	void ScriptEngine::ReloadClientAssembly()
-	{
-		SAND_PROFILE_FUNCTION();
-
-		// Cleanup
-		s_ScriptDatas.clear();
-		s_CachedClientScripts.clear();
-
-		mono_image_close(s_ClientMonoImage);
-		mono_assembly_close(s_ClientMonoAssembly);
-
-		// Load
-		LoadClientAssembly();
-	}
-	
-	// Forward decl cause im into that shieet
 	static std::vector<MonoClass*> FindAllClasses(MonoImage* image);
 
 	void ScriptEngine::LoadClientAssembly()
@@ -167,261 +146,6 @@ namespace Sand
 		return classList;
 	}
 
-	static std::vector<ScriptField> FindAllFields(MonoClass* klass)
-	{
-		SAND_PROFILE_FUNCTION();
-
-		std::vector<ScriptField> fields;
-
-		void* iterator = NULL;
-		MonoClassField* field;
-		while ((field = mono_class_get_fields(klass, &iterator)) != NULL)
-		{
-			MonoType* fieldType = mono_field_get_type(field);
-			const char* name = mono_field_get_name(field);
-			ScriptDataType scriptFieldType = ScriptEngine::MonoTypeToScriptDataType(fieldType);
-			bool isPublic = ScriptEngine::MonoFieldIsPublic(field);
-
-			fields.emplace_back(field, name, isPublic, scriptFieldType);
-		}
-
-		return fields;
-	}
-
-	bool ScriptEngine::ModuleExists(const std::string& moduleName)
-	{
-		MonoClass* klass = mono_class_from_name(s_ClientMonoImage, "Client", moduleName.c_str());
-
-		return klass != nullptr;
-	}
-
-	bool ScriptEngine::ModuleActive(Actor actor)
-	{
-		auto sdata = s_ScriptDatas.find(actor);
-		return sdata != s_ScriptDatas.end() && sdata->second.Object != nullptr;
-	}
-
-	void ScriptEngine::AddModule(uint32_t actorID, const std::string& moduleName)
-	{
-		SAND_PROFILE_FUNCTION();
-
-		MonoClass* klass = mono_class_from_name(s_ClientMonoImage, "Client", moduleName.c_str());
-
-		if (!klass)
-			return;
-
-		SAND_CORE_TRACE("Activating module {0}::{1}", "Client", moduleName);
-		
-		ScriptData sdata = {};
-		sdata.Class = klass;
-		
-		MonoMethod* initializeMethod = NULL;
-		{
-			SAND_PROFILE_SCOPE("ScriptEngine::AddModule - Getting methods from Script");;
-			
-			// Get all the methods we need
-			sdata.OnLoadMethod    = mono_class_get_method_from_name(klass, "OnLoad", 0);
-			sdata.OnCreateMethod  = mono_class_get_method_from_name(klass, "OnCreate", 0);
-			sdata.OnUpdateMethod  = mono_class_get_method_from_name(klass, "OnUpdate", 1);
-			sdata.OnLateUpdateMethod = mono_class_get_method_from_name(klass, "OnLateUpdate", 1);
-			sdata.OnDestroyMethod = mono_class_get_method_from_name(klass, "OnDestroy", 0);
-
-			// Get initialization method
-			initializeMethod = mono_class_get_method_from_name(s_ScriptableActorClass, "Initialize", 1);
-
-			sdata.Object = mono_object_new(s_MonoDomain, klass);
-		}
-		{
-			SAND_PROFILE_SCOPE("ScriptEngine::AddModule - FindAllFields()");
-			sdata.Fields = FindAllFields(klass);
-		}
-		
-		// Call scriptable actor constructor
-		void* params[] = { &actorID };
-		mono_runtime_invoke(initializeMethod, sdata.Object, params, NULL);
-
-		s_ScriptDatas.emplace(actorID, sdata);
-	}
-
-	static inline void ScriptDataOnDestroy(const ScriptData& scriptData);
-
-	void ScriptEngine::DeactivateModule(Actor actor)
-	{
-		SAND_CORE_TRACE("Deactivating module on '{0}'", actor.GetComponent<TagComponent>().Name);
-
-		// Call OnDestroy if the game is running
-		if (s_ActiveScene->IsPlaying())
-			ScriptDataOnDestroy(s_ScriptDatas[actor]);
-
-		s_ScriptDatas.erase(actor);
-	}
-
-	ScriptData* ScriptEngine::GetScriptData(uint32_t actor, const std::string& moduleName)
-	{
-		SAND_PROFILE_FUNCTION();
-
-		MonoClass* klass = mono_class_from_name(s_ClientMonoImage, "Client", moduleName.c_str());
-		if (!klass || !s_ScriptDatas.size()) {
-			// Nah fam
-			return nullptr;
-		}
-
-		if (klass && s_ScriptDatas.find(actor) == s_ScriptDatas.end())
-		{
-			// We haven't initialized this module yet, but we should
-			AddModule(actor, moduleName);
-		}
-
-		for (auto& sdata : s_ScriptDatas)
-		{
-			if (sdata.first == actor)
-			{
-				return &sdata.second;
-			}
-		}
-
-		return nullptr;
-	}
-
-	static inline void ScriptDataOnLoad(const ScriptData& scriptData)
-	{
-		if (!scriptData.OnLoadMethod)
-			return;
-
-		MonoObject* exception = NULL;
-		mono_runtime_invoke(scriptData.OnLoadMethod, scriptData.Object, NULL, &exception);
-		if (exception)
-		{
-			char* toString = mono_string_to_utf8(mono_object_to_string(exception, NULL));
-			SAND_CORE_ERROR(toString);
-			mono_free(toString);
-		}
-	}
-
-	static inline void ScriptDataOnCreate(const ScriptData& scriptData)
-	{
-		if (!scriptData.OnCreateMethod)
-			return;
-
-		MonoObject* exception = NULL;
-		{
-			SAND_PROFILE_SCOPE("(ScriptEngine.cpp) ScriptDataOnCreate() - mono_runtime_invoke()");
-			mono_runtime_invoke(scriptData.OnCreateMethod, scriptData.Object, NULL, &exception);
-		}
-		if (exception)
-		{
-			char* toString = mono_string_to_utf8(mono_object_to_string(exception, NULL));
-			SAND_CORE_ERROR(toString);
-			mono_free(toString);
-		}
-	}
-
-	static inline void ScriptDataOnUpdate(const ScriptData& scriptData, float ts)
-	{
-		SAND_PROFILE_FUNCTION();
-
-		void* params[] = { &ts };
-
-		if (!scriptData.OnUpdateMethod)
-			return;
-
-		MonoObject* exception = NULL;
-		{
-			SAND_PROFILE_SCOPE("(ScriptEngine.cpp) ScriptDataOnUpdate() - mono_runtime_invoke()");
-			mono_runtime_invoke(scriptData.OnUpdateMethod, scriptData.Object, params, &exception);
-		}
-		if (exception)
-		{
-			char* toString = mono_string_to_utf8(mono_object_to_string(exception, NULL));
-			SAND_CORE_ERROR(toString);
-			mono_free(toString);
-		}
-	}
-
-	static inline void ScriptDataOnLateUpdate(const ScriptData& scriptData, float ts)
-	{
-		SAND_PROFILE_FUNCTION();
-
-		void* params[] = { &ts };
-
-		if (!scriptData.OnLateUpdateMethod)
-			return;
-
-		MonoObject* exception = NULL;
-		{
-			SAND_PROFILE_SCOPE("(ScriptEnigne.cpp) ScriptDataOnLateUpdate() - mono_runtime_invoke()");
-			mono_runtime_invoke(scriptData.OnLateUpdateMethod, scriptData.Object, params, &exception);
-		}
-		if (exception)
-		{
-			char* toString = mono_string_to_utf8(mono_object_to_string(exception, NULL));
-			SAND_CORE_ERROR(toString);
-			mono_free(toString);
-		}
-	}
-
-	static inline void ScriptDataOnDestroy(const ScriptData& scriptData)
-	{
-		if (!scriptData.OnDestroyMethod)
-			return;
-
-		MonoObject* exception = NULL;
-		{
-			SAND_PROFILE_SCOPE("(ScriptEngine.cpp) ScriptDataOnDestroy() - mono_runtime_invoke()");
-			mono_runtime_invoke(scriptData.OnDestroyMethod, scriptData.Object, NULL, &exception);
-		}
-		if (exception)
-		{
-			char* toString = mono_string_to_utf8(mono_object_to_string(exception, NULL));
-			SAND_CORE_ERROR(toString);
-			mono_free(toString);
-		}
-	}
-
-	void ScriptEngine::CreateAll()
-	{
-		SAND_PROFILE_FUNCTION();
-
-		// OnLoad
-		for (auto& sdata : s_ScriptDatas)
-		{
-			ScriptDataOnLoad(sdata.second);
-		}
-
-		// OnCreate
-		for (auto& sdata : s_ScriptDatas)
-		{
-			ScriptDataOnCreate(sdata.second);
-		}
-	}
-
-	void ScriptEngine::UpdateAll(Timestep ts)
-	{
-		SAND_PROFILE_FUNCTION();
-
-		// OnUpdate
-		for (auto& sdata : s_ScriptDatas)
-		{
-			ScriptDataOnUpdate(sdata.second, ts);
-		}
-
-		// OnLateUpdate
-		for (auto& sdata : s_ScriptDatas)
-		{
-			ScriptDataOnLateUpdate(sdata.second, ts);
-		}
-	}
-
-	void ScriptEngine::DestroyAll()
-	{
-		SAND_PROFILE_FUNCTION();
-
-		for (auto& sdata : s_ScriptDatas)
-		{
-			ScriptDataOnDestroy(sdata.second);
-		}
-	}
-
 	ScriptDataType ScriptEngine::MonoTypeToScriptDataType(void* monoType)
 	{
 		int type = mono_type_get_type((MonoType*)monoType);
@@ -451,9 +175,13 @@ namespace Sand
 					return ScriptDataType::Vector4;
 				if (strcmp(name, "Sand.Color") == 0)
 					return ScriptDataType::Color;
+
+				break;
 			}
 			default:
+			{
 				return ScriptDataType::Unknown;
+			}
 		}
 	}
 
@@ -461,12 +189,6 @@ namespace Sand
 	{
 		uint32_t flags = mono_field_get_flags((MonoClassField*)field);
 		return (flags & MONO_FIELD_ATTR_PUBLIC) != 0;
-	}
-
-	std::vector<void*> ScriptEngine::GetCachedClientScripts()
-	{
-		// yes I know this line is cursed - it just works.
-		return *reinterpret_cast<std::vector<void*>*>(&s_CachedClientScripts);
 	}
 
 #pragma region InternalFunctions
@@ -509,13 +231,12 @@ namespace Sand
 	{
 		return Input::WasKeyPressed(button);
 	}
-	// ===== COMPONENTS =====
 	static inline Actor ActorFromID(uint32_t id)
 	{
-		return { (entt::entity)id, s_ActiveScene };
+		return { (entt::entity)id, Scene::GetActiveScene() };
 	}
 
-	// TODO: don't GetComponent<> every single function call?
+	// ===== TAG =====
 	static void TagComponent_SetTag(uint32_t id, MonoString* tag)
 	{
 		char* str = mono_string_to_utf8(tag);
@@ -527,41 +248,44 @@ namespace Sand
 		return mono_string_new(s_MonoDomain, ActorFromID(id).GetComponent<TagComponent>().Name.c_str());
 	}
 
+	// ===== TRANSFORM =====
 	static void TransformComponent_SetPosition(uint32_t id, glm::vec2* position)
 	{
-		ActorFromID(id).GetComponent<TransformComponent>().Position = *position;
+		ActorFromID(id).GetComponent<TransformComponent>().SetPosition(*position);
 	}
 	static void TransformComponent_SetRotation(uint32_t id, float rotation)
 	{
-		ActorFromID(id).GetComponent<TransformComponent>().Rotation = rotation;
+		ActorFromID(id).GetComponent<TransformComponent>().SetRotation(rotation);
 	}
 	static void TransformComponent_SetScale(uint32_t id, glm::vec2* scale)
 	{
-		ActorFromID(id).GetComponent<TransformComponent>().Scale = *scale;
+		ActorFromID(id).GetComponent<TransformComponent>().SetScale(*scale);
 	}
 
 	static void TransformComponent_GetPosition(uint32_t id, glm::vec2* out)
 	{
-		*out = ActorFromID(id).GetComponent<TransformComponent>().Position;
+		*out = ActorFromID(id).GetComponent<TransformComponent>().GetPosition();
 	}
 	static void TransformComponent_GetRotation(uint32_t id, float* out)
 	{
-		*out = ActorFromID(id).GetComponent<TransformComponent>().Rotation;
+		*out = ActorFromID(id).GetComponent<TransformComponent>().GetRotation();
 	}
 	static void TransformComponent_GetScale(uint32_t id, glm::vec2* out)
 	{
-		*out = ActorFromID(id).GetComponent<TransformComponent>().Scale;
+		*out = ActorFromID(id).GetComponent<TransformComponent>().GetScale();
 	}
 
+	// ===== CAMERA =====
 	static void CameraComponent_SetSize(uint32_t id, float size)
 	{
-		ActorFromID(id).GetComponent<CameraComponent>().Camera.SetOrthographicSize(size);
+		ActorFromID(id).GetComponent<CameraComponent>().Camera.SetSize(size);
 	}
 	static float CameraComponent_GetSize(uint32_t id)
 	{
-		return ActorFromID(id).GetComponent<CameraComponent>().Camera.GetOrthographicSize();
+		return ActorFromID(id).GetComponent<CameraComponent>().Camera.GetSize();
 	}
 
+	// ==== SPRITE RENDERER =====
 	static void SpriteRendererComponent_SetColor(glm::vec4* color, uint32_t id)
 	{
 		ActorFromID(id).GetComponent<SpriteRendererComponent>().Color = *color;
@@ -571,6 +295,83 @@ namespace Sand
 		color = &ActorFromID(id).GetComponent<SpriteRendererComponent>().Color;
 	}
 
+	// ===== PHYSICS =====
+	static void PhysicsComponent_SetType(uint32_t id, int type)
+	{
+		ActorFromID(id).GetComponent<PhysicsComponent>().Body.SetType((PhysicsBodyType)type);
+	}
+	static int PhysicsComponent_GetType(uint32_t id)
+	{
+		return (int)ActorFromID(id).GetComponent<PhysicsComponent>().Body.GetType();
+	}
+	static void PhysicsComponent_SetMass(uint32_t id, float mass)
+	{
+		ActorFromID(id).GetComponent<PhysicsComponent>().Body.SetMass(mass);
+	}
+	static float PhysicsComponent_GetMass(uint32_t id)
+	{
+		return ActorFromID(id).GetComponent<PhysicsComponent>().Body.GetMass();
+	}
+	static void PhysicsComponent_SetGravityScale(uint32_t id, float gravity)
+	{
+		ActorFromID(id).GetComponent<PhysicsComponent>().Body.SetGravityScale(gravity);
+	}
+	static float PhysicsComponent_GetGravityScale(uint32_t id)
+	{
+		return ActorFromID(id).GetComponent<PhysicsComponent>().Body.GetGravityScale();
+	}
+	static void PhysicsComponent_SetFixedRotation(uint32_t id, bool fixed)
+	{
+		ActorFromID(id).GetComponent<PhysicsComponent>().Body.SetFixedRotation(fixed);
+	}
+	static bool PhysicsComponent_GetFixedRotation(uint32_t id)
+	{
+		return ActorFromID(id).GetComponent<PhysicsComponent>().Body.GetFixedRotation();
+	}
+	static void PhysicsComponent_ApplyLinearImpulse(uint32_t id, glm::vec2* impulse, bool wake)
+	{
+		ActorFromID(id).GetComponent<PhysicsComponent>().Body.ApplyLinearImpulse(*impulse, wake);
+	}
+	static void PhysicsComponent_ApplyForce(uint32_t id, glm::vec2* force, bool wake)
+	{
+		ActorFromID(id).GetComponent<PhysicsComponent>().Body.ApplyForce(*force, wake);
+	}
+
+	// ===== BOX COLLIDER =====
+	static void BoxColliderComponent_SetScale(uint32_t id, glm::vec2* scale)
+	{
+		ActorFromID(id).GetComponent<BoxColliderComponent>().SetScale(*scale);
+	}
+	static void BoxColliderComponent_GetScale(uint32_t id, glm::vec2* outScale)
+	{
+		*outScale = ActorFromID(id).GetComponent<BoxColliderComponent>().GetScale();
+	}
+	static void BoxColliderComponent_SetRestitution(uint32_t id, float restitution)
+	{
+		ActorFromID(id).GetComponent<BoxColliderComponent>().SetRestitution(restitution);
+	}
+	static void BoxColliderComponent_SetFriction(uint32_t id, float friction)
+	{
+		ActorFromID(id).GetComponent<BoxColliderComponent>().SetFriction(friction);
+	}
+	static float BoxColliderComponent_GetFriction(uint32_t id)
+	{
+		return ActorFromID(id).GetComponent<BoxColliderComponent>().GetFriction();
+	}
+	static float BoxColliderComponent_GetRestitution(uint32_t id)
+	{
+		return ActorFromID(id).GetComponent<BoxColliderComponent>().GetRestitution();
+	}
+	static void BoxColliderComponent_SetObserver(uint32_t id, bool flag)
+	{
+		ActorFromID(id).GetComponent<BoxColliderComponent>().SetObserver(flag);
+	}
+	static bool BoxColliderComponent_IsObserver(uint32_t id)
+	{
+		return ActorFromID(id).GetComponent<BoxColliderComponent>().IsObserver();
+	}
+
+	// ===== ACTOR =====
 	static void Actor_AddComponent(uint32_t id, MonoString* typeName)
 	{
 		SAND_PROFILE_FUNCTION();
@@ -604,16 +405,17 @@ namespace Sand
 		return result;
 	}
 
+	// ===== SCENE =====
 	static uint32_t Scene_GetNumberOfActors()
 	{
-		return s_ActiveScene->GetNumberOfActors();
+		return Scene::GetActiveScene()->GetNumberOfActors();
 	}
 
 	static int Scene_FindActorByName(MonoString* name)
 	{
 		char* cstring = mono_string_to_utf8(name);
 
-		int id = s_ActiveScene->FindActorID(std::string(cstring));
+		int id = Scene::GetActiveScene()->FindActorID(std::string(cstring));
 		
 		mono_free(cstring);
 
@@ -625,36 +427,66 @@ namespace Sand
 	{
 		SAND_PROFILE_FUNCTION();
 
+		// Logging
 		mono_add_internal_call("Sand.Log::Info", &Log_PrintInfo);
 		mono_add_internal_call("Sand.Log::Warn", &Log_PrintWarn);
 		mono_add_internal_call("Sand.Log::Error", &Log_PrintError);
 
+		// Input
 		mono_add_internal_call("Sand.Input::IsKeyPressed_Native", &Input_IsKeyPressed);
 		mono_add_internal_call("Sand.Input::WasKeyPressed_Native", &Input_WasKeyPressed);
 
 		mono_add_internal_call("Sand.Input::IsMousePressed_Native", &Input_IsMouseButtonPressed);
 		mono_add_internal_call("Sand.Input::WasMousePressed_Native", &Input_WasMouseButtonPressed);
 
+		// Tag component
 		mono_add_internal_call("Sand.TagComponent::SetTag_Native", &TagComponent_SetTag);
 		mono_add_internal_call("Sand.TagComponent::GetTag_Native", &TagComponent_GetTag);
 
-		mono_add_internal_call("Sand.SpriteRendererComponent::SetColor_Native", &SpriteRendererComponent_SetColor);
-		mono_add_internal_call("Sand.SpriteRendererComponent::GetColor_Native", &SpriteRendererComponent_GetColor);
-
+		// Transform component
 		mono_add_internal_call("Sand.TransformComponent::SetPosition_Native", &TransformComponent_SetPosition);
 		mono_add_internal_call("Sand.TransformComponent::SetRotation_Native", &TransformComponent_SetRotation);
 		mono_add_internal_call("Sand.TransformComponent::SetScale_Native", &TransformComponent_SetScale);
-
-		mono_add_internal_call("Sand.CameraComponent::SetSize_Native", &CameraComponent_SetSize);
-		mono_add_internal_call("Sand.CameraComponent::GetSize_Native", &CameraComponent_GetSize);
 
 		mono_add_internal_call("Sand.TransformComponent::GetPosition_Native", &TransformComponent_GetPosition);
 		mono_add_internal_call("Sand.TransformComponent::GetRotation_Native", &TransformComponent_GetRotation);
 		mono_add_internal_call("Sand.TransformComponent::GetScale_Native", &TransformComponent_GetScale);
 
+		// Sprite renderer component
+		mono_add_internal_call("Sand.SpriteRendererComponent::SetColor_Native", &SpriteRendererComponent_SetColor);
+		mono_add_internal_call("Sand.SpriteRendererComponent::GetColor_Native", &SpriteRendererComponent_GetColor);
+
+		// Camera component
+		mono_add_internal_call("Sand.CameraComponent::SetSize_Native", &CameraComponent_SetSize);
+		mono_add_internal_call("Sand.CameraComponent::GetSize_Native", &CameraComponent_GetSize);
+
+		// Physics component
+		mono_add_internal_call("Sand.PhysicsComponent::SetType_Native", &PhysicsComponent_SetType);
+		mono_add_internal_call("Sand.PhysicsComponent::GetType_Native", &PhysicsComponent_GetType);
+		mono_add_internal_call("Sand.PhysicsComponent::SetMass_Native", &PhysicsComponent_SetMass);
+		mono_add_internal_call("Sand.PhysicsComponent::GetMass_Native", &PhysicsComponent_GetMass);
+		mono_add_internal_call("Sand.PhysicsComponent::SetGravityScale_Native", &PhysicsComponent_SetGravityScale);
+		mono_add_internal_call("Sand.PhysicsComponent::GetGravityScale_Native", &PhysicsComponent_GetGravityScale);
+		mono_add_internal_call("Sand.PhysicsComponent::SetFixedRotation_Native", &PhysicsComponent_SetFixedRotation);
+		mono_add_internal_call("Sand.PhysicsComponent::GetFixedRotation_Native", &PhysicsComponent_GetFixedRotation);
+		mono_add_internal_call("Sand.PhysicsComponent::ApplyLinearImpulse_Native", &PhysicsComponent_ApplyLinearImpulse);
+		mono_add_internal_call("Sand.PhysicsComponent::ApplyForce_Native", &PhysicsComponent_ApplyForce);
+
+		// Box collider component
+		mono_add_internal_call("Sand.BoxColliderComponent::SetScale_Native", &BoxColliderComponent_SetScale);
+		mono_add_internal_call("Sand.BoxColliderComponent::GetScale_Native", &BoxColliderComponent_GetScale);
+		mono_add_internal_call("Sand.BoxColliderComponent::SetRestitution_Native", &BoxColliderComponent_SetRestitution);
+		mono_add_internal_call("Sand.BoxColliderComponent::GetRestitution_Native", &BoxColliderComponent_GetRestitution);
+		mono_add_internal_call("Sand.BoxColliderComponent::SetObserver_Native", &BoxColliderComponent_SetObserver);
+		mono_add_internal_call("Sand.BoxColliderComponent::IsObserver_Native", &BoxColliderComponent_IsObserver);
+		mono_add_internal_call("Sand.BoxColliderComponent::SetFriction_Native", &BoxColliderComponent_SetFriction);
+		mono_add_internal_call("Sand.BoxColliderComponent::GetFriction_Native", &BoxColliderComponent_GetFriction);
+
+		// Actor
 		mono_add_internal_call("Sand.Actor::HasComponent_Native", &Actor_HasComponent);
 		mono_add_internal_call("Sand.Actor::AddComponent_Native", &Actor_AddComponent);
 
+		// Scene
 		mono_add_internal_call("Sand.Scene.Scene::GetNumberOfActors_Native", &Scene_GetNumberOfActors);
 		mono_add_internal_call("Sand.Scene.Scene::FindActorByName_Native", &Scene_FindActorByName);
 	}

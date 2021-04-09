@@ -17,7 +17,8 @@ namespace Sand
 
 	ConsolePanel::ConsolePanel()
 	{
-		s_IconTextures = {
+		s_IconTextures = 
+		{
 			Texture2D::Create("assets/textures/information.png"),
 			Texture2D::Create("assets/textures/warning.png"),
 			Texture2D::Create("assets/textures/error.png"),
@@ -106,10 +107,9 @@ namespace Sand
 					continue;
 				}
 
-				// TODO: icons
 				{
 					Ref<Texture2D> iconTexture;
-					// *barfing*
+
 					if (color == Debug::InfoMessageColor) {
 						iconTexture = s_IconTextures[0];
 					}
@@ -119,7 +119,6 @@ namespace Sand
 					else if (color == Debug::ErrorMessageColor) {
 						iconTexture = s_IconTextures[2];
 					}
-					//*stops barfing*
 
 					ImGui::Image((ImTextureID)iconTexture->GetID(), { 20, 20 }, { 0,1 }, { 1, 0 });
 					ImGui::SameLine();

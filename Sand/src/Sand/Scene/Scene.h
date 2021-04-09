@@ -36,17 +36,26 @@ namespace Sand
 		int FindActorID(const std::string& name);
 
 		Actor DuplicateActor(Actor original);
-		void SwitchToRuntimeRegistry();
-		void SwitchToEditorRegistry();
 
 		Actor GetPrimaryCameraActor();
 		PhysicsWorld& GetPhysicsWorld() { return m_PhysicsWorld; }
 		const uint32_t GetNumberOfActors() const { return (uint32_t)m_Registry.alive(); }
 
 		bool ContainsActor(Actor actor);
+
+		static Scene* const GetActiveScene();
 	private:
 		template<typename T>
-		void OnComponentAdded(Actor entity, T& component);
+		void OnComponentAdded(Actor actor, T& component);
+		template<typename T>
+		void OnComponentRemoved(Actor actor, T& component);
+
+		void SwitchToRuntimeRegistry();
+		void SwitchToEditorRegistry();
+
+		void OnActorCreate(Actor actor);
+		void OnActorDestroy(Actor actor);
+	private:
 		PhysicsWorld m_PhysicsWorld;
 		entt::registry m_Registry;
 		entt::registry m_RuntimeRegistry;

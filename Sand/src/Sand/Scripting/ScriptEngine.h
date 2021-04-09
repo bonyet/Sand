@@ -24,8 +24,6 @@ namespace Sand
 		static void Init();
 		static void Shutdown();
 
-		static void SetActiveScene(Scene* const scene);
-
 		static void ReloadClientAssembly();
 
 		static void AddModule(uint32_t actorID, const std::string& moduleName);
@@ -41,9 +39,11 @@ namespace Sand
 		// void* is actually MonoClass! wow! same but different   !
 		static std::vector<void*> GetCachedClientScripts();
 	private:
-		static void CreateAll();
-		static void UpdateAll(Timestep ts);
-		static void DestroyAll();
+		static void ScriptCreate(Actor actor);
+
+		static void ScriptCreateAll();
+		static void ScriptUpdateAll(Timestep ts);
+		static void ScriptDestroyAll();
 
 		static void LoadClientAssembly();
 	private:

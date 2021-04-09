@@ -4,19 +4,20 @@
 #include "Sand/Renderer/Renderer2D.h"
 #include "Sand/Core/Application.h"
 #include "Sand/Renderer/Renderer2D.h"
-
-#include "../Scripting/ScriptEngine.h"
+#include "Sand/Renderer/RenderCommand.h"
 
 #include "Components.h"
-#include "Sand\Renderer\RenderCommand.h"
 
 namespace Sand
 {
+
+	static Scene* s_ActiveScene = nullptr;
+
 	Scene::Scene()
 	{
 		m_CurrentRegistry = &m_Registry;
 
-		ScriptEngine::SetActiveScene(this);
+		s_ActiveScene = this;
 	}
 
 	Scene::~Scene()
@@ -28,9 +29,12 @@ namespace Sand
 		SAND_PROFILE_FUNCTION();
 
 		Actor actor = { m_CurrentRegistry->create(), this };
-		auto& transform = actor.AddComponent<TransformComponent>();
 		auto& tag = actor.AddComponent<TagComponent>();
 		tag.Name = name.empty() ? "Actor" : name;
+
+		actor.AddComponent<TransformComponent>();
+
+		OnActorCreate(actor);
 
 		return actor;
 	}
@@ -39,6 +43,7 @@ namespace Sand
 	{
 		SAND_PROFILE_FUNCTION();
 
+		OnActorDestroy(actor);
 		m_CurrentRegistry->destroy(actor);
 	}
 
@@ -92,26 +97,30 @@ namespace Sand
 		SwitchToRuntimeRegistry();
 
 		m_PhysicsWorld.Create({ 0.0f, -10.0f });
+		Audio::Unlock();
 
 		// Create all physics bodies
 		{
-			auto view = m_CurrentRegistry->view<PhysicsComponent>();
-			for (auto& entity : view)
+			auto physicsBodiesView = m_CurrentRegistry->view<PhysicsComponent>();
+			for (auto& entity : physicsBodiesView)
 			{
-				auto& component = view.get<PhysicsComponent>(entity);
+				auto& component = physicsBodiesView.get<PhysicsComponent>(entity);
 
 				const auto& tc = m_CurrentRegistry->get<TransformComponent>(entity);
 
-				PhysicsBodyDescription description = {};
-				description.Position = tc.Position;
-				description.Scale = tc.Scale;
-				description.Rotation = tc.Rotation;
+				PhysicsBodyDescription description = {
+					tc.GetPosition(), tc.GetScale(), tc.GetRotation()
+				};
 
 				component.Body.Create(description, &m_PhysicsWorld);
+
+				// Create the collider too, if it has one
+				if (m_CurrentRegistry->has<BoxColliderComponent>(entity))
+				{
+					m_CurrentRegistry->get<BoxColliderComponent>(entity).Create(tc.GetScale(), component.Body.GetBody());
+				}
 			}
 		}
-
-		ScriptEngine::CreateAll();
 	}
 
 	void Scene::EndPlay()
@@ -119,7 +128,6 @@ namespace Sand
 		SAND_PROFILE_FUNCTION();
 
 		m_Playmode = false;
-
 
 		// Destroy all physics bodies
 		{
@@ -132,8 +140,7 @@ namespace Sand
 		}
 
 		m_PhysicsWorld.Destroy();
-
-		ScriptEngine::DestroyAll();
+		Audio::Lock();
 
 		SwitchToEditorRegistry();
 
@@ -157,23 +164,9 @@ namespace Sand
 				auto& component = view.get<PhysicsComponent>(entity);
 				auto& tc = m_CurrentRegistry->get<TransformComponent>(entity);
 
-				tc.Position = component.Body.GetPosition();
-				tc.Rotation = component.Body.GetRotation();
+				tc.SetPosition(component.Body.GetPosition());
+				tc.SetRotation(component.Body.GetRotation());
 			}
-		}
-
-		// Update scripts
-		ScriptEngine::UpdateAll(ts);
-
-		// Update animations
-		auto view = m_CurrentRegistry->view<AnimatorComponent>();
-		for (auto& entity : view)
-		{
-			SAND_PROFILE_SCOPE("Update AnimatorComponents - Scene::OnUpdateRuntime()");
-
-			auto& animator = view.get<AnimatorComponent>(entity);
-
-			animator.Animator.OnUpdate({ entity, this }, ts);
 		}
 
 		// Camera stuff and rendering
@@ -242,18 +235,23 @@ namespace Sand
 
 	bool Scene::ContainsActor(Actor actor)
 	{
-		bool contains = false;
-
-		m_CurrentRegistry->each([&](auto entity)
+		// I do this instead of registry::each because a traditional for loop allows early exit using return, so 
+		// we don't have to continue iterating entities even if we found the one we want
+		auto data = m_CurrentRegistry->data();
+		for (size_t i = 0; i < m_CurrentRegistry->size(); i++)
 		{
-			if (actor.mEntityHandle == entity)
-				contains = true;
-		});
-
-		return contains;
+			if (actor == data[i])
+				return true;
+		}
+		return false;
 	}
 
-	Actor Scene::FindActor(const std::string& name)
+	Scene* const Scene::GetActiveScene()
+	{
+		return s_ActiveScene;
+	}
+
+	Actor Scene::FindActor(const std::string& name) 
 	{
 		SAND_PROFILE_FUNCTION();
 
@@ -288,8 +286,12 @@ namespace Sand
 	{
 		Actor clone = { m_CurrentRegistry->create(), this };
 
+		// do it
+
 		return clone;
 	}
+
+	#define COPY_COMPONENT(Type) { auto view = m_Registry.view<Type>(); m_RuntimeRegistry.insert<Type>(view.data(), view.data() + view.size(), view.raw(), view.raw() + view.size()); }
 
 	void Scene::SwitchToRuntimeRegistry()
 	{
@@ -298,42 +300,20 @@ namespace Sand
 		// coppy all entities
 		m_RuntimeRegistry.assign(m_Registry.data(), m_Registry.data() + m_Registry.size(), m_Registry.destroyed());
 
-		// copy all components
-		{
-			auto view = m_Registry.view<TagComponent>();
-			m_RuntimeRegistry.insert<TagComponent>(view.data(), view.data() + view.size(), view.raw(), view.raw() + view.size());
-		}
-		{
-			auto view = m_Registry.view<TransformComponent>();
-			m_RuntimeRegistry.insert<TransformComponent>(view.data(), view.data() + view.size(), view.raw(), view.raw() + view.size());
-		}
-		{
-			auto view = m_Registry.view<SpriteRendererComponent>();
-			m_RuntimeRegistry.insert<SpriteRendererComponent>(view.data(), view.data() + view.size(), view.raw(), view.raw() + view.size());
-		}
-		{
-			auto view = m_Registry.view<CameraComponent>();
-			m_RuntimeRegistry.insert<CameraComponent>(view.data(), view.data() + view.size(), view.raw(), view.raw() + view.size());
-		}
-		{
-			auto view = m_Registry.view<PhysicsComponent>();
-			m_RuntimeRegistry.insert<PhysicsComponent>(view.data(), view.data() + view.size(), view.raw(), view.raw() + view.size());
-		}
-		{
-			auto view = m_Registry.view<ScriptComponent>();
-			m_RuntimeRegistry.insert<ScriptComponent>(view.data(), view.data() + view.size(), view.raw(), view.raw() + view.size());
-		}
-		{
-			auto view = m_Registry.view<TextureComponent>();
-			m_RuntimeRegistry.insert<TextureComponent>(view.data(), view.data() + view.size(), view.raw(), view.raw() + view.size());
-		}
-		{
-			auto view = m_Registry.view<AnimatorComponent>();
-			m_RuntimeRegistry.insert<AnimatorComponent>(view.data(), view.data() + view.size(), view.raw(), view.raw() + view.size());
-		}
+		// copy all components -- this process also dirties any components, ex: transform component will be dirtied --
+		COPY_COMPONENT(TagComponent);
+		COPY_COMPONENT(TransformComponent);
+		COPY_COMPONENT(SpriteRendererComponent);
+		COPY_COMPONENT(CameraComponent);
+		COPY_COMPONENT(PhysicsComponent);
+		COPY_COMPONENT(BoxColliderComponent);
+		COPY_COMPONENT(TextureComponent);
+		COPY_COMPONENT(AnimatorComponent);
+		COPY_COMPONENT(AudioSourceComponent);
 
 		m_CurrentRegistry = &m_RuntimeRegistry;
 	}
+#undef COPY_COMPONENT
 
 	void Scene::SwitchToEditorRegistry()
 	{
@@ -354,6 +334,18 @@ namespace Sand
 			if (!cameraComponent.FixedAspectRatio)
 				cameraComponent.Camera.SetViewportSize(x, y);
 		}
+	}
+
+	void Scene::OnActorCreate(Actor actor)
+	{
+	}
+
+	void Scene::OnActorDestroy(Actor actor)
+	{
+		// Properly remove children
+		TransformComponent& transform = actor.GetComponent<TransformComponent>();
+		if (transform.HasParent())
+			transform.GetParentTransform().RemoveChild(actor);
 	}
 
 	template<typename T>
@@ -393,26 +385,99 @@ namespace Sand
 		component.owner = actor;
 	}
 	template<>
+	void Scene::OnComponentAdded<BoxColliderComponent>(Actor actor, BoxColliderComponent& component)
+	{
+		component.owner = actor;
+
+		const auto& tc = actor.GetComponent<TransformComponent>();
+
+		// Initialize the collider correctly if we are running the game
+		if (m_Playmode)
+		{
+			component.Create(tc.GetScale(), actor.GetComponent<PhysicsComponent>().Body.GetBody());
+		}
+	}
+	template<>
 	void Scene::OnComponentAdded<PhysicsComponent>(Actor actor, PhysicsComponent& component)
 	{
 		component.owner = actor;
+
+		const auto& tc = actor.GetComponent<TransformComponent>();
+		component.Description = {
+			tc.GetPosition(), tc.GetScale(), tc.GetRotation()
+		};
+
+		// Initialize the physics body correctly if we are running the game
+		if (m_Playmode)
+		{
+			component.Body.Create(component.Description, &m_PhysicsWorld);
+
+			// Initialize the collider correctly if we are running the game
+			if (actor.HasComponent<BoxColliderComponent>())
+			{
+				auto& collider = actor.GetComponent<BoxColliderComponent>();
+				collider.Create(tc.GetScale(), component.Body.GetBody());
+			}
+		}
 	}
+
 	template<>
-	void Scene::OnComponentAdded<AnimatorComponent>(Actor actor, AnimatorComponent& component)
+	void Scene::OnComponentAdded<AudioSourceComponent>(Actor actor, AudioSourceComponent& component)
 	{
 		component.owner = actor;
+	}
 
-		auto& animation = component.Animator.GetAnimation();
+	template<typename T>
+	void Scene::OnComponentRemoved(Actor actor, T& component)
+	{
+		static_assert(false);
+	}
 
-		animation.Append(glm::vec2(1.0f, 1.0f), glm::vec2(1.0f, 1.0f), glm::radians(5.0f),  glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-		animation.Append(glm::vec2(2.0f, 2.0f), glm::vec2(1.0f, 1.0f), glm::radians(10.0f), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-		animation.Append(glm::vec2(3.0f, 3.0f), glm::vec2(1.0f, 1.0f), glm::radians(15.0f), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-		animation.Append(glm::vec2(4.0f, 4.0f), glm::vec2(1.0f, 1.0f), glm::radians(20.0f), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	template<>
+	void Scene::OnComponentRemoved<TagComponent>(Actor actor, TagComponent& component)
+	{
 	}
 	template<>
-	void Scene::OnComponentAdded<ScriptComponent>(Actor actor, ScriptComponent& component)
+	void Scene::OnComponentRemoved<TransformComponent>(Actor actor, TransformComponent& component)
 	{
-		component.owner = actor;
+		// Properly remove children
+		if (component.HasParent())
+			component.GetParentTransform().RemoveChild(actor);
 	}
+	template<>
+	void Scene::OnComponentRemoved<TextureComponent>(Actor actor, TextureComponent& component)
+	{
+	}
+	template<>
+	void Scene::OnComponentRemoved<SpriteRendererComponent>(Actor actor, SpriteRendererComponent& component)
+	{
+	}
+	template<>
+	void Scene::OnComponentRemoved<CameraComponent>(Actor actor, CameraComponent& component)
+	{
+	}
+	template<>
+	void Scene::OnComponentRemoved<NativeScriptComponent>(Actor actor, NativeScriptComponent& component)
+	{
+	}
+
+	template<>
+	void Scene::OnComponentRemoved<BoxColliderComponent>(Actor actor, BoxColliderComponent& component)
+	{
+		component.Destroy();
+	}
+
+	template<>
+	void Scene::OnComponentRemoved<PhysicsComponent>(Actor actor, PhysicsComponent& component)
+	{
+		if (actor.HasComponent<BoxColliderComponent>())
+			actor.GetComponent<BoxColliderComponent>().Destroy();
+	}
+
+	template<>
+	void Scene::OnComponentRemoved<AudioSourceComponent>(Actor actor, AudioSourceComponent& component)
+	{
+	}
+
 
 }

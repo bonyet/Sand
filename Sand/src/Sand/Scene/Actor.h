@@ -17,45 +17,45 @@ namespace Sand
 		{
 			SAND_CORE_ASSERT(!HasComponent<T>(), "Actor already has component.");
 
-			T& component = mScene->m_CurrentRegistry->emplace<T>(mEntityHandle, std::forward<Args>(args)...);
-			mScene->OnComponentAdded<T>(*this, component);
+			T& component = m_Scene->m_CurrentRegistry->emplace<T>(m_EntityHandle, std::forward<Args>(args)...);
+			m_Scene->OnComponentAdded<T>(*this, component);
 
 			return component;
 		}
 		template<typename T>
 		T& GetComponent()
 		{
+#ifdef _DEBUG
+			const char* name = typeid(T).name();
+#endif
 			SAND_CORE_ASSERT(HasComponent<T>(), "Actor does not have component.");
-			return mScene->m_CurrentRegistry->get<T>(mEntityHandle);
+			return m_Scene->m_CurrentRegistry->get<T>(m_EntityHandle);
 		}
 		template<typename T>
 		bool HasComponent()
 		{
-			return mScene->m_CurrentRegistry->has<T>(mEntityHandle);
+			return m_Scene->m_CurrentRegistry->has<T>(m_EntityHandle);
 		}
 		template<typename T>
 		void RemoveComponent()
 		{
 			SAND_CORE_ASSERT(HasComponent<T>(), "Actor does not have component.");
-
-			// I know this is horrid but it kinda just works
-			if constexpr (std::is_base_of_v<T, ScriptComponent>)
-				mScene->m_CurrentRegistry->get<T>(mEntityHandle).Deactivate();
-
-			mScene->m_CurrentRegistry->remove<T>(mEntityHandle);
+			
+			m_Scene->OnComponentRemoved<T>(*this, m_Scene->m_CurrentRegistry->get<T>(m_EntityHandle));
+			m_Scene->m_CurrentRegistry->remove<T>(m_EntityHandle);
 		}
 
-		operator bool() const { return mEntityHandle != entt::null; }
-		operator entt::entity() const { return mEntityHandle; }
-		operator uint32_t() const { return (uint32_t)mEntityHandle; }
+		operator bool() const { return m_EntityHandle != entt::null; }
+		operator entt::entity() const { return m_EntityHandle; }
+		operator uint32_t() const { return (uint32_t)m_EntityHandle; }
 
-		bool operator==(const Actor& other) const { return mEntityHandle == other.mEntityHandle && mScene == other.mScene; }
+		bool operator==(const Actor& other) const { return m_EntityHandle == other.m_EntityHandle && m_Scene == other.m_Scene; }
 		bool operator!=(const Actor& other) const { return !(*this == other); }
 
-		Scene* GetScene() const { return mScene; }
+		Scene* GetScene() const { return m_Scene; }
 	private:
-		entt::entity mEntityHandle = entt::null;
-		Scene* mScene = nullptr;
+		entt::entity m_EntityHandle = entt::null;
+		Scene* m_Scene = nullptr;
 
 		friend class Scene;
 	};

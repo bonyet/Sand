@@ -13195,7 +13195,12 @@ static void ImGui::DockNodeUpdateTabBar(ImGuiDockNode* node, ImGuiWindow* host_w
 
     const ImGuiDockNodeFlags node_flags = node->GetMergedFlags();
     const bool has_window_menu_button = (node_flags & ImGuiDockNodeFlags_NoWindowMenuButton) == 0;
+
+#if 1
     const bool has_close_button = (node_flags & ImGuiDockNodeFlags_NoCloseButton) == 0;
+#else
+    const bool has_close_button = false;
+#endif
 
     // In a dock node, the Collapse Button turns into the Window Menu button.
     // FIXME-DOCK FIXME-OPT: Could we recycle popups id across multiple dock nodes?
@@ -13218,6 +13223,7 @@ static void ImGui::DockNodeUpdateTabBar(ImGuiDockNode* node, ImGuiWindow* host_w
     host_window->DrawList->AddRectFilled(title_bar_rect.Min, title_bar_rect.Max, title_bar_col, host_window->WindowRounding, ImDrawCornerFlags_Top);
 
     // Docking/Collapse button
+#if 0
     if (has_window_menu_button)
     {
         if (CollapseButton(host_window->GetID("#COLLAPSE"), window_menu_button_pos, node))
@@ -13225,6 +13231,7 @@ static void ImGui::DockNodeUpdateTabBar(ImGuiDockNode* node, ImGuiWindow* host_w
         if (IsItemActive())
             focus_tab_id = tab_bar->SelectedTabId;
     }
+#endif
 
     // Submit new tabs and apply NavWindow focus back to the tab bar. They will be added as Unsorted and sorted below based on relative DockOrder value.
     const int tabs_count_old = tab_bar->Tabs.Size;

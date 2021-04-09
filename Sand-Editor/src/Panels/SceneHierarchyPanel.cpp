@@ -8,6 +8,7 @@
 namespace Sand
 {
 
+	static Actor s_CurrentDragDropTarget = {};
 
 	SceneHierarchyPanel::SceneHierarchyPanel(const Ref<Scene>& scene)
 	{
@@ -22,23 +23,62 @@ namespace Sand
 
 	void SceneHierarchyPanel::OnGuiRender()
 	{
-		// hierarchy
 		if (!m_ShowWindow)
 			return;
 
-		ImGui::Begin("Scene Hierarchy", &m_ShowWindow);
-
+		ImGui::Begin("Scene Hierarchy", &m_ShowWindow, ImGuiWindowFlags_HorizontalScrollbar);
+		
+		// Render all actors
+		ImGui::SetWindowFontScale(0.9f);
 		m_Context->m_CurrentRegistry->each([&](auto entityID)
 		{
 			Actor entity{ entityID, m_Context.get() };
-			DrawActorNode(entity);
+
+			if (!entity.GetComponent<TransformComponent>().HasParent())
+				DrawActorNode(entity); // The drawing of children nodes is handled in DrawActorNode
 		});
+		ImGui::SetWindowFontScale(1.0f);
+
+		// Tooltip for drag and drop actors
+		if (m_SelectionContext && ImGui::IsMouseDown(0)) 
+		{
+			ImGui::BeginTooltipEx(0, ImGuiTooltipFlags_OverridePreviousTooltip);
+			if (s_CurrentDragDropTarget) 
+			{
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.2f, 0.8f, 0.3f, 1.0f));
+				ImGui::Text("Parenting '%s' to '%s'", m_SelectionContext.GetComponent<TagComponent>().Name.c_str(),
+					s_CurrentDragDropTarget.GetComponent<TagComponent>().Name.c_str());
+			}
+			else 
+			{
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.8f, 0.3f, 0.3f, 1.0f));
+				ImGui::Text("Orphaning '%s'", m_SelectionContext.GetComponent<TagComponent>().Name.c_str());
+			}
+
+			s_CurrentDragDropTarget = {};
+			
+			ImGui::PopStyleColor();
+			ImGui::EndTooltip();
+		}
+
+		// Handle drag and drop
+		if (ImGui::BeginDragDropTargetCustom(ImGui::GetCurrentWindow()->WorkRect, (ImGuiID)"SHP_DND"))
+		{
+			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DND_ACTOR_SHP"))
+			{
+				entt::entity fromID = (entt::entity)*(uint32_t*)payload->Data;
+				Actor(fromID, Scene::GetActiveScene()).GetComponent<TransformComponent>().SetParent({});
+
+				ImGui::ClearDragDrop();
+			}
+		}
 
 		if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered() && ImGui::GetIO().WantCaptureMouse) {
-			// clicked in empty space in panel
+			// Clicked in empty space in panel
 			m_SelectionContext = {};
 		}
 
+		// Create actors
 		if (ImGui::BeginPopupContextWindow(0, 1, false))
 		{
 			DrawActorCreationMenu();
@@ -49,25 +89,44 @@ namespace Sand
 		ImGui::End();
 	}
 
-	void SceneHierarchyPanel::DrawActorNode(Actor entity)
+	void SceneHierarchyPanel::DrawActorNode(Actor actor)
 	{
-		auto& tag = entity.GetComponent<TagComponent>().Name;
+		auto& tag = actor.GetComponent<TagComponent>().Name;
 
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5.0f);
-		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, { 3.0f, 3.0f });
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, { 2.0f, 2.0f });
 
-		ImVec4 textColor = m_SelectionContext == entity ? ImVec4(0.2f, 0.8f, 0.3f, 1.0f) : ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+		ImVec4 textColor = m_SelectionContext == actor ? ImVec4(0.2f, 0.8f, 0.3f, 1.0f) : ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
 		ImGui::PushStyleColor(ImGuiCol_Text, textColor);
 
-		ImGuiTreeNodeFlags flags = ((m_SelectionContext == entity) ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
-		flags |= ImGuiTreeNodeFlags_Framed;
-		bool opened = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)entity, flags, tag.c_str());
+		ImGuiTreeNodeFlags flags = ((m_SelectionContext == actor) ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Framed;
+		bool opened = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)actor, flags, tag.c_str());
 		
+		if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceNoPreviewTooltip))
+		{
+			ImGui::SetDragDropPayload("DND_ACTOR_SHP", (uint32_t*)&actor, sizeof(uint32_t));
+
+			ImGui::EndDragDropSource();
+		}
+
+		if (ImGui::BeginDragDropTarget())
+		{
+			s_CurrentDragDropTarget = actor;
+
+			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DND_ACTOR_SHP"))
+			{
+				entt::entity fromID = (entt::entity)*(uint32_t*)payload->Data;
+				Actor(fromID, Scene::GetActiveScene()).GetComponent<TransformComponent>().SetParent(actor);
+			}
+
+			ImGui::EndDragDropTarget();
+		}
+
 		ImGui::PopStyleColor();
 		ImGui::PopStyleVar(2);
 
 		if (ImGui::IsItemClicked())
-			m_SelectionContext = entity;
+			m_SelectionContext = actor;
 
 		bool entityDeleted = false;
 		if (ImGui::BeginPopupContextItem())
@@ -81,15 +140,19 @@ namespace Sand
 		if (opened)
 		{
 			// Display children of entity
-			ImGui::TextWrapped("Anyways uhm... I bought a whole bunch of shungite, rocks, do you know what shungite is? Anybody know what shungite is. No, no Suge Knight, I think hes locked up in prison. Talking shungite. Anyways, its a 2 billion year old like rock, stone that protects against frequencies and unwanted frequencies that may be traveling in the air. So thats my story. I bought a whole bunch of stuff, put them around the la casa. Little pyramids. Stuff like that.");
+			TransformComponent& transform = actor.GetComponent<TransformComponent>();
+			for (auto& child : transform.GetChildren())
+			{
+				DrawActorNode(child);
+			}
 
 			ImGui::TreePop();
 		}
 
 		if (entityDeleted)
 		{
-			m_Context->DestroyActor(entity);
-			if (m_SelectionContext == entity)
+			m_Context->DestroyActor(actor);
+			if (m_SelectionContext == actor)
 				m_SelectionContext = {};
 		}
 	}

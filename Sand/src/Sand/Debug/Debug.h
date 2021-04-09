@@ -91,7 +91,7 @@ namespace Sand
 			m_DebugMessages.push_back({ Time::GetSystemTime(), ErrorMessageColor, std::to_string(value) });
 		}
 
-		static inline std::vector<std::tuple<std::string, glm::vec3, std::string>>& GetMessages() { return m_DebugMessages; }
+		static std::vector<std::tuple<std::string, glm::vec3, std::string>>& GetMessages() { return m_DebugMessages; }
 	private:
 		static std::vector<std::tuple<std::string, glm::vec3, std::string>> m_DebugMessages;
 	};

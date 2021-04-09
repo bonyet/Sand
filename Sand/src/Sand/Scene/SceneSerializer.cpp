@@ -130,9 +130,9 @@ namespace Sand
 			out << YAML::BeginMap; // TransformComponent
 
 			auto& transform = actor.GetComponent<TransformComponent>();
-			out << YAML::Key << "Position" << YAML::Value << transform.Position;
-			out << YAML::Key << "Rotation" << YAML::Value << transform.Rotation;
-			out << YAML::Key << "Scale" << YAML::Value << transform.Scale;
+			out << YAML::Key << "Position" << YAML::Value << transform.GetPosition();
+			out << YAML::Key << "Rotation" << YAML::Value << transform.GetRotation();
+			out << YAML::Key << "Scale" << YAML::Value << transform.GetScale();
 
 			out << YAML::EndMap; // TransformComponent
 		}
@@ -146,9 +146,9 @@ namespace Sand
 
 			out << YAML::Key << "Camera" << YAML::Value;
 			out << YAML::BeginMap; // Camera
-			out << YAML::Key << "OrthographicSize" << YAML::Value << camera.GetOrthographicSize();
-			out << YAML::Key << "OrthographicNear" << YAML::Value << camera.GetOrthographicNearClip();
-			out << YAML::Key << "OrthographicFar" << YAML::Value << camera.GetOrthographicFarClip();
+			out << YAML::Key << "OrthographicSize" << YAML::Value << camera.GetSize();
+			out << YAML::Key << "OrthographicNear" << YAML::Value << camera.GetNearClip();
+			out << YAML::Key << "OrthographicFar" << YAML::Value << camera.GetFarClip();
 			out << YAML::EndMap; // Camera
 
 			out << YAML::Key << "Primary" << YAML::Value << cameraComponent.Primary;
@@ -180,16 +180,19 @@ namespace Sand
 
 			out << YAML::EndMap; // TextureComponent
 		}
-		if (actor.HasComponent<ScriptComponent>())
+		if (actor.HasComponent<PhysicsComponent>())
 		{
-			out << YAML::Key << "ScriptComponent";
-			out << YAML::BeginMap; // ScriptComponent
+			out << YAML::Key << "PhysicsComponent";
+			out << YAML::BeginMap; // PhysicsComponent
 
-			auto& script = actor.GetComponent<ScriptComponent>();
+			auto& physics = actor.GetComponent<PhysicsComponent>();
 
-			out << YAML::Key << "ModuleName" << YAML::Value << script.ModuleName;
+			out << YAML::Key << "FixedRotation" << YAML::Value << physics.Body.GetFixedRotation();
+			out << YAML::Key << "Mass" << YAML::Value << physics.Body.GetMass();
+			out << YAML::Key << "GravityScale" << YAML::Value << physics.Body.GetGravityScale();
+			out << YAML::Key << "Type" << YAML::Value << (int)physics.Body.GetType();
 
-			out << YAML::EndMap; // ScriptComponent
+			out << YAML::EndMap;
 		}
 
 		out << YAML::EndMap; // Actor
@@ -265,9 +268,9 @@ namespace Sand
 				if (transformComponent)
 				{
 					auto& tc = deserializedActor.GetComponent<TransformComponent>(); // always has transform
-					tc.Position = transformComponent["Position"].as<glm::vec2>();
-					tc.Rotation = transformComponent["Rotation"].as<float>();
-					tc.Scale = transformComponent["Scale"].as<glm::vec2>();
+					tc.SetPosition(transformComponent["Position"].as<glm::vec2>());
+					tc.SetRotation(transformComponent["Rotation"].as<float>());
+					tc.SetScale(transformComponent["Scale"].as<glm::vec2>());
 				}
 				auto cameraComponent = actor["CameraComponent"];
 				if (cameraComponent)
@@ -276,9 +279,9 @@ namespace Sand
 
 					auto& cameraProps = cameraComponent["Camera"];
 
-					cc.Camera.SetOrthographicSize(cameraProps["OrthographicSize"].as<float>());
-					cc.Camera.SetOrthographicNearClip(cameraProps["OrthographicNear"].as<float>());
-					cc.Camera.SetOrthographicFarClip(cameraProps["OrthographicFar"].as<float>());
+					cc.Camera.SetSize(cameraProps["OrthographicSize"].as<float>());
+					cc.Camera.SetNearClip(cameraProps["OrthographicNear"].as<float>());
+					cc.Camera.SetFarClip(cameraProps["OrthographicFar"].as<float>());
 
 					cc.Primary = cameraComponent["Primary"].as<bool>();
 					cc.FixedAspectRatio = cameraComponent["FixedAspectRatio"].as<bool>();
@@ -299,12 +302,15 @@ namespace Sand
 					tc.Texture = !path.empty() ? Texture2D::Create(path) : nullptr;
 					tc.TilingFactor = textureComponent["TilingFactor"].as<float>();
 				}
-				auto scriptComponent = actor["ScriptComponent"];
-				if (scriptComponent)
+				auto physicsComponent = actor["PhysicsComponent"];
+				if (physicsComponent)
 				{
-					auto& script = deserializedActor.AddComponent<ScriptComponent>();
+					auto& physics = deserializedActor.AddComponent<PhysicsComponent>();
 
-					script.ModuleName = scriptComponent["ModuleName"].as<std::string>();
+					physics.Body.SetFixedRotation(physicsComponent["FixedRotation"].as<bool>());
+					physics.Body.SetMass(physicsComponent["Mass"].as<float>());
+					physics.Body.SetGravityScale(physicsComponent["GravityScale"].as<float>());
+					physics.Body.SetType((PhysicsBodyType)physicsComponent["Type"].as<int>());
 				}
 			}
 		}

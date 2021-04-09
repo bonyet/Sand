@@ -10,7 +10,7 @@ namespace Sand
 	/// </summary>
 	public static class PsuedoRandom
 	{
-		private static Random random;
+		private static Random random = new Random();
 
 		/// <summary>
 		/// Returns a random integer greater or equal to <paramref name="min"/> and less than <paramref name="max"/>

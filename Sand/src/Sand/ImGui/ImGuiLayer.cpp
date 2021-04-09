@@ -1,7 +1,6 @@
 #include "sandpch.h"
 #include "Sand/ImGui/ImGuiLayer.h"
 #include "Sand/Core/Application.h"
-#include "Platform/D3D11/D3D11Context.h"
 #include "Sand/Renderer/RendererAPI.h"
 
 #include <imgui.h>
@@ -47,8 +46,6 @@ namespace Sand
 
 		Application& app = Application::Get();
 		GLFWwindow* window = static_cast<GLFWwindow*>(app.GetWindow().GetNativeWindow());
-
-		//SAND_CORE_ASSERT(RendererAPI::GetAPI() != RendererAPI::API::D3D11, "Direct3D 11 GUI not supported.");
 
 		ImGui_ImplGlfw_InitForOpenGL(window, true);
 		ImGui_ImplOpenGL3_Init("#version 410");

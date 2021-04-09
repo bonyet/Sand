@@ -7,6 +7,8 @@
 #include "Sand/Scene/Scene.h"
 #include "Sand/Scripting/ScriptEngine.h"
 
+#include "Sand/Audio/Audio.h"
+
 namespace Sand
 {
 	Application* Application::s_Instance = nullptr;
@@ -24,6 +26,7 @@ namespace Sand
 
 		Renderer::Init();
 		ScriptEngine::Init();
+		Audio::Init();
 
 		m_UILayer = new ImGuiLayer();
 		PushOverlay(m_UILayer);
@@ -35,6 +38,7 @@ namespace Sand
 
 		Renderer::Shutdown();
 		ScriptEngine::Shutdown();
+		Audio::Shutdown();
 	}
 
 	void Application::PushLayer(Layer* layer)

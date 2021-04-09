@@ -36,21 +36,20 @@ namespace Sand
 		void SetGravityScale(float gravity);
 		float GetGravityScale() const;
 
-		void SetFriction(float friction);
-		float GetFriction() const;
-
 		void SetFixedRotation(bool rotation);
 		bool GetFixedRotation() const;
 
 		glm::vec2 GetPosition();
 		float GetRotation();
 
+		b2Body* const GetBody() const { return m_Body; }
+
 		void ApplyLinearImpulse(const glm::vec2& impulse, bool wake = true);
 		void ApplyForce(const glm::vec2& force, bool wake = true);
 	private:
 		b2Body* m_Body = nullptr;
 
-		float m_Mass = 1.0f, m_Friction = 0.3f, m_GravityScale = 1.0f;
+		float m_Mass = 1.0f, m_GravityScale = 1.0f;
 		bool m_FixedRotation = false;
 
 		PhysicsBodyType m_Type = PhysicsBodyType::Static;

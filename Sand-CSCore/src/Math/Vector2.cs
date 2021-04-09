@@ -125,6 +125,11 @@ namespace Sand.Math
 			return new Vector2(a.x - b.x, a.y - b.y);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Vector2 operator*(Vector2 a, float b)
+		{
+			return new Vector2(a.x * b, a.y * b);
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Vector2 operator/(Vector2 a, double divisor)
 		{
 			return new Vector2(a.x / divisor, a.y / divisor);

@@ -37,6 +37,8 @@ namespace Sand
 		void NewScene();
 		void SaveSceneAs();
 		void OpenScene();
+
+		void ShowSettingsWindow();
 	private:
 		Ref<Framebuffer> m_ViewportFramebuffer;
 

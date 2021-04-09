@@ -13,8 +13,19 @@
 #include <imgui/imgui.h>
 #include "ImGuizmo.h"
 
+#include <imgui/imgui_internal.h>
+
 namespace Sand
 {
+
+	static bool s_ShowSettingsWindow = false;
+
+	struct EditorSettings
+	{
+		ImVec4 FrameBg;
+	};
+
+	static EditorSettings s_DefaultEditorSettings;
 
 	EditorLayer::EditorLayer()
 		: Layer("Editor")
@@ -68,9 +79,9 @@ namespace Sand
 		colors[ImGuiCol_ButtonActive]  = ImVec4{ 0.15f, 0.15f, 0.20f, 1.0f };
 
 		// Frame BG
-		colors[ImGuiCol_FrameBg]          = ImVec4{ 0.25f, 0.25f, 0.25f, 1.0f };
-		colors[ImGuiCol_FrameBgHovered]   = ImVec4{ 0.35f, 0.35f, 0.35f, 1.0f };
-		colors[ImGuiCol_FrameBgActive]    = ImVec4{ 0.20f, 0.20f, 0.20f, 1.0f };
+		colors[ImGuiCol_FrameBg]          = ImVec4{ 0.25f, 0.25f, 0.27f, 1.0f };
+		colors[ImGuiCol_FrameBgHovered]   = ImVec4{ 0.35f, 0.35f, 0.37f, 1.0f };
+		colors[ImGuiCol_FrameBgActive]    = ImVec4{ 0.20f, 0.20f, 0.22f, 1.0f };
 
 		// Child and popups and misc
 		colors[ImGuiCol_ChildBg]   = ImVec4{ 0.00f, 0.00f, 0.00f, 0.0f };
@@ -94,10 +105,20 @@ namespace Sand
 		colors[ImGuiCol_ResizeGripHovered]     = ImVec4{ 0.35f, 0.35f, 0.35f, 1.0f };
 		colors[ImGuiCol_ResizeGripActive]      = ImVec4{ 0.30f, 0.30f, 0.30f, 1.0f };
 
+		// Checkbox
+		colors[ImGuiCol_CheckMark] = ImVec4{ 0.3f, 0.7f, 0.3f, 1.0f };
+
+		// Random
 		colors[ImGuiCol_Text]                 = ImVec4{ 1.0f, 1.0f, 1.0f, 1.0f };
 		colors[ImGuiCol_ModalWindowDarkening] = ImVec4{ 0.2f, 0.2f, 0.2f, 0.5f };
 		colors[ImGuiCol_DockingPreview]       = ImVec4{ 0.45f, 0.45f, 0.45f, 1.0f };
 		colors[ImGuiCol_MenuBarBg]            = ImVec4{ 0.14f, 0.14f, 0.14f, 1.0f };
+
+		colors[ImGuiCol_DragDropTarget] = ImVec4{ 0.2f, 0.3f, 0.6f, 0.8f };
+
+		s_DefaultEditorSettings = {
+			colors[ImGuiCol_FrameBg],
+		};
 	}
 
 	void EditorLayer::OnDetach()
@@ -158,19 +179,19 @@ namespace Sand
 
 		// dockspace nonsense
 		{
-			static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
+			static ImGuiDockNodeFlags dockspaceFlags = ImGuiDockNodeFlags_NoWindowMenuButton | ImGuiDockNodeFlags_NoCloseButton;
 
-			ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDocking;
+			ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoDocking;
 
 			ImGuiViewport* viewport = ImGui::GetMainViewport();
 			ImGui::SetNextWindowPos(viewport->Pos);
 			ImGui::SetNextWindowSize(viewport->Size);
 			ImGui::SetNextWindowViewport(viewport->ID);
 
-			window_flags |= ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
-			window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+			windowFlags |= ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+			windowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 
-			ImGui::Begin("DockSpace Demo", (bool*)true, window_flags);
+			ImGui::Begin("Dockspace", (bool*)true, windowFlags);
 
 			ImGuiIO& io = ImGui::GetIO();
 			ImGuiStyle& style = ImGui::GetStyle();
@@ -178,8 +199,8 @@ namespace Sand
 			style.WindowMinSize.x = 300.0f;
 			if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
 			{
-				ImGuiID dockspace_id = ImGui::GetID("DockSpace");
-				ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
+				ImGuiID dockspaceID = ImGui::GetID("Dockspace");
+				ImGui::DockSpace(dockspaceID, ImVec2(0.0f, 0.0f), dockspaceFlags);
 			}
 			style.WindowMinSize.x = minWinSizeX;
 		}
@@ -217,6 +238,14 @@ namespace Sand
 
 				ImGui::EndMenu();
 			}
+			if (ImGui::BeginMenu("Settings"))
+			{
+				if (ImGui::MenuItem("Customize")) {
+					s_ShowSettingsWindow = true;
+				}
+
+				ImGui::EndMenu();
+			}
 
 			ImGui::EndMainMenuBar();
 		}
@@ -236,7 +265,8 @@ namespace Sand
 		}
 
 		ImGui::Separator();
-		if (ImGui::TreeNodeEx("Renderer")) {
+		if (ImGui::TreeNodeEx("Renderer")) 
+		{
 			auto stats = Renderer2D::GetStats();
 			ImGui::Text("Renderer2D:");
 			ImGui::Text("Draw Calls: %d", stats.DrawCalls);
@@ -249,8 +279,9 @@ namespace Sand
 
 		ImGui::End();
 
+		// render the ui panels
 		m_SceneHierarchyPanel.OnGuiRender();
-		m_AssetManagerPanel.OnGuiRender();
+		//m_AssetManagerPanel.OnGuiRender();
 		
 		{
 			Actor selected = m_SceneHierarchyPanel.GetSelectedActor();
@@ -264,8 +295,10 @@ namespace Sand
 		m_PropertiesPanel.OnGuiRender();
 		m_ConsolePanel.OnGuiRender();
 
+		ShowSettingsWindow();
+
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
-		ImGui::Begin("Viewport", false, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoCollapse);
+		ImGui::Begin("Viewport", false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoCollapse);
 		
 		auto viewportMinRegion = ImGui::GetWindowContentRegionMin();
 		auto viewportMaxRegion = ImGui::GetWindowContentRegionMax();
@@ -325,10 +358,11 @@ namespace Sand
 				float rotation;
 				Math::DecomposeTransform(transform, translation, scale, rotation);
 
-				float deltaRotation = rotation - transformComponent.Rotation;
-				transformComponent.Position = translation;
-				transformComponent.Rotation += deltaRotation;
-				transformComponent.Scale = scale;
+				// apply values we changed
+				float deltaRotation = rotation - transformComponent.GetRotation();
+				transformComponent.SetPosition(translation);
+				transformComponent.SetRotation(transformComponent.GetRotation() + deltaRotation);
+				transformComponent.SetScale(scale);
 			}
 		}
 
@@ -337,6 +371,26 @@ namespace Sand
 
 		ImGui::End();
 	}
+
+#define SAND_CUSTOMIZATION_WIDGET(func, label, code) ImGui::TextUnformatted(label); ImGui::NextColumn(); ImGui::SetNextItemWidth(-1); if(func) { code } ImGui::NextColumn();
+	void EditorLayer::ShowSettingsWindow()
+	{
+		if (!s_ShowSettingsWindow)
+			return;
+
+		ImGui::OpenPopup("Customization");
+
+		ImGui::SetNextWindowSize({ 500.0f, 450.0f }, ImGuiCond_Once);
+
+		if (ImGui::BeginPopupModal("Customization", &s_ShowSettingsWindow)) 
+		{
+			ImVec4& frameBackground = s_DefaultEditorSettings.FrameBg;
+			SAND_CUSTOMIZATION_WIDGET(ImGui::ColorEdit4("##Frame Background", &frameBackground.x), "Frame Background", );
+
+			ImGui::EndPopup();
+		}
+	}
+#undef SAND_CUSTOMIZATION_WIDGET
 
 	void EditorLayer::OnEvent(Event& e)
 	{
@@ -477,12 +531,21 @@ namespace Sand
 					break;
 
 				const auto& tc = focused.GetComponent<TransformComponent>();
-				const auto& position = tc.Position;
-				const auto& rotation = tc.Rotation;
+				const auto& position = tc.GetPosition();
+				const auto& rotation = tc.GetRotation();
 
 				m_EditorCamera.SetRotation(0.0f, 0.0f);
 				m_EditorCamera.SetFocalPoint({ position, 0.0f });
 				m_EditorCamera.SetDistance(10.0f);
+
+				break;
+			}
+			case Keycode::D:
+			{
+				if (!controlPressed || !m_SceneHierarchyPanel.GetSelectedActor())
+					break;
+
+				m_SceneHierarchyPanel.SetSelectedActor(m_ActiveScene->DuplicateActor(m_SceneHierarchyPanel.GetSelectedActor()));
 
 				break;
 			}
