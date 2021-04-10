@@ -1,16 +1,14 @@
 ## It's Sand.
 
-I don't even know why I made this website. How does this even work? I don't know.
+I am not married to the name.
 
 ### Features
 
-Sand has some of the worst features ever.
-
 ```markdown
-Buggy UI
-Can only render rectangles
-Can't use it to make anything
-Probably leaks memory all over the place
+Sleek(?) UI
+Fast (I think?) UI
+Rapid development and bug fixes
+Simplistic
 ```
 
-For more details see [my ass](https://github.com/bonyet/Sand).
+For more details see [Sand](https://github.com/bonyet/Sand).
