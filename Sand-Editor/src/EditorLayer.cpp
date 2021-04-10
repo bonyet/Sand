@@ -338,7 +338,8 @@ namespace Sand
 
 			// Actor transform
 			auto& transformComponent = selectedActor.GetComponent<TransformComponent>();
-			glm::mat4 transform = transformComponent.GetTransform();
+
+			glm::mat4 transformToModify = transformComponent.GetTransform();
 
 			// Snapping
 			bool snap = Input::IsKeyPressed(Keycode::LeftControl);
@@ -349,14 +350,19 @@ namespace Sand
 			float snapValues[3] = { snapValue, snapValue, snapValue };
 
 			ImGuizmo::Manipulate(glm::value_ptr(cameraView), glm::value_ptr(cameraProjection),
-				(ImGuizmo::OPERATION)m_GizmoType, ImGuizmo::MODE::LOCAL, glm::value_ptr(transform), 
+				(ImGuizmo::OPERATION)m_GizmoType, ImGuizmo::MODE::LOCAL, glm::value_ptr(transformToModify),
 				nullptr, snap ? snapValues : nullptr);
 
 			if (ImGuizmo::IsUsing() && !Input::IsKeyPressed(Mousecode::Right))
 			{
 				glm::vec2 translation, scale;
 				float rotation;
-				Math::DecomposeTransform(transform, translation, scale, rotation);
+
+				// Correctly transform back to local space if we modified a child
+				if (transformComponent.HasParent())
+					transformToModify *= glm::inverse(transformComponent.GetParentTransform().GetGlobalTransform());
+
+				Math::DecomposeTransform(transformToModify, translation, scale, rotation);
 
 				// apply values we changed
 				float deltaRotation = rotation - transformComponent.GetRotation();

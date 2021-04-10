@@ -98,11 +98,12 @@ namespace Sand
 				parent.GetComponent<TransformComponent>().AddChild(owner); 
 		}
 
-		glm::mat4 GetTransform() 
+		glm::mat4 GetGlobalTransform()
 		{
 			SAND_PROFILE_FUNCTION();
 
-			if (m_Dirty) 
+			// Recalculate if necessary
+			if (m_Dirty)
 			{
 				m_Transformation = glm::translate(glm::mat4(1.0f), glm::vec3(m_Position, 0.0f))
 					* glm::rotate(glm::mat4(1.0f), m_Rotation, { 0, 0, 1 })
@@ -111,10 +112,28 @@ namespace Sand
 				m_Dirty = false;
 			}
 
-			if (!m_Parent)
-				return m_Transformation;
+			return m_Transformation;
+		}
 
-			return m_Transformation * m_Parent.GetComponent<TransformComponent>().m_Transformation;
+		glm::mat4 GetTransform() 
+		{
+			SAND_PROFILE_FUNCTION();
+
+			// Recalculate if necessary
+			if (m_Dirty)
+			{
+				m_Transformation = glm::translate(glm::mat4(1.0f), glm::vec3(m_Position, 0.0f))
+					* glm::rotate(glm::mat4(1.0f), m_Rotation, { 0, 0, 1 })
+					* glm::scale(glm::mat4(1.0f), glm::vec3(m_Scale, 1.0f));
+
+				m_Dirty = false;
+			}
+			
+			// Return global transform if we are an orphan
+			if (!m_Parent)
+				return GetGlobalTransform();
+
+			return m_Parent.GetComponent<TransformComponent>().GetGlobalTransform() * m_Transformation;
 		}
 
 		operator const glm::mat4 () { return GetTransform(); }

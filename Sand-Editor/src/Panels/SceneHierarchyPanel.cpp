@@ -40,24 +40,25 @@ namespace Sand
 		ImGui::SetWindowFontScale(1.0f);
 
 		// Tooltip for drag and drop actors
-		if (m_SelectionContext && ImGui::IsMouseDown(0)) 
+		if (m_SelectionContext && ImGui::IsMouseDown(0) && ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem)) 
 		{
 			ImGui::BeginTooltipEx(0, ImGuiTooltipFlags_OverridePreviousTooltip);
-			if (s_CurrentDragDropTarget) 
+			if (s_CurrentDragDropTarget)
 			{
 				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.2f, 0.8f, 0.3f, 1.0f));
 				ImGui::Text("Parenting '%s' to '%s'", m_SelectionContext.GetComponent<TagComponent>().Name.c_str(),
 					s_CurrentDragDropTarget.GetComponent<TagComponent>().Name.c_str());
+				ImGui::PopStyleColor();
 			}
-			else 
+			else if (!s_CurrentDragDropTarget)
 			{
 				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.8f, 0.3f, 0.3f, 1.0f));
 				ImGui::Text("Orphaning '%s'", m_SelectionContext.GetComponent<TagComponent>().Name.c_str());
+				ImGui::PopStyleColor();
 			}
 
 			s_CurrentDragDropTarget = {};
 			
-			ImGui::PopStyleColor();
 			ImGui::EndTooltip();
 		}
 

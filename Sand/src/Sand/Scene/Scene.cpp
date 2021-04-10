@@ -291,8 +291,7 @@ namespace Sand
 		return clone;
 	}
 
-	#define COPY_COMPONENT(Type) { auto view = m_Registry.view<Type>(); m_RuntimeRegistry.insert<Type>(view.data(), view.data() + view.size(), view.raw(), view.raw() + view.size()); }
-
+#define COPY_COMPONENT(Type) { auto view = m_Registry.view<Type>(); m_RuntimeRegistry.insert<Type>(view.data(), view.data() + view.size(), view.raw(), view.raw() + view.size()); }
 	void Scene::SwitchToRuntimeRegistry()
 	{
 		m_RuntimeRegistry.clear();
@@ -344,8 +343,12 @@ namespace Sand
 	{
 		// Properly remove children
 		TransformComponent& transform = actor.GetComponent<TransformComponent>();
+
 		if (transform.HasParent())
 			transform.GetParentTransform().RemoveChild(actor);
+		
+		for (auto& child : transform.GetChildren())
+			DestroyActor(child); // Calls OnActorDestroy too
 	}
 
 	template<typename T>
