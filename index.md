@@ -6,7 +6,7 @@ I am not married to the name.
 
 ```markdown
 Sleek(?) UI
-Fast (I think?) UI
+Fast (I think?) 2D rendering
 Rapid development and bug fixes
 Simplistic
 ```
