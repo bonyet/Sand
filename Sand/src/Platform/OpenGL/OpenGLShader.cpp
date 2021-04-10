@@ -113,6 +113,9 @@ namespace Sand
 			shaderSources[ShaderTypeFromString(type)] = (pos == std::string::npos) ? source.substr(nextLinePos) : source.substr(nextLinePos, pos - nextLinePos);
 		}
 
+		if (!shaderSources.size())
+			SAND_CORE_CRITICAL("Shader '{0}' preprocessing failed.", m_Filepath);
+
 		return shaderSources;
 	}
 

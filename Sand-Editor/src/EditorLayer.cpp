@@ -7,25 +7,16 @@
 #include "Sand/Debug/Debug.h"
 #include "Sand/Math/Math.h"
 
-#include <filesystem>
-#include <glm/glm/gtc/type_ptr.hpp>
-
 #include <imgui/imgui.h>
+#include <imgui/imgui_internal.h>
 #include "ImGuizmo.h"
 
-#include <imgui/imgui_internal.h>
+#include <glm/glm/gtc/type_ptr.hpp>
+
+#include <filesystem>
 
 namespace Sand
 {
-
-	static bool s_ShowSettingsWindow = false;
-
-	struct EditorSettings
-	{
-		ImVec4 FrameBg;
-	};
-
-	static EditorSettings s_DefaultEditorSettings;
 
 	EditorLayer::EditorLayer()
 		: Layer("Editor")
@@ -115,10 +106,6 @@ namespace Sand
 		colors[ImGuiCol_MenuBarBg]            = ImVec4{ 0.14f, 0.14f, 0.14f, 1.0f };
 
 		colors[ImGuiCol_DragDropTarget] = ImVec4{ 0.2f, 0.3f, 0.6f, 0.8f };
-
-		s_DefaultEditorSettings = {
-			colors[ImGuiCol_FrameBg],
-		};
 	}
 
 	void EditorLayer::OnDetach()
@@ -150,6 +137,7 @@ namespace Sand
 		RenderCommand::SetClearColor({ 0.12f, 0.12f, 0.12f, 1.0f });
 		RenderCommand::Clear();
 
+		// Temporary playmode stuff
 		if (Input::WasKeyPressed(Keycode::P))
 		{
 			if (m_ActiveScene->IsPlaying())
@@ -238,14 +226,6 @@ namespace Sand
 
 				ImGui::EndMenu();
 			}
-			if (ImGui::BeginMenu("Settings"))
-			{
-				if (ImGui::MenuItem("Customize")) {
-					s_ShowSettingsWindow = true;
-				}
-
-				ImGui::EndMenu();
-			}
 
 			ImGui::EndMainMenuBar();
 		}
@@ -279,9 +259,9 @@ namespace Sand
 
 		ImGui::End();
 
-		// render the ui panels
+		//Rrender UI panels
 		m_SceneHierarchyPanel.OnGuiRender();
-		//m_AssetManagerPanel.OnGuiRender();
+		m_AssetManagerPanel.OnGuiRender();
 		
 		{
 			Actor selected = m_SceneHierarchyPanel.GetSelectedActor();
@@ -294,8 +274,6 @@ namespace Sand
 
 		m_PropertiesPanel.OnGuiRender();
 		m_ConsolePanel.OnGuiRender();
-
-		ShowSettingsWindow();
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
 		ImGui::Begin("Viewport", false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoCollapse);
@@ -316,10 +294,11 @@ namespace Sand
 		uint32_t textureID = m_ViewportFramebuffer->GetColorAttachmentRendererID();
 		ImGui::Image(reinterpret_cast<void*>(textureID), viewportPanelSize, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 
-		// GIZMOS
+		// GIZMO STUFF
 		Actor selectedActor = m_SceneHierarchyPanel.GetSelectedActor();
 
-		if (selectedActor && m_GizmoType != -1)
+		bool shouldShowGizmos = selectedActor && m_GizmoType != -1 && !m_ActiveScene->IsPlaying();
+		if (shouldShowGizmos)
 		{
 			ImGuizmo::SetDrawlist();
 			float windowWidth = ImGui::GetWindowWidth(), windowHeight = ImGui::GetWindowHeight();
@@ -377,26 +356,6 @@ namespace Sand
 
 		ImGui::End();
 	}
-
-#define SAND_CUSTOMIZATION_WIDGET(func, label, code) ImGui::TextUnformatted(label); ImGui::NextColumn(); ImGui::SetNextItemWidth(-1); if(func) { code } ImGui::NextColumn();
-	void EditorLayer::ShowSettingsWindow()
-	{
-		if (!s_ShowSettingsWindow)
-			return;
-
-		ImGui::OpenPopup("Customization");
-
-		ImGui::SetNextWindowSize({ 500.0f, 450.0f }, ImGuiCond_Once);
-
-		if (ImGui::BeginPopupModal("Customization", &s_ShowSettingsWindow)) 
-		{
-			ImVec4& frameBackground = s_DefaultEditorSettings.FrameBg;
-			SAND_CUSTOMIZATION_WIDGET(ImGui::ColorEdit4("##Frame Background", &frameBackground.x), "Frame Background", );
-
-			ImGui::EndPopup();
-		}
-	}
-#undef SAND_CUSTOMIZATION_WIDGET
 
 	void EditorLayer::OnEvent(Event& e)
 	{

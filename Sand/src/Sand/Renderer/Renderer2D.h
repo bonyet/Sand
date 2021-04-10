@@ -7,6 +7,7 @@
 
 namespace Sand 
 {
+
 	class Renderer2D
 	{
 	public:
@@ -18,6 +19,9 @@ namespace Sand
 		static void Begin(const EditorCamera& camera);
 		static void End();
 		static void Flush();
+
+		// Simple function to instantly draw a grid
+		static void DrawGrid();
 
 		// Primitives
 		static void DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color);

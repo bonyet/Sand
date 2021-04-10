@@ -334,7 +334,7 @@ namespace Sand
 			{								
 				auto textureID = component.Texture->GetID();
 
-				if (ImGui::ImageButton((ImTextureID)textureID, { 100, 100 }, { 0, 1 }, { 1, 0 }))
+				if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(textureID), { 100, 100 }, { 0, 1 }, { 1, 0 }))
 				{
 					std::string chosenFilepath = FileDialogs::OpenFile("Image (*.jpg);(*.png)\0*.png;*.jpg;\0");
 

@@ -1,12 +1,9 @@
 #pragma once
 
-#include "Sand/Scene/Actor.h"
 #include <mono/metadata/reflection.h>
 
 namespace Sand
 {
-
-	enum class ScriptDataType;
 
 	struct ScriptData
 	{

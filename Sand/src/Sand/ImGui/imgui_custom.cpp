@@ -35,6 +35,18 @@ namespace ImGui
 		}
 	}
 
+	void TextScaled(float scale, const char* text, ...)
+	{
+		va_list args;
+		va_start(args, text);
+
+		ImGui::SetWindowFontScale(scale);
+		ImGui::TextV(text, args);
+		ImGui::SetWindowFontScale(1.0f);
+
+		va_end(args);
+	}
+
 	bool ToggleButton(const char* str_id, bool* v)
 	{
 		ImGui::Button(str_id, { 40, 25 });

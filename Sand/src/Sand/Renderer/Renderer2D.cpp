@@ -8,6 +8,9 @@
 
 #include "Sand/Core/Application.h"
 
+#include <glad/glad.h>
+#include <glm/gtc/type_ptr.hpp>
+
 namespace Sand 
 {
 

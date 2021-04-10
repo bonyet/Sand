@@ -52,7 +52,6 @@ namespace Sand
 		SAND_PROFILE_FUNCTION();
 
 		// Render geometry
-
 		{
 			Renderer2D::Begin(camera);
 
@@ -67,15 +66,10 @@ namespace Sand
 					if (hasTextureComponent)
 					{
 						auto& texComponent = m_CurrentRegistry->get<TextureComponent>(actor);
-						if (texComponent.IsTextured()) {
+						if (texComponent.IsTextured()) 
 							Renderer2D::DrawQuad(transform.GetTransform(), (uint32_t)actor, texComponent.Texture, texComponent.TilingFactor, sprite.Color);
-						}
 						else
-						{
-							// TODO: make good
-							constexpr glm::vec4 MISSING_TEXTURE_COLOR = { 1.0f, 0.0f, 1.0f, 1.0f };
-							Renderer2D::DrawQuad(transform.GetTransform(), MISSING_TEXTURE_COLOR, (uint32_t)actor);
-						}
+							Renderer2D::DrawQuad(transform.GetTransform(), { 1.0f, 0.0f, 1.0f, 1.0f }, (uint32_t)actor);
 					}
 					else if (!hasTextureComponent) 
 					{
@@ -200,15 +194,10 @@ namespace Sand
 					if (hasTextureComponent)
 					{
 						auto& texComponent = m_CurrentRegistry->get<TextureComponent>(actor);
-						if (texComponent.IsTextured()) {
+						if (texComponent.IsTextured())
 							Renderer2D::DrawQuad(transform.GetTransform(), (uint32_t)actor, texComponent.Texture, texComponent.TilingFactor, sprite.Color);
-						}
 						else
-						{
-							// TODO: make good
-							constexpr glm::vec4 MISSING_TEXTURE_COLOR = { 1.0f, 0.0f, 1.0f, 1.0f };
-							Renderer2D::DrawQuad(transform.GetTransform(), MISSING_TEXTURE_COLOR, (uint32_t)actor);
-						}
+							Renderer2D::DrawQuad(transform.GetTransform(), { 1.0f, 0.0f, 1.0f, 1.0f }, (uint32_t)actor);
 					}
 					else if (!hasTextureComponent) {
 						Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color, (uint32_t)actor);
@@ -235,8 +224,8 @@ namespace Sand
 
 	bool Scene::ContainsActor(Actor actor)
 	{
-		// I do this instead of registry::each because a traditional for loop allows early exit using return, so 
-		// we don't have to continue iterating entities even if we found the one we want
+		/* I do this instead of registry::each because a traditional for loop allows early exit via return, so 
+		we don't have to continue iterating entities even if we found the one we want */
 		auto data = m_CurrentRegistry->data();
 		for (size_t i = 0; i < m_CurrentRegistry->size(); i++)
 		{
@@ -341,6 +330,8 @@ namespace Sand
 
 	void Scene::OnActorDestroy(Actor actor)
 	{
+		SAND_PROFILE_FUNCTION();
+
 		// Properly remove children
 		TransformComponent& transform = actor.GetComponent<TransformComponent>();
 

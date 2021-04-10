@@ -17,9 +17,9 @@ namespace Sand
 		switch (severity)
 		{
 			case GL_DEBUG_SEVERITY_HIGH:         SAND_CORE_CRITICAL(message); return;
-			case GL_DEBUG_SEVERITY_MEDIUM:       SAND_CORE_ERROR(message); return;
-			case GL_DEBUG_SEVERITY_LOW:          SAND_CORE_WARN(message); return;
-			case GL_DEBUG_SEVERITY_NOTIFICATION: SAND_CORE_TRACE(message); return;
+			case GL_DEBUG_SEVERITY_MEDIUM:       SAND_CORE_ERROR(message);    return;
+			case GL_DEBUG_SEVERITY_LOW:          SAND_CORE_WARN(message);     return;
+			case GL_DEBUG_SEVERITY_NOTIFICATION: SAND_CORE_TRACE(message);    return;
 		}
 		
 		SAND_CORE_ASSERT(false, "Unknown severity level!");

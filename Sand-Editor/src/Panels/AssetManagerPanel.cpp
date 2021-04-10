@@ -4,91 +4,86 @@
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
 
-#include <filesystem>
 #include <array>
 
 namespace Sand
 {
 
-	static std::filesystem::directory_entry s_SelectedDirectory;
-	static std::array<Ref<Texture2D>, 7> s_FileIcons;
-
-	static AssetManagerPanel::FileType GetAssetType(const std::filesystem::directory_entry& entry)
+	struct FileIcon
 	{
-		using FT = AssetManagerPanel::FileType;
+		Ref<Texture2D> Texture;
+		std::string TexturePath;
+		ImVec2 PreferredSize = { 25, 25 };
+	};
 
-		auto extension = entry.path().extension();
-		std::string extString = extension.string();
+	static std::array<FileIcon, 7> s_FileIcons;
 
-		if (extString == "")
-			return FT::Folder;
-		if (extString == ".sscene")
-			return FT::Scene;
-		if (extString == ".txt")
-			return FT::Text;
-		if (extString == ".cs")
-			return FT::Script;
-		if (extString == ".ttf")
-			return FT::Font;
-		if (extString == ".glsl" || extString == ".shader")
-			return FT::Shader;
-		if (extString == ".png" || extString == ".jpg" 
-			|| extString == ".PNG" || extString == ".JPG")
-			return FT::Image;
 
-		return FT::Unknown;
-	}
-
-	static std::string GetFileExtension(const std::filesystem::directory_entry& entry)
-	{
-		return entry.path().extension().string();
-	}
-	static std::string FileTypeToString(AssetManagerPanel::FileType type)
-	{
-		using FT = AssetManagerPanel::FileType;
-
-		switch (type)
-		{
-		case FT::Folder:
-			return "Folder";
-		case FT::Scene:
-			return "Scene";
-		case FT::Script:
-			return "Script";
-		case FT::Text:
-			return "Text";
-		case FT::Image:
-			return "Image";
-		case FT::Shader:
-			return "Shader";
-		case FT::Font:
-			return "Font";
-		case FT::Unknown:
-			return "Unknown";
-		}
-
-		return "Unknown";
-	}
 
 	AssetManagerPanel::AssetManagerPanel()
 	{
 		// LOAD ICONS
 		{
-			std::string iconFilepaths[7] = {
-				"assets/textures/folder.png",
-				"assets/textures/text.png",
-				"assets/textures/script.png",
-				"assets/textures/folder.png", // NEED SCENE
-				"assets/textures/font.png",
-				"assets/textures/folder.png", // NEED SHADER
-				"assets/textures/image.png",
+			std::pair<std::string, ImVec2> iconPathsAndSizes[7] = {
+				{"assets/textures/folder.png", { 25, 25 }},
+				{"assets/textures/text.png",   { 25, 25 }},
+				{"assets/textures/script.png", { 35, 35 }},
+				{"assets/textures/folder.png", { 25, 25 }}, // NEED SCENE
+				{"assets/textures/font.png",   { 15, 15 }},
+				{"assets/textures/folder.png", { 20, 20 }},  // NEED SHADER
+				{"assets/textures/image.png",  { 25, 25 }},
 			};
 
 			for (int i = 0; i < 7; i++)
 			{
-				s_FileIcons[i] = Texture2D::Create(iconFilepaths[i]);
+				auto element = iconPathsAndSizes[i];
+				s_FileIcons[i] = { Texture2D::Create(element.first), element.first, element.second };
 			}
 		}
+	}
+
+	static AssetFileType GetFileType(const std::filesystem::directory_entry& entry)
+	{
+		// Is it a folder? (handle now cause folders don't have an extension)
+		if (entry.is_directory())
+			return AssetFileType::Folder;
+
+		std::string string = entry.path().extension().string();
+
+		// Is it an image? (handle now cause there are multiple possible extensions)
+		{
+			constexpr size_t numImageFileExtensions = 2;
+			const char* imageFileTypesString[numImageFileExtensions] = {
+				".png", ".jpg"
+			};
+			for (int i = 0; i < numImageFileExtensions; i++)
+			{
+				if (strcmp(string.c_str(), imageFileTypesString[i]) == 0)
+					return AssetFileType::Image;
+			}
+		}
+
+		// Handle other file extensions
+		constexpr size_t numFileExtensions = 6;
+		const char* assetFileTypesString[numFileExtensions] = {
+			".txt", ".cs", ".sscene", ".ttf", ".glsl", 
+		};
+
+		for (int i = 1; i < numFileExtensions; i++)
+		{
+			if (strcmp(string.c_str(), assetFileTypesString[i - 1]) == 0) {
+				return (AssetFileType)i;
+			}
+		}
+
+		return AssetFileType::Unknown;
+	}
+
+	static FileIcon& GetFileIcon(const std::filesystem::directory_entry& entry)
+	{
+		AssetFileType type = GetFileType(entry);
+
+		return s_FileIcons[(int)type];
 	}
 
 	void AssetManagerPanel::OnGuiRender()
@@ -101,15 +96,17 @@ namespace Sand
 
 		ImGui::BeginChild("AssetManager_FolderView", { 200, ImGui::GetContentRegionAvail().y });
 		{
-			for (const auto& entry : std::filesystem::directory_iterator(mFilepath)) 
+			for (const auto& entry : std::filesystem::directory_iterator(m_Filepath)) 
 			{
 				const auto entryName = entry.path().filename().string();
 				
 				std::string prefix = entry.is_directory() ? "Folder: " : "File: ";
 				std::string text = prefix + entryName;
 
-				if (ImGui::Selectable(text.c_str(), false)) {
-					s_SelectedDirectory = entry;
+				// Select folder
+				if (ImGui::Selectable(text.c_str(), false)) 
+				{
+					m_CurrentDirectory = entry;
 				}
 
 				ImGui::Separator();
@@ -124,19 +121,21 @@ namespace Sand
 
 		ImGui::BeginChild("AssetManager_FileView", ImGui::GetContentRegionAvail());
 		{
-			for (const auto& entry : std::filesystem::directory_iterator(s_SelectedDirectory))
+			for (const auto& entry : std::filesystem::directory_iterator(m_CurrentDirectory))
 			{
-
-				std::string filename = entry.path().filename().string();
-				filename.erase(filename.find(GetFileExtension(entry))); // Remove the extension from the name
-				FileType type = GetAssetType(entry);
-
-				Ref<Texture2D> icon = s_FileIcons[(int)type];
-				std::string text = FileTypeToString(type) + ": " + filename;
-
-				ImGui::Image(reinterpret_cast<ImTextureID>(icon->GetID()), { 20, 20 }, { 0, 1 }, { 1, 0 });
-				ImGui::SameLine();
-				ImGui::Text(text.c_str());
+				// display file preview
+				auto& icon = GetFileIcon(entry);
+				if (icon.Texture)
+				{
+					ImGui::Image((ImTextureID)icon.Texture->GetID(), icon.PreferredSize, { 0, 1 }, { 1, 0 });
+					ImGui::SameLine();
+					ImGui::Text("%s", entry.path().filename().string().c_str());
+				} else 
+				{
+					ImGui::PushStyleColor(ImGuiCol_Text, ImVec4{ 0.8f, 0.2f, 0.3f, 1.0f });
+					ImGui::Text("Unknown file type");
+					ImGui::PopStyleColor();
+				}
 			}
 		}
 		ImGui::EndChild();
@@ -146,8 +145,8 @@ namespace Sand
 
 	void AssetManagerPanel::SetPath(const std::string& path)
 	{
-		mFilepath = path;
-		s_SelectedDirectory = std::filesystem::directory_entry(path);
+		m_Filepath = path;
+		m_CurrentDirectory = { path };
 	}
 
 }
