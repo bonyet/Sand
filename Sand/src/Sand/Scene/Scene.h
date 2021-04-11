@@ -42,6 +42,7 @@ namespace Sand
 		const uint32_t GetNumberOfActors() const { return (uint32_t)m_Registry.alive(); }
 
 		bool ContainsActor(Actor actor);
+		bool IsActorIDValid(uint32_t id);
 
 		static Scene* const GetActiveScene();
 	private:

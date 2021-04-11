@@ -106,13 +106,14 @@ namespace Sand
 	{
 		SAND_PROFILE_FUNCTION();
 
-		std::vector<MonoClass*> classes;
-
 		const MonoTableInfo* tableInfo = mono_image_get_table_info(image, MONO_TABLE_TYPEDEF);
 
 		int rows = mono_table_info_get_rows(tableInfo);
 
-		/* For each row, get some of its values */
+		std::vector<MonoClass*> classes;
+		classes.reserve(rows);
+
+		// Get values from each row
 		for (int i = 0; i < rows; i++)
 		{
 			MonoClass* klass = nullptr;
@@ -133,7 +134,7 @@ namespace Sand
 
 	ScriptDataType ScriptEngine::MonoTypeToScriptDataType(MonoType* monoType)
 	{
-		int type = mono_type_get_type((MonoType*)monoType);
+		int type = mono_type_get_type(monoType);
 		switch (type)
 		{
 			case MONO_TYPE_I2:

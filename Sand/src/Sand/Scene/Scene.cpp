@@ -235,6 +235,11 @@ namespace Sand
 		return false;
 	}
 
+	bool Scene::IsActorIDValid(uint32_t id)
+	{
+		return m_Registry.valid((entt::entity)id);
+	}
+
 	Scene* const Scene::GetActiveScene()
 	{
 		return s_ActiveScene;

@@ -27,9 +27,14 @@ namespace Sand
 	{
 		SAND_PROFILE_FUNCTION();
 
-		// Framebuffers
+		// TODO: move out of editor
+		// Framebuffers 
 		FramebufferSpecification fbSpec;
-		fbSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RED_INTEGER, FramebufferTextureFormat::Depth };
+		fbSpec.Attachments = { 
+			FramebufferTextureFormat::RGBA8, 
+			FramebufferTextureFormat::RED_INTEGER, 
+			FramebufferTextureFormat::Depth 
+		};
 		fbSpec.Width = 1280;
 		fbSpec.Height = 720;
 		m_ViewportFramebuffer = Framebuffer::Create(fbSpec);
@@ -122,6 +127,7 @@ namespace Sand
 
 		Renderer2D::ResetStats();
 
+		// TODO: move out of editor
 		if (FramebufferSpecification spec = m_ViewportFramebuffer->GetSpecification();
 			m_ViewportSize.x > 0 && m_ViewportSize.y > 0 && // zero sized framebuffer is invalid
 			(spec.Width != m_ViewportSize.x || spec.Height != m_ViewportSize.y))
@@ -169,15 +175,13 @@ namespace Sand
 		{
 			static ImGuiDockNodeFlags dockspaceFlags = ImGuiDockNodeFlags_NoWindowMenuButton | ImGuiDockNodeFlags_NoCloseButton;
 
-			ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoDocking;
+			ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
+				ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 
 			ImGuiViewport* viewport = ImGui::GetMainViewport();
 			ImGui::SetNextWindowPos(viewport->Pos);
 			ImGui::SetNextWindowSize(viewport->Size);
 			ImGui::SetNextWindowViewport(viewport->ID);
-
-			windowFlags |= ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
-			windowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 
 			ImGui::Begin("Dockspace", (bool*)true, windowFlags);
 
@@ -245,7 +249,7 @@ namespace Sand
 		}
 
 		ImGui::Separator();
-		if (ImGui::TreeNodeEx("Renderer")) 
+		if (ImGui::TreeNodeEx("Rendering")) 
 		{
 			auto stats = Renderer2D::GetStats();
 			ImGui::Text("Renderer2D:");
@@ -259,7 +263,7 @@ namespace Sand
 
 		ImGui::End();
 
-		//Rrender UI panels
+		// Render editor panels
 		m_SceneHierarchyPanel.OnGuiRender();
 		m_AssetManagerPanel.OnGuiRender();
 		
@@ -305,12 +309,6 @@ namespace Sand
 			ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
 			ImGuizmo::SetRect(m_ViewportBounds[0].x, m_ViewportBounds[0].y, m_ViewportBounds[1].x - m_ViewportBounds[0].x, m_ViewportBounds[1].y - m_ViewportBounds[0].y);
 
-			// Runtime camera
-			//auto cameraActor = m_ActiveScene->GetPrimaryCameraActor();
-			//const auto& camera = cameraActor.GetComponent<CameraComponent>().Camera;
-			//const glm::mat4& cameraProjection = camera.GetProjection();
-			//glm::mat4 cameraView = glm::inverse(cameraActor.GetComponent<TransformComponent>().GetTransform());
-
 			// Editor camera
 			const glm::mat4& cameraProjection = m_EditorCamera.GetProjection();
 			glm::mat4 cameraView = m_EditorCamera.GetViewMatrix();
@@ -332,6 +330,7 @@ namespace Sand
 				(ImGuizmo::OPERATION)m_GizmoType, ImGuizmo::MODE::LOCAL, glm::value_ptr(transformToModify),
 				nullptr, snap ? snapValues : nullptr);
 
+			// Correctly set the data of the transform component we modified (if we modified one)
 			if (ImGuizmo::IsUsing() && !Input::IsKeyPressed(Mousecode::Right))
 			{
 				glm::vec2 translation, scale;
@@ -397,11 +396,12 @@ namespace Sand
 		int mouseX = (int)mx;
 		int mouseY = (int)my;
 
+		// Bounds check in the viewport
 		if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
 		{
 			int pixelData = m_ViewportFramebuffer->ReadPixel(1, mouseX, mouseY);
 
-			if (pixelData < 0 || pixelData > m_ActiveScene->GetNumberOfActors())
+			if (pixelData < 0 || !m_ActiveScene->IsActorIDValid(pixelData))
 			{
 				pixelData = -1;
 				m_SceneHierarchyPanel.SetSelectedActor({});
@@ -422,9 +422,10 @@ namespace Sand
 		bool controlPressed = Input::IsKeyPressed(Keycode::LeftControl);
 		bool shiftPressed = Input::IsKeyPressed(Keycode::LeftShift);
 
-		// shortcuts
+		// Keyboard shortcuts
 		switch (e.GetKey())
 		{
+			// Scene keybinds
 			case Keycode::N:
 			{
 				if (controlPressed)
@@ -444,7 +445,7 @@ namespace Sand
 				break;
 			}
 
-			// GIZMOS YEA
+			// Gizmos
 			case Keycode::Q:
 			{
 				if (!m_ViewportHovered || ImGuizmo::IsUsing())
@@ -478,7 +479,7 @@ namespace Sand
 				break;
 			}
 
-			// CAMERA STUFF
+			// 2D view
 			case Keycode::KP_0:
 			{
 				if (!m_ViewportHovered)
@@ -488,7 +489,7 @@ namespace Sand
 				break;
 			}			
 
-			// RANDOM EDITOR KEYBINDS
+			// Focusing on actors
 			case Keycode::F:
 			{
 				Actor focused = m_SceneHierarchyPanel.GetSelectedActor();
@@ -505,6 +506,7 @@ namespace Sand
 
 				break;
 			}
+			// Duplicating actors
 			case Keycode::D:
 			{
 				if (!controlPressed || !m_SceneHierarchyPanel.GetSelectedActor())
