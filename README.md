@@ -1,4 +1,3 @@
-Why did you read me?
-They will find out...
+Simple 2D game engine built off https://github.com/TheCherno/Hazel
 
-(to be continued...)
+Build instructions will be added in the future
