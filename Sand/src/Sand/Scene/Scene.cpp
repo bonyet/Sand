@@ -47,41 +47,6 @@ namespace Sand
 		m_CurrentRegistry->destroy(actor);
 	}
 
-	void Scene::OnUpdateEditor(Timestep ts, EditorCamera& camera)
-	{
-		SAND_PROFILE_FUNCTION();
-
-		// Render geometry
-		{
-			Renderer2D::Begin(camera);
-
-			auto group = m_CurrentRegistry->group<SpriteRendererComponent>(entt::get<TransformComponent>);
-			for (auto actor : group)
-			{
-				auto [sprite, transform] = group.get<SpriteRendererComponent, TransformComponent>(actor);
-
-				// Render the sprite
-				{
-					bool hasTextureComponent = m_CurrentRegistry->has<TextureComponent>(actor);
-					if (hasTextureComponent)
-					{
-						auto& texComponent = m_CurrentRegistry->get<TextureComponent>(actor);
-						if (texComponent.IsTextured()) 
-							Renderer2D::DrawQuad(transform.GetTransform(), (uint32_t)actor, texComponent.Texture, texComponent.TilingFactor, sprite.Color);
-						else
-							Renderer2D::DrawQuad(transform.GetTransform(), { 1.0f, 0.0f, 1.0f, 1.0f }, (uint32_t)actor);
-					}
-					else if (!hasTextureComponent) 
-					{
-						Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color, (uint32_t)actor);
-					}
-				}
-			}
-
-			Renderer2D::End();
-		}
-	}
-
 	void Scene::BeginPlay()
 	{
 		SAND_PROFILE_FUNCTION();
@@ -95,10 +60,10 @@ namespace Sand
 
 		// Create all physics bodies
 		{
-			auto physicsBodiesView = m_CurrentRegistry->view<PhysicsComponent>();
-			for (auto& entity : physicsBodiesView)
+			auto bodies = m_CurrentRegistry->view<PhysicsComponent>();
+			for (auto& entity : bodies)
 			{
-				auto& component = physicsBodiesView.get<PhysicsComponent>(entity);
+				auto& component = bodies.get<PhysicsComponent>(entity);
 
 				const auto& tc = m_CurrentRegistry->get<TransformComponent>(entity);
 
@@ -141,6 +106,48 @@ namespace Sand
 		Application::Get().OnEvent(SceneEndPlayEvent{ this });
 	}
 
+
+	void Scene::OnUpdateEditor(Timestep ts, EditorCamera& camera)
+	{
+		SAND_PROFILE_FUNCTION();
+
+		// Render geometry
+		{
+			Renderer2D::Begin(camera);
+
+			// Rendering
+			{
+				auto group = m_CurrentRegistry->group<SpriteRendererComponent>(entt::get<TransformComponent>);
+				for (auto actor : group)
+				{
+					auto [sprite, transform] = group.get<SpriteRendererComponent, TransformComponent>(actor);
+
+					// Render the sprite
+					bool hasTextureComponent = m_CurrentRegistry->has<TextureComponent>(actor);
+					if (!hasTextureComponent)
+					{
+						Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color, (uint32_t)actor);
+					}
+					else
+					{
+						// Render textured sprite
+						auto& texComponent = m_CurrentRegistry->get<TextureComponent>(actor);
+
+						if (texComponent.IsTextured()) {
+							Renderer2D::DrawQuad(transform.GetTransform(), (uint32_t)actor, texComponent.Texture, texComponent.TilingFactor, sprite.Color);
+						}
+						else {
+							Renderer2D::DrawQuad(transform.GetTransform(), { 1.0f, 0.0f, 1.0f, 1.0f }, (uint32_t)actor);
+						}
+					}
+				}
+			}
+
+			Renderer2D::End();
+		}
+	}
+
+
 	void Scene::OnUpdateRuntime(Timestep ts)
 	{
 		SAND_PROFILE_FUNCTION();
@@ -167,15 +174,17 @@ namespace Sand
 		Camera* primaryCamera = nullptr;
 		glm::mat4 camTransform;
 
-		auto group = m_CurrentRegistry->group<TransformComponent, CameraComponent>();
-		for (auto actor : group)
 		{
-			auto [transform, camera] = group.get<TransformComponent, CameraComponent>(actor);				
-			if (camera.Primary)
+			auto group = m_CurrentRegistry->group<TransformComponent, CameraComponent>();
+			for (auto actor : group)
 			{
-				primaryCamera = &camera.Camera;
-				camTransform = transform;
-				break;
+				auto [transform, camera] = group.get<TransformComponent, CameraComponent>(actor);
+				if (camera.Primary)
+				{
+					primaryCamera = &camera.Camera;
+					camTransform = transform;
+					break;
+				}
 			}
 		}
 
@@ -183,24 +192,30 @@ namespace Sand
 		{
 			Renderer2D::Begin(*primaryCamera, camTransform);
 
-			auto group = m_CurrentRegistry->group<SpriteRendererComponent>(entt::get<TransformComponent>);
-			for (auto actor : group)
+			// Rendering
 			{
-				auto [sprite, transform] = group.get<SpriteRendererComponent, TransformComponent>(actor);
-				
-				// Render the sprite
+				auto group = m_CurrentRegistry->group<SpriteRendererComponent>(entt::get<TransformComponent>);
+				for (auto actor : group)
 				{
+					auto [sprite, transform] = group.get<SpriteRendererComponent, TransformComponent>(actor);
+
+					// Render the sprite
 					bool hasTextureComponent = m_CurrentRegistry->has<TextureComponent>(actor);
-					if (hasTextureComponent)
+					if (!hasTextureComponent)
 					{
-						auto& texComponent = m_CurrentRegistry->get<TextureComponent>(actor);
-						if (texComponent.IsTextured())
-							Renderer2D::DrawQuad(transform.GetTransform(), (uint32_t)actor, texComponent.Texture, texComponent.TilingFactor, sprite.Color);
-						else
-							Renderer2D::DrawQuad(transform.GetTransform(), { 1.0f, 0.0f, 1.0f, 1.0f }, (uint32_t)actor);
+						Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color, static_cast<uint32_t>(actor));
 					}
-					else if (!hasTextureComponent) {
-						Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color, (uint32_t)actor);
+					else 
+					{
+						// Render textured sprite
+						auto& texComponent = m_CurrentRegistry->get<TextureComponent>(actor);
+
+						if (texComponent.IsTextured()) {
+							Renderer2D::DrawQuad(transform.GetTransform(), static_cast<uint32_t>(actor), texComponent.Texture, texComponent.TilingFactor, sprite.Color);
+						}
+						else {
+							Renderer2D::DrawQuad(transform.GetTransform(), { 1.0f, 0.0f, 1.0f, 1.0f }, static_cast<uint32_t>(actor));
+						}
 					}
 				}
 			}
@@ -224,7 +239,7 @@ namespace Sand
 
 	bool Scene::ContainsActor(Actor actor)
 	{
-		/* I do this instead of registry::each because a traditional for loop allows early exit via return, so 
+		/* We do this instead of registry::each because a traditional for loop allows early exit via return, so 
 		we don't have to continue iterating entities even if we found the one we want */
 		auto data = m_CurrentRegistry->data();
 		for (size_t i = 0; i < m_CurrentRegistry->size(); i++)
@@ -237,7 +252,7 @@ namespace Sand
 
 	bool Scene::IsActorIDValid(uint32_t id)
 	{
-		return m_Registry.valid((entt::entity)id);
+		return m_Registry.valid(static_cast<entt::entity>(id));
 	}
 
 	Scene* const Scene::GetActiveScene()
@@ -260,6 +275,7 @@ namespace Sand
 
 		return {};
 	}
+
 	int Scene::FindActorID(const std::string& name)
 	{
 		SAND_PROFILE_FUNCTION();
@@ -270,7 +286,7 @@ namespace Sand
 			auto& tag = view.get<TagComponent>(actor);
 
 			if (tag.Name == name)
-				return (int)actor;
+				return static_cast<int>(actor);
 		}
 
 		return -1; // Not found
@@ -278,22 +294,11 @@ namespace Sand
 
 	Actor Scene::DuplicateActor(Actor original)
 	{
+		// I admit this is fairly adventurous use of the preprocessor 
+#define COPY_COMPONENT(Type) if (m_CurrentRegistry->has<Type>(original)) { m_CurrentRegistry->emplace<Type>(clone, original.GetComponent<Type>()); }
+
 		Actor clone = { m_CurrentRegistry->create(), this };
 
-		// do it
-
-		return clone;
-	}
-
-#define COPY_COMPONENT(Type) { auto view = m_Registry.view<Type>(); m_RuntimeRegistry.insert<Type>(view.data(), view.data() + view.size(), view.raw(), view.raw() + view.size()); }
-	void Scene::SwitchToRuntimeRegistry()
-	{
-		m_RuntimeRegistry.clear();
-
-		// coppy all entities
-		m_RuntimeRegistry.assign(m_Registry.data(), m_Registry.data() + m_Registry.size(), m_Registry.destroyed());
-
-		// copy all components -- this process also dirties any components, ex: transform component will be dirtied --
 		COPY_COMPONENT(TagComponent);
 		COPY_COMPONENT(TransformComponent);
 		COPY_COMPONENT(SpriteRendererComponent);
@@ -304,9 +309,32 @@ namespace Sand
 		COPY_COMPONENT(AnimatorComponent);
 		COPY_COMPONENT(AudioSourceComponent);
 
+		return clone;
+
+#undef COPY_COMPONENT
+	}
+
+#define COPY_COMPONENT_TO_REGISTRY(Type) { auto view = m_Registry.view<Type>(); m_RuntimeRegistry.insert<Type>(view.data(), view.data() + view.size(), view.raw(), view.raw() + view.size()); }
+	void Scene::SwitchToRuntimeRegistry()
+	{
+		m_RuntimeRegistry.clear();
+
+		// Copy all entities
+		m_RuntimeRegistry.assign(m_Registry.data(), m_Registry.data() + m_Registry.size(), m_Registry.destroyed());
+
+		COPY_COMPONENT_TO_REGISTRY(TagComponent);
+		COPY_COMPONENT_TO_REGISTRY(TransformComponent);
+		COPY_COMPONENT_TO_REGISTRY(SpriteRendererComponent);
+		COPY_COMPONENT_TO_REGISTRY(CameraComponent);
+		COPY_COMPONENT_TO_REGISTRY(PhysicsComponent);
+		COPY_COMPONENT_TO_REGISTRY(BoxColliderComponent);
+		COPY_COMPONENT_TO_REGISTRY(TextureComponent);
+		COPY_COMPONENT_TO_REGISTRY(AnimatorComponent);
+		COPY_COMPONENT_TO_REGISTRY(AudioSourceComponent);
+
 		m_CurrentRegistry = &m_RuntimeRegistry;
 	}
-#undef COPY_COMPONENT
+#undef COPY_COMPONENT_TO_REGISTRY
 
 	void Scene::SwitchToEditorRegistry()
 	{
@@ -390,11 +418,8 @@ namespace Sand
 
 		const auto& tc = actor.GetComponent<TransformComponent>();
 
-		// Initialize the collider correctly if we are running the game
 		if (m_Playmode)
-		{
 			component.Create(tc.GetScale(), actor.GetComponent<PhysicsComponent>().Body.GetBody());
-		}
 	}
 	template<>
 	void Scene::OnComponentAdded<PhysicsComponent>(Actor actor, PhysicsComponent& component)
@@ -424,6 +449,13 @@ namespace Sand
 	void Scene::OnComponentAdded<AudioSourceComponent>(Actor actor, AudioSourceComponent& component)
 	{
 		component.owner = actor;
+	}
+
+	template<>
+	void Scene::OnComponentAdded<ScriptComponent>(Actor actor, ScriptComponent& component)
+	{
+		component.owner = actor;
+		component.Init();
 	}
 
 	template<typename T>
@@ -478,5 +510,10 @@ namespace Sand
 	{
 	}
 
+	template<>
+	void Scene::OnComponentRemoved<ScriptComponent>(Actor actor, ScriptComponent& component)
+	{
+		component.Uninit();
+	}
 
 }

@@ -26,7 +26,7 @@ namespace Sand
 		auto& component = Actor.GetComponent<T>();
 		ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
 		
-		bool open = ImGui::TreeNodeEx((void*)typeid(T).hash_code(), treeNodeFlags, name.c_str());
+		bool open = ImGui::TreeNodeEx(reinterpret_cast<void*>(typeid(T).hash_code()), treeNodeFlags, name.c_str());
 
 		ImGui::Tooltip("Right click for more actions", 1.1f);
 
@@ -190,7 +190,7 @@ namespace Sand
 
 		if (ImGui::BeginPopup("AddComponent", false))
 		{
-			// Misc / Base
+			// Common components
 			if (ImGui::BeginMenu("Basic"))
 			{
 				DrawComponentMenuItem<TransformComponent>("Transform", actor);
@@ -208,6 +208,7 @@ namespace Sand
 				ImGui::EndMenu();
 			}
 
+			// Physics
 			if (ImGui::BeginMenu("Physics"))
 			{
 				DrawComponentMenuItem<PhysicsComponent>("Physics", actor);
@@ -216,9 +217,25 @@ namespace Sand
 				ImGui::EndMenu();
 			}
 
+			// Audio
 			if (ImGui::BeginMenu("Audio"))
 			{
 				DrawComponentMenuItem<AudioSourceComponent>("Audio Source", actor);
+
+				ImGui::EndMenu();
+			}
+
+			// Scripts / scripting
+			if (ImGui::BeginMenu("Scripts"))
+			{
+				for (std::string& className : ScriptEngine::GetClientScriptNames())
+				{
+					if (DrawComponentMenuItem<ScriptComponent>(className, actor, className))
+					{
+						auto& scriptComponent = actor.GetComponent<ScriptComponent>();
+						scriptComponent.Init();
+					}
+				}
 
 				ImGui::EndMenu();
 			}
@@ -264,7 +281,7 @@ namespace Sand
 			ImGui::SameLine(ImGui::GetContentRegionAvailWidth() - 180);
 			ImGui::PushStyleColor(ImGuiCol_Text, { 1.0f, 1.0f, 1.0f, 0.7f });
 
-			ImGui::Text(("= " + std::to_string((uint32_t)actor)).c_str());
+			ImGui::Text("= %d", static_cast<uint32_t>(actor));
 			
 			ImGui::PopStyleColor();
 		}
@@ -373,7 +390,16 @@ namespace Sand
 		});
 		SetColumnsMinSpacing(defaultColumnSpacing);
 	
-		DrawComponent<BoxColliderComponent>("Box Collider", actor, [=](auto& component)
+		DrawComponent<ScriptComponent>("Script", actor, [&](auto& component)
+		{
+			const ScriptData& scriptData = ScriptEngine::GetScriptDataFromActor(actor);
+			for (auto& scriptField : scriptData.Fields)
+			{
+				RenderScriptField(scriptField, scriptData);
+			}
+		});
+
+		DrawComponent<BoxColliderComponent>("Box Collider", actor, [](auto& component)
 		{
 			glm::vec2 scale = component.GetScale();
 			SAND_LEFT_LABEL(ImGui::DragFloat2("##Scale", glm::value_ptr(scale), 0.05f, 0.05f, 0.0f, "%.2f"), "Scale",
@@ -477,92 +503,82 @@ namespace Sand
 		});
 	}
 
-#if 0
-	static void RenderAllScriptFields(const ScriptData* const scriptData)
-	{
-		for (const ScriptField& field : scriptData->Fields)
-		{
-			if (!field.IsPublic())
-				continue; // dont show private fields in inspector
-
-			RenderScriptField(field, scriptData);
-		}
-	}
-
-	static void RenderScriptField(const ScriptField& field, const ScriptData* const scriptData)
+	static void RenderScriptField(const ScriptField& field, const ScriptData& scriptData)
 	{
 		SAND_PROFILE_FUNCTION();
 
-		const std::string fieldIDStr = std::string("##") + std::string(field.GetName());
-		const char* fieldID = fieldIDStr.c_str();
+		const char* fieldName = mono_field_get_name(field.MonoField);
+
+		char fieldID[200];
+		sprintf(fieldID, "##%s", fieldName);
 
 		ImGui::Columns(2);
 
-		switch (field.GetType())
+		switch (field.Type)
 		{
-			case ScriptDataType::Double:
-			case ScriptDataType::Float:
+			case ScriptFieldType::Double:
+			case ScriptFieldType::Float:
 			{
 				float value;
-				mono_field_get_value(scriptData->Object, field.GetField(), &value);
-				SAND_LEFT_LABEL(ImGui::InputFloat(fieldID, &value, 0.5f, 1.0f), field.GetName(),
+				mono_field_get_value(scriptData.Object, field.MonoField, &value);
+				SAND_LEFT_LABEL(ImGui::InputFloat(fieldID, &value, 0.5f, 1.0f), fieldName,
 				{
-					mono_field_set_value(scriptData->Object, field.GetField(), &value);
+					mono_field_set_value(scriptData.Object, field.MonoField, &value);
 				});
 				break;
 			}
-			case ScriptDataType::UInt:
-			case ScriptDataType::Int:
+			case ScriptFieldType::UInt:
+			case ScriptFieldType::Int:
 			{
 				int value;
-				mono_field_get_value(scriptData->Object, field.GetField(), &value);
-				SAND_LEFT_LABEL(ImGui::InputInt(fieldID, &value, 1), field.GetName(),
+				mono_field_get_value(scriptData.Object, field.MonoField, &value);
+				SAND_LEFT_LABEL(ImGui::InputInt(fieldID, &value, 1), fieldName,
 				{
-					mono_field_set_value(scriptData->Object, field.GetField(), &value);
+					mono_field_set_value(scriptData.Object, field.MonoField, &value);
 				});
 				break;
 			}
-			case ScriptDataType::Vector2:
+			case ScriptFieldType::Vector2:
 			{
 				glm::vec2 value;
-				mono_field_get_value(scriptData->Object, field.GetField(), &value);
-				SAND_LEFT_LABEL(ImGui::DragFloat2(fieldID, glm::value_ptr(value), 0.5f), field.GetName(),
+				mono_field_get_value(scriptData.Object, field.MonoField, &value);
+				SAND_LEFT_LABEL(ImGui::DragFloat2(fieldID, glm::value_ptr(value), 0.5f), fieldName,
 				{
-					mono_field_set_value(scriptData->Object, field.GetField(), &value);
+					mono_field_set_value(scriptData.Object, field.MonoField, &value);
 				});
 				break;
 			}
-			case ScriptDataType::Vector3:
+			case ScriptFieldType::Vector3:
 			{
 				glm::vec3 value;
-				mono_field_get_value(scriptData->Object, field.GetField(), &value);
-				SAND_LEFT_LABEL(ImGui::DragFloat3(fieldID, glm::value_ptr(value), 0.5f), field.GetName(),
+				mono_field_get_value(scriptData.Object, field.MonoField, &value);
+				SAND_LEFT_LABEL(ImGui::DragFloat3(fieldID, glm::value_ptr(value), 0.5f), fieldName,
 				{
-					mono_field_set_value(scriptData->Object, field.GetField(), &value);
+					mono_field_set_value(scriptData.Object, field.MonoField, &value);
 				});
 				break;
 			}
-			case ScriptDataType::Vector4:
+			case ScriptFieldType::Vector4:
 			{
 				glm::vec4 value;
-				mono_field_get_value(scriptData->Object, field.GetField(), &value);
-				SAND_LEFT_LABEL(ImGui::DragFloat4(fieldID, glm::value_ptr(value), 0.5f), field.GetName(),
+				mono_field_get_value(scriptData.Object, field.MonoField, &value);
+				SAND_LEFT_LABEL(ImGui::DragFloat4(fieldID, glm::value_ptr(value), 0.5f), fieldName,
 				{
-					mono_field_set_value(scriptData->Object, field.GetField(), &value);
+					mono_field_set_value(scriptData.Object, field.MonoField, &value);
 				});
 				break;
 			}
-			case ScriptDataType::Color:
+			case ScriptFieldType::Color:
 			{
 				glm::vec4 value;
-				mono_field_get_value(scriptData->Object, field.GetField(), &value);
-				SAND_LEFT_LABEL(ImGui::ColorEdit4(fieldID, glm::value_ptr(value)), field.GetName(),
+				mono_field_get_value(scriptData.Object, field.MonoField, &value);
+				SAND_LEFT_LABEL(ImGui::ColorEdit4(fieldID, glm::value_ptr(value)), fieldName,
 				{
-					mono_field_set_value(scriptData->Object, field.GetField(), &value);
+					mono_field_set_value(scriptData.Object, field.MonoField, &value);
 				});
 				break;
 			}
-			case ScriptDataType::Unknown:
+			case ScriptFieldType::Unknown:
 			{
 				ImGui::Text("Unknown data type.");
 			}
@@ -570,6 +586,5 @@ namespace Sand
 
 		ImGui::Columns(1);
 	}
-#endif
 
 }

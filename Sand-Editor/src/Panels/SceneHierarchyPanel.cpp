@@ -42,24 +42,33 @@ namespace Sand
 		// Tooltip for drag and drop actors
 		if (m_SelectionContext && ImGui::IsMouseDown(0) && ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem)) 
 		{
-			ImGui::BeginTooltipEx(0, ImGuiTooltipFlags_OverridePreviousTooltip);
+			// We don't call Begin/End tooltip in this scope because it messes up the tooltip if the else-if block doesn't get executed
+
+			// Some nice tooltip stuff
 			if (s_CurrentDragDropTarget)
 			{
+				ImGui::BeginTooltipEx(0, ImGuiTooltipFlags_OverridePreviousTooltip);
+
 				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.2f, 0.8f, 0.3f, 1.0f));
 				ImGui::Text("Parenting '%s' to '%s'", m_SelectionContext.GetComponent<TagComponent>().Name.c_str(),
 					s_CurrentDragDropTarget.GetComponent<TagComponent>().Name.c_str());
 				ImGui::PopStyleColor();
+			
+				ImGui::EndTooltip();
 			}
-			else if (!s_CurrentDragDropTarget)
+			else if (!s_CurrentDragDropTarget && m_SelectionContext.GetComponent<TransformComponent>().HasParent())
 			{
+				ImGui::BeginTooltipEx(0, ImGuiTooltipFlags_OverridePreviousTooltip);
+
 				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.8f, 0.3f, 0.3f, 1.0f));
 				ImGui::Text("Orphaning '%s'", m_SelectionContext.GetComponent<TagComponent>().Name.c_str());
 				ImGui::PopStyleColor();
+
+				ImGui::EndTooltip();
 			}
 
 			s_CurrentDragDropTarget = {};
 			
-			ImGui::EndTooltip();
 		}
 
 		// Handle drag and drop
@@ -67,7 +76,7 @@ namespace Sand
 		{
 			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DND_ACTOR_SHP"))
 			{
-				entt::entity fromID = (entt::entity)*(uint32_t*)payload->Data;
+				entt::entity fromID = static_cast<entt::entity>(*static_cast<uint32_t*>(payload->Data)); // The Ultimate Cast
 				Actor(fromID, Scene::GetActiveScene()).GetComponent<TransformComponent>().SetParent({});
 
 				ImGui::ClearDragDrop();
@@ -101,7 +110,7 @@ namespace Sand
 		ImGui::PushStyleColor(ImGuiCol_Text, textColor);
 
 		ImGuiTreeNodeFlags flags = ((m_SelectionContext == actor) ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Framed;
-		bool opened = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)actor, flags, tag.c_str());
+		bool opened = ImGui::TreeNodeEx(reinterpret_cast<void*>(static_cast<uint32_t>(actor)), flags, tag.c_str());
 		
 		if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceNoPreviewTooltip))
 		{
@@ -116,7 +125,7 @@ namespace Sand
 
 			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DND_ACTOR_SHP"))
 			{
-				entt::entity fromID = (entt::entity)*(uint32_t*)payload->Data;
+				entt::entity fromID = static_cast<entt::entity>(*static_cast<uint32_t*>(payload->Data));
 				Actor(fromID, Scene::GetActiveScene()).GetComponent<TransformComponent>().SetParent(actor);
 			}
 

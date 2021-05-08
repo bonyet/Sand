@@ -1,12 +1,9 @@
 #include "sandpch.h"
 #include "ScriptCalls.h" // Includes ScriptEngine.h
-#include "ScriptData.h"
 
 #include "Sand/Debug/Debug.h"
 
-#include <filesystem>
 #include <vector>
-#include <string>
 
 #include <mono/metadata/attrdefs.h>
 #include <mono/metadata/assembly.h>
@@ -21,6 +18,11 @@ namespace Sand
 
 	static MonoAssembly* s_ClientMonoAssembly = nullptr;
 	static MonoImage* s_ClientMonoImage = nullptr;
+
+	static const std::string CLIENT_NAMESPACE = "Client";
+
+	static std::unordered_map<uint32_t, ScriptData> s_ScriptDataMap;
+	static std::vector<std::string> s_CachedClientScriptNames;
 
 #define RegisterComponent(Type) \
 	{\
@@ -78,6 +80,7 @@ namespace Sand
 		return s_MonoImage;
 	}
 
+	// Forward decl for LoadClientAssembly
 	static std::vector<MonoClass*> FindAllClasses(MonoImage* image);
 
 	void ScriptEngine::LoadClientAssembly()
@@ -98,8 +101,74 @@ namespace Sand
 		SAND_CORE_ASSERT(s_ClientMonoAssembly, "Failed to load client MonoAssembly");
 		s_ClientMonoImage = mono_assembly_get_image(s_ClientMonoAssembly);
 
-		//s_CachedClientScripts = FindAllClasses(s_ClientMonoImage);
+		// Get the names of all the classes and cache them in a vector
+		{
+			std::vector<MonoClass*> clientClasses = FindAllClasses(s_ClientMonoImage);
+			s_ScriptDataMap.reserve(clientClasses.size());
+			for (auto klass : clientClasses)
+			{
+				s_CachedClientScriptNames.emplace_back(mono_class_get_name(klass));
+			}
+		}
+
 	}
+	bool ScriptEngine::IsModuleRegistered(uint32_t actorID)
+	{
+		return s_ScriptDataMap.count(actorID);
+	}
+
+	// == Module things ==
+	void ScriptEngine::RegisterModule(uint32_t actorID, const std::string& moduleName)
+	{
+		SAND_PROFILE_FUNCTION();
+
+		MonoClass* klass = mono_class_from_name(s_ClientMonoImage, CLIENT_NAMESPACE.c_str(), moduleName.c_str());
+		if (!klass)
+			return; // Class doesn't exist
+
+		// Get all the engine-specific methods we need
+		// mono_class_get_method_from_name() will just return NULL if it couldn't find it (instead of crashing), so it works out fine.
+		MonoMethod* onLoadMethod = mono_class_get_method_from_name(klass, "OnLoad", 0);
+		MonoMethod* onCreateMethod = mono_class_get_method_from_name(klass, "OnCreate", 0);
+		MonoMethod* onUpdateMethod = mono_class_get_method_from_name(klass, "OnUpdate", 1);
+		MonoMethod* onLateUpdateMethod = mono_class_get_method_from_name(klass, "OnLateUpdate", 1);
+		MonoMethod* onDestroyMethod = mono_class_get_method_from_name(klass, "OnDestroy", 0);
+
+		// Create an instance of the script object
+		MonoObject* object = mono_object_new(s_MonoDomain, klass);
+
+		ScriptData data = {
+			object, klass, onLoadMethod, onCreateMethod, onUpdateMethod, onLateUpdateMethod, onDestroyMethod
+		};
+
+		// Get all the fields in the MonoClass
+		{
+			SAND_PROFILE_SCOPE("Getting script fields - ScriptEngine::RegisterModule(actorID, moduleName)");
+
+			MonoClassField* field;
+			void* iterator = NULL;
+			while (field = mono_class_get_fields(klass, &iterator))
+			{
+				data.Fields.emplace_back(ScriptField{ MonoTypeToScriptDataType(mono_field_get_type(field)), field });
+			}
+		}
+
+		s_ScriptDataMap.emplace(actorID, data);
+	}
+	void ScriptEngine::UnregisterModule(uint32_t actorID)
+	{
+		if (!s_ScriptDataMap.count(actorID))
+			return; // Early exit if the actor doesn't have a script associated with it
+
+		const ScriptData& scriptData = s_ScriptDataMap[actorID];
+		
+		// Call appropriate destruction function(s)
+		if (scriptData.OnDestroyMethod)
+			mono_runtime_invoke(scriptData.OnDestroyMethod, scriptData.Object, nullptr, nullptr);
+
+		s_ScriptDataMap.erase(actorID);
+	}
+	// == End module things ==
 
 	// Returns all the MonoClasses in a MonoImage
 	static std::vector<MonoClass*> FindAllClasses(MonoImage* image)
@@ -132,7 +201,17 @@ namespace Sand
 		return classes;
 	}
 
-	ScriptDataType ScriptEngine::MonoTypeToScriptDataType(MonoType* monoType)
+	std::vector<std::string>& ScriptEngine::GetClientScriptNames()
+	{
+		return s_CachedClientScriptNames;
+	}
+
+	ScriptData& ScriptEngine::GetScriptDataFromActor(uint32_t actorID)
+	{
+		return s_ScriptDataMap[actorID];
+	}
+
+	ScriptFieldType ScriptEngine::MonoTypeToScriptDataType(MonoType* monoType)
 	{
 		int type = mono_type_get_type(monoType);
 		switch (type)
@@ -140,33 +219,33 @@ namespace Sand
 			case MONO_TYPE_I2:
 			case MONO_TYPE_I4:
 			case MONO_TYPE_I8:
-				return ScriptDataType::Int;
+				return ScriptFieldType::Int;
 			case MONO_TYPE_U2:
 			case MONO_TYPE_U4:
 			case MONO_TYPE_U8:
-				return ScriptDataType::UInt;
+				return ScriptFieldType::UInt;
 			case MONO_TYPE_R4:
-				return ScriptDataType::Float;
+				return ScriptFieldType::Float;
 			case MONO_TYPE_R8:
-				return ScriptDataType::Double;
+				return ScriptFieldType::Double;
 			case MONO_TYPE_VALUETYPE:
 			{
 				const char* name = mono_type_get_name((MonoType*)monoType);
 
 				if (strcmp(name, "Sand.Math.Vector2") == 0)
-					return ScriptDataType::Vector2;
+					return ScriptFieldType::Vector2;
 				if (strcmp(name, "Sand.Math.Vector3") == 0)
-					return ScriptDataType::Vector3;
+					return ScriptFieldType::Vector3;
 				if (strcmp(name, "Sand.Math.Vector4") == 0)
-					return ScriptDataType::Vector4;
+					return ScriptFieldType::Vector4;
 				if (strcmp(name, "Sand.Color") == 0)
-					return ScriptDataType::Color;
+					return ScriptFieldType::Color;
 
 				break;
 			}
 		}
 		
-		return ScriptDataType::Unknown;
+		return ScriptFieldType::Unknown;
 	}
 
 	bool ScriptEngine::MonoFieldIsPublic(MonoClassField* field)

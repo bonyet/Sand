@@ -23,7 +23,6 @@ namespace Sand
 		std::string Name;
 
 		TagComponent() = default;
-		TagComponent(const TagComponent&) = default;
 		TagComponent(const std::string& tag)
 			: Name(tag) {}
 	};
@@ -32,8 +31,6 @@ namespace Sand
 	{
 		Actor owner{};
 	private:
-		glm::mat4 m_Transformation = glm::mat4(1.0f);
-
 		glm::vec2 m_Position{ 0.0f, 0.0f };
 		float m_Rotation = 0.0f;
 		glm::vec2 m_Scale{ 1.0f, 1.0f };
@@ -43,7 +40,6 @@ namespace Sand
 		std::vector<Actor> m_Children = {};
 	public:
 		TransformComponent() = default;
-		TransformComponent(const TransformComponent&) = default;
 		TransformComponent(const glm::vec2& pos, const glm::vec2& size, float rot)
 			: m_Position(pos), m_Scale(size), m_Rotation(rot) {}
 
@@ -103,16 +99,18 @@ namespace Sand
 			SAND_PROFILE_FUNCTION();
 
 			// Recalculate if necessary
-			if (m_Dirty)
-			{
-				m_Transformation = glm::translate(glm::mat4(1.0f), glm::vec3(m_Position, 0.0f))
-					* glm::rotate(glm::mat4(1.0f), m_Rotation, { 0, 0, 1 })
-					* glm::scale(glm::mat4(1.0f), glm::vec3(m_Scale, 1.0f));
+			//if (m_Dirty)
+			//{
+			//	m_Transformation = glm::translate(glm::mat4(1.0f), glm::vec3(m_Position, 0.0f))
+			//		* glm::rotate(glm::mat4(1.0f), m_Rotation, { 0, 0, 1 })
+			//		* glm::scale(glm::mat4(1.0f), glm::vec3(m_Scale, 1.0f));
+			//
+			//	m_Dirty = false;
+			//}
 
-				m_Dirty = false;
-			}
-
-			return m_Transformation;
+			return glm::translate(glm::mat4(1.0f), glm::vec3(m_Position, 0.0f))
+				* glm::rotate(glm::mat4(1.0f), m_Rotation, { 0, 0, 1 })
+				* glm::scale(glm::mat4(1.0f), glm::vec3(m_Scale, 1.0f));
 		}
 
 		glm::mat4 GetTransform() 
@@ -120,20 +118,22 @@ namespace Sand
 			SAND_PROFILE_FUNCTION();
 
 			// Recalculate if necessary
-			if (m_Dirty)
-			{
-				m_Transformation = glm::translate(glm::mat4(1.0f), glm::vec3(m_Position, 0.0f))
-					* glm::rotate(glm::mat4(1.0f), m_Rotation, { 0, 0, 1 })
-					* glm::scale(glm::mat4(1.0f), glm::vec3(m_Scale, 1.0f));
-
-				m_Dirty = false;
-			}
+			//if (m_Dirty)
+			//{
+			//	m_Transformation = glm::translate(glm::mat4(1.0f), glm::vec3(m_Position, 0.0f))
+			//		* glm::rotate(glm::mat4(1.0f), m_Rotation, { 0, 0, 1 })
+			//		* glm::scale(glm::mat4(1.0f), glm::vec3(m_Scale, 1.0f));
+			//
+			//	m_Dirty = false;
+			//}
 			
 			// Return global transform if we are an orphan
 			if (!m_Parent)
 				return GetGlobalTransform();
 
-			return m_Parent.GetComponent<TransformComponent>().GetGlobalTransform() * m_Transformation;
+			return m_Parent.GetComponent<TransformComponent>().GetGlobalTransform() * glm::translate(glm::mat4(1.0f), glm::vec3(m_Position, 0.0f))
+				* glm::rotate(glm::mat4(1.0f), m_Rotation, { 0, 0, 1 })
+				* glm::scale(glm::mat4(1.0f), glm::vec3(m_Scale, 1.0f));
 		}
 
 		operator const glm::mat4 () { return GetTransform(); }
@@ -153,10 +153,7 @@ namespace Sand
 		Ref<Texture2D> Texture = nullptr;
 		float TilingFactor = 1;
 
-		inline bool IsTextured() const { return Texture != nullptr; }
-
-		TextureComponent() {}
-		TextureComponent(const TextureComponent&) = default;
+		bool IsTextured() const { return Texture != nullptr; }
 
 		void Reset()
 		{
@@ -171,9 +168,8 @@ namespace Sand
 	public:
 		glm::vec4 Color{ 1.0f, 1.0f, 1.0f, 1.0f };
 
-		SpriteRendererComponent() {}
+		SpriteRendererComponent() = default;
 		SpriteRendererComponent(const glm::vec4& color) : Color(color) {}
-		SpriteRendererComponent(const SpriteRendererComponent&) = default;
 	public:
 		void Reset()
 		{
@@ -190,7 +186,6 @@ namespace Sand
 		bool FixedAspectRatio = false;
 
 		CameraComponent() = default;
-		CameraComponent(const CameraComponent&) = default;
 		CameraComponent(float orthoSize) { Camera.SetSize(orthoSize); }
 	public:
 		void Reset()
@@ -244,9 +239,6 @@ namespace Sand
 		void SetFriction(float friction);
 		float GetFriction() const;
 
-		BoxColliderComponent() = default;
-		BoxColliderComponent(const BoxColliderComponent&) = default;
-
 		void Reset()
 		{
 		}
@@ -264,9 +256,6 @@ namespace Sand
 			0.0f
 		};
 
-		PhysicsComponent() = default;
-		PhysicsComponent(const PhysicsComponent&) = default;
-
 		void Reset() {}
 	};
 
@@ -274,9 +263,6 @@ namespace Sand
 	{
 		Actor owner;
 	public:
-		AnimatorComponent() = default;
-		AnimatorComponent(const AnimatorComponent&) = default;
-
 		void Reset() {}
 	};
 
@@ -286,9 +272,6 @@ namespace Sand
 	public:
 		AudioSource Source;
 		AudioClip Clip;
-
-		AudioSourceComponent() = default;
-		AudioSourceComponent(const AudioSourceComponent&) = default;
 
 		void Init()
 		{
@@ -301,6 +284,25 @@ namespace Sand
 			Source.SetPitch(1.0f);
 			Source.SetSpatial(false);
 		};
+	};
+
+	struct ScriptComponent
+	{
+		Actor owner{};
+	public:
+		std::string ModuleName;
+
+		ScriptComponent() = default;
+		ScriptComponent(const std::string& moduleName)
+			: ModuleName(moduleName) { }
+
+		void Init();
+		void Uninit();
+
+		void Reset()
+		{
+			ModuleName.clear();
+		}
 	};
 
 }

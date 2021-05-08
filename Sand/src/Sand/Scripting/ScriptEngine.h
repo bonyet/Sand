@@ -1,11 +1,11 @@
 #pragma once
 
-#include <mono/metadata/reflection.h>
+#include "ScriptData.h"
 
 namespace Sand
 {
 
-	enum class ScriptDataType
+	enum class ScriptFieldType
 	{
 		Unknown,
 
@@ -23,10 +23,17 @@ namespace Sand
 		static void Init();
 		static void Shutdown();
 
-		static MonoImage* GetMonoImage();
+		static bool IsModuleRegistered(uint32_t actorID);
+		static void RegisterModule(uint32_t actorID, const std::string& moduleName);
+		static void UnregisterModule(uint32_t actorID);
 
-		static ScriptDataType MonoTypeToScriptDataType(MonoType* type);
+		static ScriptFieldType MonoTypeToScriptDataType(MonoType* type);
 		static bool MonoFieldIsPublic(MonoClassField* field);
+
+		static MonoImage* GetMonoImage();
+		static std::vector<std::string>& GetClientScriptNames();
+
+		static ScriptData& GetScriptDataFromActor(uint32_t actorID);
 	private:
 		static void LoadClientAssembly();
 		static void RegisterInternalCalls();

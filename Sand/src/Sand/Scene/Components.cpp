@@ -6,6 +6,7 @@
 namespace Sand
 {
 
+	// BOX COLLIDER
 	void BoxColliderComponent::Create(const glm::vec2& scale, b2Body* const body)
 	{
 		Body = body;
@@ -83,6 +84,18 @@ namespace Sand
 	float BoxColliderComponent::GetFriction() const
 	{
 		return m_Friction;
+	}
+
+	// SCRIPT
+	void ScriptComponent::Init()
+	{
+		if (!ScriptEngine::IsModuleRegistered((uint32_t)owner))
+			ScriptEngine::RegisterModule((uint32_t)owner, ModuleName);
+	}
+
+	void ScriptComponent::Uninit()
+	{
+		ScriptEngine::UnregisterModule((uint32_t)owner);
 	}
 
 }

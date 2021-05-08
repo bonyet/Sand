@@ -143,19 +143,6 @@ namespace Sand
 		RenderCommand::SetClearColor({ 0.12f, 0.12f, 0.12f, 1.0f });
 		RenderCommand::Clear();
 
-		// Temporary playmode stuff
-		if (Input::WasKeyPressed(Keycode::P))
-		{
-			if (m_ActiveScene->IsPlaying())
-			{
-				m_ActiveScene->EndPlay();
-			}
-			else
-			{
-				m_ActiveScene->BeginPlay();
-			}
-		}
-
 		if (!m_ActiveScene->IsPlaying())
 			m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);
 		else
@@ -183,7 +170,7 @@ namespace Sand
 			ImGui::SetNextWindowSize(viewport->Size);
 			ImGui::SetNextWindowViewport(viewport->ID);
 
-			ImGui::Begin("Dockspace", (bool*)true, windowFlags);
+			ImGui::Begin("Dockspace", reinterpret_cast<bool*>(true), windowFlags);
 
 			ImGuiIO& io = ImGui::GetIO();
 			ImGuiStyle& style = ImGui::GetStyle();
@@ -425,7 +412,7 @@ namespace Sand
 		// Keyboard shortcuts
 		switch (e.GetKey())
 		{
-			// Scene keybinds
+			// Scene control keybinds
 			case Keycode::N:
 			{
 				if (controlPressed)
@@ -515,6 +502,23 @@ namespace Sand
 				m_SceneHierarchyPanel.SetSelectedActor(m_ActiveScene->DuplicateActor(m_SceneHierarchyPanel.GetSelectedActor()));
 
 				break;
+			}
+			case Keycode::Delete:
+			{
+				if (!m_SceneHierarchyPanel.GetSelectedActor())
+					break;
+
+				m_ActiveScene->DestroyActor(m_SceneHierarchyPanel.GetSelectedActor());
+				m_SceneHierarchyPanel.SetSelectedActor({});
+
+				break;
+			}
+			case Keycode::F5:
+			{
+				if (m_ActiveScene->IsPlaying())
+					m_ActiveScene->EndPlay();
+				else 
+					m_ActiveScene->BeginPlay();
 			}
 		}
 

@@ -5,11 +5,16 @@
 namespace Sand
 {
 
+	enum class ScriptFieldType;
+
+	struct ScriptField
+	{
+		ScriptFieldType Type;
+		MonoClassField* MonoField = nullptr;
+	};
+
 	struct ScriptData
 	{
-	public:
-		ScriptData() = default;
-	public:
 		MonoObject* Object = nullptr;
 		MonoClass* Class = nullptr;
 
@@ -18,6 +23,8 @@ namespace Sand
 		MonoMethod* OnUpdateMethod = nullptr;
 		MonoMethod* OnLateUpdateMethod = nullptr;
 		MonoMethod* OnDestroyMethod = nullptr;
+
+		std::vector<ScriptField> Fields;
 	};
 
 }
