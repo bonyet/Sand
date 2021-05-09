@@ -8,62 +8,69 @@ Sandbox2D::Sandbox2D()
 {
 }
 
+static Ref<Texture2D> checkerboardTexture = nullptr;
+
 void Sandbox2D::OnAttach()
 {
 	SAND_PROFILE_FUNCTION();
+
+	RecalculateProjection(1280.0f, 720.0f);
+
+	checkerboardTexture = Texture2D::Create("assets/textures/Checkerboard.png");
 }
 
 void Sandbox2D::OnDetach()
 {
 }
 
-static float moveSpeed = 10.0f;
-static glm::vec3 worldSpace = glm::vec3(1.0f);
-
 void Sandbox2D::OnUpdate(Timestep ts)
 {
 	SAND_PROFILE_FUNCTION();
 
-	RenderCommand::SetClearColor({ 0.6f, 0.4f, 0.5f, 1.0f });
+	Renderer2D::ResetStats();
+
+	RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
 	RenderCommand::Clear();
 
 	glm::mat4 view = glm::translate(glm::mat4(1.0f), { m_Position.x, m_Position.y, 0.0f });
 
-	glm::vec2 mousePosition = Input::GetMousePosition();
-
-	glm::mat4 quadTransform = glm::translate(glm::mat4(1.0f), worldSpace);
-
 	Renderer2D::Begin(m_Projection, view);
 
-	Renderer2D::DrawQuad(quadTransform, { 0.2f, 0.8f, 0.3f, 1.0f }, 0);
+	for (float y = 0; y < 200.0f; y += 1.0f)
+	{
+		for (float x = 0; x < 200.0f; x += 1.0f)
+		{
+			Renderer2D::DrawQuad({ x, y }, { 0.8f, 0.8f }, checkerboardTexture, 1.0f, { 1.0f, 1.0f, 1.0f, 1.0f });
+		}
+	}
 
 	Renderer2D::End();
 
-	// Input
-	if (Input::IsKeyPressed(Keycode::A))
-		m_Position.x += moveSpeed * ts;
-	if (Input::IsKeyPressed(Keycode::D))
-		m_Position.x -= moveSpeed * ts;
+	float speedMultiplier = Input::IsKeyPressed(Keycode::LeftShift) ? 50.0f : 8.0f;
+
 	if (Input::IsKeyPressed(Keycode::W))
-		m_Position.y += moveSpeed * ts;
+		m_Position.y += ts * speedMultiplier;
+	if (Input::IsKeyPressed(Keycode::A))
+		m_Position.x += ts * speedMultiplier;
 	if (Input::IsKeyPressed(Keycode::S))
-		m_Position.y -= moveSpeed * ts;
+		m_Position.y -= ts * speedMultiplier;
+	if (Input::IsKeyPressed(Keycode::D))
+		m_Position.x -= ts * speedMultiplier;
 }
 
 void Sandbox2D::OnGuiRender()
 {
 	SAND_PROFILE_FUNCTION();
 
-	ImGui::Begin("Settings");
+	ImGui::Begin("Stats");
+	
+	ImGui::Text("%.2fms (%.2ffps)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
-	if (ImGui::DragFloat("ortho size", &m_OrthographicSize, 0.1f, 1.0f, 1000.0f)) {
-		const Window& wnd = Application::Get().GetWindow();
-		RecalculateProjection((float)wnd.GetWidth(), (float)wnd.GetHeight());
-	}
-	ImGui::DragFloat("speed", &moveSpeed, 0.5f, 1.0f, 100.0f);
-
-	ImGui::Spacing();
-	ImGui::Text("%f, %f, %f", worldSpace.x, worldSpace.y, worldSpace.z);
+	Renderer2D::Statistics stats = Renderer2D::GetStats();
+	ImGui::Text("Draw calls: %d", stats.DrawCalls);
+	ImGui::Text("Quads: %d", stats.QuadCount);
+	ImGui::Text("Vertices: %d", stats.GetTotalVertexCount());
+	ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
 
 	ImGui::End();
 }
@@ -71,12 +78,29 @@ void Sandbox2D::OnGuiRender()
 void Sandbox2D::OnEvent(Event& e)
 {
 	EventDispatcher dispatcher(e);
+
 	dispatcher.Dispatch<WindowResizeEvent>(SAND_BIND_EVENT_FN(Sandbox2D::OnWindowResize));
+	dispatcher.Dispatch<MouseScrolledEvent>(SAND_BIND_EVENT_FN(Sandbox2D::OnMouseScrolled));
 }
 
-bool Sandbox2D::OnWindowResize(Sand::WindowResizeEvent& e)
+bool Sandbox2D::OnWindowResize(WindowResizeEvent& e)
 {
 	RecalculateProjection((float)e.GetWidth(), (float)e.GetHeight());
+
+	return true;
+}
+
+bool Sandbox2D::OnMouseScrolled(Sand::MouseScrolledEvent& e)
+{
+	m_OrthographicSize -= e.GetYOffset();
+
+	if (m_OrthographicSize <= 1.0f)
+		m_OrthographicSize = 1.0f;
+	if (m_OrthographicSize >= 250.0f)
+		m_OrthographicSize = 250.0f;
+	
+	const Window& wnd = Application::Get().GetWindow();
+	RecalculateProjection(wnd.GetWidth(), wnd.GetHeight());
 
 	return true;
 }

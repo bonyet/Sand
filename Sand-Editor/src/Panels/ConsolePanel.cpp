@@ -88,7 +88,7 @@ namespace Sand
 		ImGui::Separator();
 		ImGui::Spacing();
 
-		// MESSAGES SECTION
+		// Showing messages
 		{
 			float y = ImGui::GetCursorPosY();
 			ImGui::SetCursorPosY(y - 4);
@@ -97,11 +97,11 @@ namespace Sand
 
 			constexpr glm::vec3 colors[3] = { Debug::InfoMessageColor, Debug::WarningMessageColor, Debug::ErrorMessageColor };
 
-			// display messages
+			// Display messages
 			for (int i = 0; i < Debug::GetMessages().size(); i++)
 			{
 				auto& element = Debug::GetMessages()[i];
-				auto color = std::get<1>(element);
+				auto& color = std::get<1>(element);
 
 				if (visibilityType != 0 && color != colors[visibilityType - 1]) {
 					continue;
@@ -110,6 +110,7 @@ namespace Sand
 				{
 					Ref<Texture2D> iconTexture;
 
+					// Determine color
 					if (color == Debug::InfoMessageColor) {
 						iconTexture = s_IconTextures[0];
 					}
@@ -129,9 +130,14 @@ namespace Sand
 				float cursorX = ImGui::GetCursorPosX();
 				ImGui::TextColored({ color.r, color.b, color.g, 1.0f }, std::get<2>(element).c_str());
 				ImGui::SameLine(cursorX, 0);
-				if (ImGui::InvisibleButton((std::string("##Button") + std::to_string(i)).c_str(), ImGui::GetItemRectSize())) {
-					// TODO: open to where the Debug::Print was called
+
+				char label[100]{};
+				std::sprintf(label, "##Button%d", i);
+
+				if (ImGui::InvisibleButton(label, ImGui::GetItemRectSize())) {
+					// Open to the print call
 				}
+
 				ImGui::Separator();
 
 				if (shouldScroll) {
@@ -146,7 +152,8 @@ namespace Sand
 
 	void ConsolePanel::sink_it_(const spdlog::details::log_msg& msg)
 	{
-		switch (msg.level) {
+		switch (msg.level) 
+		{
 			case spdlog::level::trace:
 			case spdlog::level::info:
 			{
@@ -157,13 +164,13 @@ namespace Sand
 			{
 				Debug::PrintWarning(std::string(msg.payload));
 				return;
+			}
 			case spdlog::level::err:
 			case spdlog::level::critical:
 			{
 				Debug::PrintError(std::string(msg.payload));
 				return;
 			}
-		}
 		}
 	}
 

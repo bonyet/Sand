@@ -1,6 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 
-namespace Sand.Math
+namespace Sand
 {
 
 	public static class Math

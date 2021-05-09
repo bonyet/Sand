@@ -83,7 +83,7 @@ namespace Sand
 		TransformComponent& GetParentTransform() { return m_Parent.GetComponent<TransformComponent>(); }
 		void SetParent(Actor parent) 
 		{ 
-			// Remove us from the existing parent's children if we reset the parent
+			// Remove us from the existing parents children if we reset the parent
 			if (!parent && m_Parent)
 				m_Parent.GetComponent<TransformComponent>().RemoveChild(owner);
 
@@ -98,16 +98,6 @@ namespace Sand
 		{
 			SAND_PROFILE_FUNCTION();
 
-			// Recalculate if necessary
-			//if (m_Dirty)
-			//{
-			//	m_Transformation = glm::translate(glm::mat4(1.0f), glm::vec3(m_Position, 0.0f))
-			//		* glm::rotate(glm::mat4(1.0f), m_Rotation, { 0, 0, 1 })
-			//		* glm::scale(glm::mat4(1.0f), glm::vec3(m_Scale, 1.0f));
-			//
-			//	m_Dirty = false;
-			//}
-
 			return glm::translate(glm::mat4(1.0f), glm::vec3(m_Position, 0.0f))
 				* glm::rotate(glm::mat4(1.0f), m_Rotation, { 0, 0, 1 })
 				* glm::scale(glm::mat4(1.0f), glm::vec3(m_Scale, 1.0f));
@@ -116,16 +106,6 @@ namespace Sand
 		glm::mat4 GetTransform() 
 		{
 			SAND_PROFILE_FUNCTION();
-
-			// Recalculate if necessary
-			//if (m_Dirty)
-			//{
-			//	m_Transformation = glm::translate(glm::mat4(1.0f), glm::vec3(m_Position, 0.0f))
-			//		* glm::rotate(glm::mat4(1.0f), m_Rotation, { 0, 0, 1 })
-			//		* glm::scale(glm::mat4(1.0f), glm::vec3(m_Scale, 1.0f));
-			//
-			//	m_Dirty = false;
-			//}
 			
 			// Return global transform if we are an orphan
 			if (!m_Parent)

@@ -1,7 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace Sand.Math
+namespace Sand
 {
 
 	[StructLayout(LayoutKind.Sequential)]

@@ -3,30 +3,47 @@
 namespace Sand
 {
 
-	using Math;
-
 	public class Log
 	{
-		// Overloads
-		public static void Info(Vector2 msg) => Info($"({msg.x}, {msg.y})");
-		public static void Info(Vector3 msg) => Info($"({msg.x}, {msg.y}, {msg.z})");
-		public static void Info(Vector4 msg) => Info($"({msg.x}, {msg.y}, {msg.z}, {msg.w})");
+		/// <summary>
+		/// Logs <paramref name="message"/> to the editor console as info.
+		/// </summary>
+		/// <param name="message"></param>
+		public static void Info(string message) => Info_Native(message);
+		/// <summary>
+		/// Logs <paramref name="message"/> to the editor console as info.
+		/// </summary>
+		/// <param name="message"></param>
+		public static void Info(object message) => Info_Native(message.ToString());
 
-		public static void Warn(Vector2 msg) => Warn($"({msg.x}, {msg.y})");
-		public static void Warn(Vector3 msg) => Warn($"({msg.x}, {msg.y}, {msg.z})");
-		public static void Warn(Vector4 msg) => Warn($"({msg.x}, {msg.y}, {msg.z}, {msg.w})");
+		/// <summary>
+		/// Logs <paramref name="message"/> to the editor console as a warning.
+		/// </summary>
+		/// <param name="message"></param>
+		public static void Warn(string message) => Warn_Native(message);
+		/// <summary>
+		/// Logs <paramref name="message"/> to the editor console as a warning.
+		/// </summary>
+		/// <param name="message"></param>
+		public static void Warn(object message) => Warn_Native(message.ToString());
 
-		public static void Error(Vector2 msg) => Error($"({msg.x}, {msg.y})");
-		public static void Error(Vector3 msg) => Error($"({msg.x}, {msg.y}, {msg.z})");
-		public static void Error(Vector4 msg) => Error($"({msg.x}, {msg.y}, {msg.z}, {msg.w})");
+		/// <summary>
+		/// Logs <paramref name="message"/> to the editor console as an error.
+		/// </summary>
+		/// <param name="message"></param>
+		public static void Error(string message) => Error_Native(message);
+		/// <summary>
+		/// Logs <paramref name="message"/> to the editor console as an error.
+		/// </summary>
+		/// <param name="message"></param>
+		public static void Error(object message) => Error_Native(message.ToString());
 
-		// Base ones
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern static void Info(string msg);
+		internal static extern void Info_Native(string msg);
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern static void Warn(string msg);
+		internal static extern void Warn_Native(string msg);
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		public extern static void Error(string msg);
+		internal static extern void Error_Native(string msg);
 	}
 
 }

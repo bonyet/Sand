@@ -3,13 +3,11 @@
 
 #include "Sand/Renderer/VertexArray.h"
 #include "Sand/Renderer/RenderCommand.h"
-
-#include <glm/gtc/matrix_transform.hpp>
-
 #include "Sand/Core/Application.h"
 
 #include <glad/glad.h>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 namespace Sand 
 {
@@ -44,10 +42,10 @@ namespace Sand
 		uint32_t TextureSlotIndex = 1; // 0 = white texture
 
 		const glm::vec4 QuadVertexPositions[4] = {
-			{-0.5f, -0.5f, 0.0f, 1.0f},
-			{ 0.5f, -0.5f, 0.0f, 1.0f},
-			{ 0.5f,  0.5f, 0.0f, 1.0f},
-			{-0.5f,  0.5f, 0.0f, 1.0f},
+			{ -0.5f, -0.5f, 0.0f, 1.0f },
+			{  0.5f, -0.5f, 0.0f, 1.0f },
+			{  0.5f,  0.5f, 0.0f, 1.0f },
+			{ -0.5f,  0.5f, 0.0f, 1.0f },
 		};
 
 		Renderer2D::Statistics Stats;
@@ -101,7 +99,7 @@ namespace Sand
 		uint32_t whiteTextureData = 0xffffffff;
 		s_Data.WhiteTexture->SetData(&whiteTextureData, sizeof(uint32_t));
 
-		int32_t samplers[s_Data.MaxTextureSlots];
+		int32_t samplers[s_Data.MaxTextureSlots]{};
 		for (uint32_t i = 0; i < s_Data.MaxTextureSlots; i++)
 			samplers[i] = i;
 
@@ -170,16 +168,15 @@ namespace Sand
 	{
 		SAND_PROFILE_FUNCTION();
 
-		uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.QuadVertexBufferPtr - (uint8_t*)s_Data.QuadVertexBufferBase);
-  		s_Data.QuadVertexBuffer->SetData(s_Data.QuadVertexBufferBase, dataSize);
+		uint32_t dataSize = static_cast<uint32_t>((reinterpret_cast<uint8_t*>(s_Data.QuadVertexBufferPtr) - 
+			reinterpret_cast<uint8_t*>(s_Data.QuadVertexBufferBase)));
+		s_Data.QuadVertexBuffer->SetData(s_Data.QuadVertexBufferBase, dataSize);
 
 		Flush();
 	}
 
 	void Renderer2D::Flush()
 	{
-		s_Data.QuadVertexArray->Bind();
-
 		if (s_Data.QuadIndexCount == 0)
 			return; // Nothing to draw
 		
@@ -225,14 +222,15 @@ namespace Sand
 			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
 		DrawQuad(transform, 0, texture, tilingFactor, tintColor);
 	}
+
 	void Renderer2D::DrawQuad(const glm::mat4& transform, const glm::vec4& color, uint32_t actorID)
 	{
 		SAND_PROFILE_FUNCTION();		
 
 		constexpr size_t quadVertexCount = 4;
-		const float textureIndex = 0.0f; // White Texture
+		constexpr float textureIndex = 0.0f; // White Texture
 		constexpr glm::vec2 textureCoords[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
-		const float tilingFactor = 1.0f;
+		constexpr float tilingFactor = 1.0f;
 
 		if (s_Data.QuadIndexCount >= Renderer2DData::MaxIndices)
 			FlushAndReset();

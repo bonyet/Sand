@@ -68,7 +68,6 @@ namespace Sand
 			}
 
 			s_CurrentDragDropTarget = {};
-			
 		}
 
 		// Handle drag and drop
@@ -77,6 +76,7 @@ namespace Sand
 			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DND_ACTOR_SHP"))
 			{
 				entt::entity fromID = static_cast<entt::entity>(*static_cast<uint32_t*>(payload->Data)); // The Ultimate Cast
+				SAND_CORE_TRACE((uint32_t)fromID);
 				Actor(fromID, Scene::GetActiveScene()).GetComponent<TransformComponent>().SetParent({});
 
 				ImGui::ClearDragDrop();

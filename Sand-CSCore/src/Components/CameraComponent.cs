@@ -1,6 +1,4 @@
-﻿using System;
-using System.Runtime.CompilerServices;
-using Sand.Math;
+﻿using System.Runtime.CompilerServices;
 
 namespace Sand
 {

@@ -23,17 +23,24 @@ namespace Sand
 		static void Init();
 		static void Shutdown();
 
-		static bool IsModuleRegistered(uint32_t actorID);
 		static void RegisterModule(uint32_t actorID, const std::string& moduleName);
 		static void UnregisterModule(uint32_t actorID);
+		static bool IsModuleRegistered(uint32_t actorID);
 
 		static ScriptFieldType MonoTypeToScriptDataType(MonoType* type);
-		static bool MonoFieldIsPublic(MonoClassField* field);
 
+		static bool IsMonoFieldPublic(MonoClassField* field);
+		static bool IsMonoFieldPrivate(MonoClassField* field);
+		static bool IsMonoFieldStatic(MonoClassField* field);
+
+		static MonoObject* Invoke(MonoMethod* method, MonoObject* object);
+		static MonoObject* Invoke(MonoMethod* method, MonoObject* object, void** params);
+
+		// Getters
 		static MonoImage* GetMonoImage();
-		static std::vector<std::string>& GetClientScriptNames();
-
+		static std::vector<const char*>& GetClientScriptNames();
 		static ScriptData& GetScriptDataFromActor(uint32_t actorID);
+		static std::unordered_map<uint32_t, ScriptData>& GetScriptDatas();
 	private:
 		static void LoadClientAssembly();
 		static void RegisterInternalCalls();

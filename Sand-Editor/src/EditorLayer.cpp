@@ -62,11 +62,11 @@ namespace Sand
 
 		auto& colors = style.Colors;
 		colors[ImGuiCol_WindowBg] = ImVec4{ 0.15f, 0.15f, 0.16f, 1.0f };
-		colors[ImGuiCol_Border]   = ImVec4{ 0.0f, 0.0f, 0.5f, 1.0f };
+		colors[ImGuiCol_Border]   = ImVec4{ 0.0f, 0.0f, 0.0f, 0.0f };
 
 		// Headers
 		colors[ImGuiCol_Header]        = ImVec4{ 0.20f, 0.20f, 0.20f, 1.0f };
-		colors[ImGuiCol_HeaderHovered] = ImVec4{ 0.30f, 0.30f, 0.30f, 1.0f };
+		colors[ImGuiCol_HeaderHovered] = ImVec4{ 0.25f, 0.25f, 0.25f, 1.0f };
 		colors[ImGuiCol_HeaderActive]  = ImVec4{ 0.15f, 0.15f, 0.15f, 1.0f };
 
 		// Buttons
@@ -75,9 +75,9 @@ namespace Sand
 		colors[ImGuiCol_ButtonActive]  = ImVec4{ 0.15f, 0.15f, 0.20f, 1.0f };
 
 		// Frame BG
-		colors[ImGuiCol_FrameBg]          = ImVec4{ 0.25f, 0.25f, 0.27f, 1.0f };
-		colors[ImGuiCol_FrameBgHovered]   = ImVec4{ 0.35f, 0.35f, 0.37f, 1.0f };
-		colors[ImGuiCol_FrameBgActive]    = ImVec4{ 0.20f, 0.20f, 0.22f, 1.0f };
+		colors[ImGuiCol_FrameBg]          = ImVec4{ 0.25f, 0.25f, 0.25f, 1.0f };
+		colors[ImGuiCol_FrameBgHovered]   = ImVec4{ 0.30f, 0.30f, 0.30f, 1.0f };
+		colors[ImGuiCol_FrameBgActive]    = ImVec4{ 0.21f, 0.21f, 0.21f, 1.0f };
 
 		// Child and popups and misc
 		colors[ImGuiCol_ChildBg]   = ImVec4{ 0.00f, 0.00f, 0.00f, 0.0f };

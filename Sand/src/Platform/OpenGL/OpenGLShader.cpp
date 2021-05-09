@@ -30,7 +30,6 @@ namespace Sand
 		auto shaderSources = PreProcess(source);
 		Compile(shaderSources);
 
-		// Init the thang
 		InitUniformCache();
 
 		// Extract name from filepath
@@ -78,12 +77,12 @@ namespace Sand
 			}
 			else
 			{
-				SAND_CORE_ERROR("Could not read from file '{0}'", filepath);
+				SAND_CORE_ERROR("Could not read from file '{0}'.", filepath);
 			}
 		}
 		else
 		{
-			SAND_CORE_ERROR("Could not open file '{0}'", filepath);
+			SAND_CORE_ERROR("Could not open file '{0}'.", filepath);
 		}
 
 		return result;
@@ -125,7 +124,7 @@ namespace Sand
 
 		GLuint program = glCreateProgram();
 		SAND_CORE_ASSERT(shaderSources.size() <= 2, "Sand supports a max of 2 shaders at the same time");
-		std::array<GLenum, 2> glShaderIDs;
+		std::array<GLenum, 2> glShaderIDs{};
 		int glShaderIDIndex = 0;
 		for (auto& kv : shaderSources)
 		{
@@ -224,11 +223,10 @@ namespace Sand
 			return cachedLocation->second;
 
 		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
-		// TODO: deal with situation where uniform does not exist
 		if (location == -1) {
-			// it does not exist
 			SAND_CORE_ERROR("Uniform '{0}' does not exist", name);
 		}
+
 		m_UniformLocationCache[name] = location;
 		return location;
 	}
@@ -295,75 +293,49 @@ namespace Sand
 	void OpenGLShader::UploadUniformInt(const std::string& name, int value)
 	{
 		GLint location = GetUniformLocation(name);
-		glUniform1i(location, value);
+		glProgramUniform1i(m_RendererID, location, value);
 	}
 
 	void OpenGLShader::UploadUniformIntArray(const std::string& name, int* values, uint32_t count)
 	{
 		GLint location = GetUniformLocation(name);
-		glUniform1iv(location, count, values);
+		glProgramUniform1iv(m_RendererID, location, count, values);
 	}
 
 	void OpenGLShader::UploadUniformFloat(const std::string& name, float value)
 	{
 		GLint location = GetUniformLocation(name);
-		glUniform1f(location, value);
+		glProgramUniform1f(m_RendererID, location, value);
 	}
 
 	void OpenGLShader::UploadUniformFloat2(const std::string& name, const glm::vec2& value)
 	{
 		GLint location = GetUniformLocation(name);
-		glUniform2f(location, value.x, value.y);
+		glProgramUniform2f(m_RendererID, location, value.x, value.y);
 	}
 
 	void OpenGLShader::UploadUniformFloat3(const std::string& name, const glm::vec3& value)
 	{
 		GLint location = GetUniformLocation(name);
-		glUniform3f(location, value.x, value.y, value.z);
+		glProgramUniform3f(m_RendererID, location, value.x, value.y, value.z);
 	}
 
 	void OpenGLShader::UploadUniformFloat4(const std::string& name, const glm::vec4& value)
 	{
 		GLint location = GetUniformLocation(name);
-		glUniform4f(location, value.x, value.y, value.z, value.w);
+		glProgramUniform4f(m_RendererID, location, value.x, value.y, value.z, value.w);
 	}
 
 	void OpenGLShader::UploadUniformMat3(const std::string& name, const glm::mat3& matrix)
 	{
 		GLint location = GetUniformLocation(name);
-		glUniformMatrix3fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
+		glProgramUniformMatrix3fv(m_RendererID, location, 1, GL_FALSE, glm::value_ptr(matrix));
 	}
 
 	void OpenGLShader::UploadUniformMat4(const std::string& name, const glm::mat4& matrix)
 	{
 		GLint location = GetUniformLocation(name);
-		glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
+		glProgramUniformMatrix4fv(m_RendererID, location, 1, GL_FALSE, glm::value_ptr(matrix));
 	}
-
-#if 0
-	static std::string GLUniformTypeToString(GLenum enumType)
-	{
-		switch (enumType)
-		{
-		case GL_SAMPLER_2D: return "sampler2D";
-		case GL_FLOAT:      return "float";
-		case GL_INT:        return "int";
-		case GL_DOUBLE:     return "double";
-
-		case GL_FLOAT_MAT2: return "mat2f";
-		case GL_FLOAT_MAT3: return "mat3f";
-		case GL_FLOAT_MAT4: return "mat4f";
-
-		case GL_FLOAT_VEC2: return "vec2f";
-		case GL_FLOAT_VEC3: return "vec3f";
-		case GL_FLOAT_VEC4: return "vec4f";
-
-		case GL_INT_VEC2:   return "vec2i";
-		case GL_INT_VEC3:   return "vec3i";
-		case GL_INT_VEC4:   return "vec4i";
-		}
-		return "Unknown uniform type";
-	}
-#endif
 
 }

@@ -108,7 +108,6 @@ namespace Sand
 	void Renderer::DrawCube(const glm::vec3& position, const glm::vec3& scale, const glm::vec4& color)
 	{
 		s_Data.CubeShader->Bind();
-		s_Data.CubeVertexArray->Bind();
 
 		RenderCommand::DrawIndexed(s_Data.CubeVertexArray, 6 * 6);
 	}

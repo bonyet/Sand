@@ -1,7 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 
-namespace Sand.Math
+namespace Sand
 {
 
 	[StructLayout(LayoutKind.Sequential)]
@@ -78,7 +78,7 @@ namespace Sand.Math
 		}
 
 		/// <summary>
-		/// Moves <paramref name="current"/> towards <paramref name="target"/>, moving no further than <paramref name="maxDistanceDelta"/> each call
+		/// Moves <paramref name="current"/> towards <paramref name="target"/>, moving no further than <paramref name="maxDistanceDelta"/> each invocation
 		/// </summary>
 		/// <returns>A new vector that has been interpolated towards <paramref name="target"/></returns>
 		public static Vector3 MoveTowards(Vector3 current, Vector3 target, float maxDistanceDelta)
@@ -107,13 +107,6 @@ namespace Sand.Math
 		/// <returns>A new vector that has been moved towards the target according to <paramref name="smoothTime"/>, <paramref name="maxSpeed"/>, and <paramref name="deltaTime"/>.</returns>
 		public static Vector3 SmoothDamp(Vector3 current, Vector3 target, ref Vector3 currentVelocity, float smoothTime, float maxSpeed, float deltaTime)
 		{
-			// Based on https://github.com/Unity-Technologies/UnityCsReference
-			// which is based on Game Programming Gems 4 Chapter 1.10'
-
-			float output_x = 0.0f;
-			float output_y = 0.0f;
-			float output_z = 0.0f;
-
 			// Based on Game Programming Gems 4 Chapter 1.10
 			smoothTime = System.Math.Max(0.0001f, smoothTime);
 			float omega = 2.0f / smoothTime;
@@ -151,9 +144,9 @@ namespace Sand.Math
 			currentVelocity.y = (currentVelocity.y - omega * temp_y) * exp;
 			currentVelocity.z = (currentVelocity.z - omega * temp_z) * exp;
 
-			output_x = target.x + (change_x + temp_x) * exp;
-			output_y = target.y + (change_y + temp_y) * exp;
-			output_z = target.z + (change_z + temp_z) * exp;
+			float output_x = target.x + (change_x + temp_x) * exp;
+			float output_y = target.y + (change_y + temp_y) * exp;
+			float output_z = target.z + (change_z + temp_z) * exp;
 
 			// Prevent overshooting
 			float origMinusCurrent_x = originalTo.x - current.x;

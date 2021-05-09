@@ -46,6 +46,8 @@ namespace Sand
 
 		static Scene* const GetActiveScene();
 	private:
+		void RenderScene(EditorCamera* camera);
+
 		template<typename T>
 		void OnComponentAdded(Actor actor, T& component);
 		template<typename T>

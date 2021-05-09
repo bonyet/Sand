@@ -41,20 +41,6 @@ namespace Sand
 		glDeleteVertexArrays(1, &m_RendererID);
 	}
 
-	void OpenGLVertexArray::Bind() const
-	{
-		SAND_PROFILE_FUNCTION();
-
-		glBindVertexArray(m_RendererID);
-	}
-
-	void OpenGLVertexArray::Unbind() const
-	{
-		SAND_PROFILE_FUNCTION();
-
-		glBindVertexArray(0);
-	}
-
 	void OpenGLVertexArray::AddVertexBuffer(const Ref<VertexBuffer>& vertexBuffer)
 	{
 		SAND_PROFILE_FUNCTION();
@@ -62,11 +48,11 @@ namespace Sand
 		SAND_CORE_ASSERT(vertexBuffer->GetLayout().GetElements().size(), "Vertex Buffer has no layout!");
 
 		glBindVertexArray(m_RendererID);
-		vertexBuffer->Bind();
 
 		const auto& layout = vertexBuffer->GetLayout();
 		for (const auto& element : layout)
 		{
+#if 0
 			switch (element.Type)
 			{
 				case ShaderDataType::Float:
@@ -120,6 +106,13 @@ namespace Sand
 				default:
 					SAND_CORE_ASSERT(false, "Unknown ShaderDataType!");
 			}
+#endif
+
+			glEnableVertexArrayAttrib(m_RendererID, m_VertexBufferIndex);
+			glVertexArrayVertexBuffer(m_RendererID, m_VertexBufferIndex, vertexBuffer->GetHandle(), element.Offset, layout.GetStride());
+			glVertexArrayAttribFormat(m_RendererID, m_VertexBufferIndex, element.GetComponentCount(), ShaderDataTypeToOpenGLBaseType(element.Type),
+				element.Normalized ? GL_TRUE : GL_FALSE, 0);
+			m_VertexBufferIndex++;
 		}
 
 		m_VertexBuffers.push_back(vertexBuffer);
@@ -129,9 +122,7 @@ namespace Sand
 	{
 		SAND_PROFILE_FUNCTION();
 
-		glBindVertexArray(m_RendererID);
-		indexBuffer->Bind();
-
+		glVertexArrayElementBuffer(m_RendererID, indexBuffer->GetHandle());
 		m_IndexBuffer = indexBuffer;
 	}
 

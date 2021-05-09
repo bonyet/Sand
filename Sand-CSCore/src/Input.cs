@@ -141,18 +141,26 @@ namespace Sand
 
     public class Input
 	{
+        /// <param name="code">The key to check</param>
+        /// <returns>Whether or not the key <paramref name="code"/> is currently held down.</returns>
         public static bool IsKeyPressed(Keycode code)
 		{
             return IsKeyPressed_Native(code);
 		}
+        /// <param name="code">The key to check</param>
+        /// <returns>Whether or not the key <paramref name="code"/> was pressed this frame.</returns>
         public static bool WasKeyPressed(Keycode code)
         {
             return WasKeyPressed_Native(code);
         }
+        /// <param name="code">The button to check</param>
+        /// <returns>Whether or not the mouse button <paramref name="code"/> is currently held down.</returns>
         public static bool IsKeyPressed(Mousecode code)
         {
             return IsMousePressed_Native(code);
         }
+        /// <param name="code">The button to check</param>
+        /// <returns>Whether or not the mouse button <paramref name="code"/> was pressed this frame.</returns>
         public static bool WasKeyPressed(Mousecode code)
         {
             return WasMousePressed_Native(code);

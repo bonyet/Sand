@@ -2,7 +2,6 @@
 
 namespace Sand
 {
-	using Math;
 
 	public class BoxColliderComponent : Component
 	{

@@ -17,6 +17,8 @@ public:
 	virtual void OnEvent(Sand::Event& e) override;
 private:
 	bool OnWindowResize(Sand::WindowResizeEvent& e);
+	bool OnMouseScrolled(Sand::MouseScrolledEvent& e);
+
 	void RecalculateProjection(float width, float height);
 private:
 	// Camera stuff

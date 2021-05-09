@@ -22,7 +22,7 @@ namespace Sand
 	static const std::string CLIENT_NAMESPACE = "Client";
 
 	static std::unordered_map<uint32_t, ScriptData> s_ScriptDataMap;
-	static std::vector<std::string> s_CachedClientScriptNames;
+	static std::vector<const char*> s_CachedClientScriptNames;
 
 #define RegisterComponent(Type) \
 	{\
@@ -107,7 +107,7 @@ namespace Sand
 			s_ScriptDataMap.reserve(clientClasses.size());
 			for (auto klass : clientClasses)
 			{
-				s_CachedClientScriptNames.emplace_back(mono_class_get_name(klass));
+				s_CachedClientScriptNames.push_back(mono_class_get_name(klass));
 			}
 		}
 
@@ -201,7 +201,16 @@ namespace Sand
 		return classes;
 	}
 
-	std::vector<std::string>& ScriptEngine::GetClientScriptNames()
+	MonoObject* ScriptEngine::Invoke(MonoMethod* method, MonoObject* object)
+	{
+		return mono_runtime_invoke(method, object, NULL, NULL);
+	}
+	MonoObject* ScriptEngine::Invoke(MonoMethod* method, MonoObject* object, void** params)
+	{
+		return mono_runtime_invoke(method, object, params, NULL);
+	}
+
+	std::vector<const char*>& ScriptEngine::GetClientScriptNames()
 	{
 		return s_CachedClientScriptNames;
 	}
@@ -209,6 +218,10 @@ namespace Sand
 	ScriptData& ScriptEngine::GetScriptDataFromActor(uint32_t actorID)
 	{
 		return s_ScriptDataMap[actorID];
+	}
+	std::unordered_map<uint32_t, ScriptData>& ScriptEngine::GetScriptDatas()
+	{
+		return s_ScriptDataMap;
 	}
 
 	ScriptFieldType ScriptEngine::MonoTypeToScriptDataType(MonoType* monoType)
@@ -230,7 +243,7 @@ namespace Sand
 				return ScriptFieldType::Double;
 			case MONO_TYPE_VALUETYPE:
 			{
-				const char* name = mono_type_get_name((MonoType*)monoType);
+				const char* name = mono_type_get_name(monoType);
 
 				if (strcmp(name, "Sand.Math.Vector2") == 0)
 					return ScriptFieldType::Vector2;
@@ -248,10 +261,17 @@ namespace Sand
 		return ScriptFieldType::Unknown;
 	}
 
-	bool ScriptEngine::MonoFieldIsPublic(MonoClassField* field)
+	bool ScriptEngine::IsMonoFieldPublic(MonoClassField* field)
 	{
-		uint32_t flags = mono_field_get_flags(field);
-		return (flags & MONO_FIELD_ATTR_PUBLIC) != 0;
+		return (mono_field_get_flags(field) & MONO_FIELD_ATTR_PUBLIC) != 0;
+	}
+	bool ScriptEngine::IsMonoFieldPrivate(MonoClassField* field)
+	{
+		return (mono_field_get_flags(field) & MONO_FIELD_ATTR_PRIVATE) != 0;
+	}
+	bool ScriptEngine::IsMonoFieldStatic(MonoClassField* field)
+	{
+		return (mono_field_get_flags(field) & MONO_FIELD_ATTR_STATIC) != 0;
 	}
 
 	void ScriptEngine::RegisterInternalCalls()
@@ -259,9 +279,9 @@ namespace Sand
 		SAND_PROFILE_FUNCTION();
 
 		// Logging
-		mono_add_internal_call("Sand.Log::Info", &Log_PrintInfo);
-		mono_add_internal_call("Sand.Log::Warn", &Log_PrintWarn);
-		mono_add_internal_call("Sand.Log::Error", &Log_PrintError);
+		mono_add_internal_call("Sand.Log::Info_Native", &Log_PrintInfo);
+		mono_add_internal_call("Sand.Log::Warn_Native", &Log_PrintWarn);
+		mono_add_internal_call("Sand.Log::Error_Native", &Log_PrintError);
 
 		// Input
 		mono_add_internal_call("Sand.Input::IsKeyPressed_Native", &Input_IsKeyPressed);
@@ -278,7 +298,6 @@ namespace Sand
 		mono_add_internal_call("Sand.TransformComponent::SetPosition_Native", &TransformComponent_SetPosition);
 		mono_add_internal_call("Sand.TransformComponent::SetRotation_Native", &TransformComponent_SetRotation);
 		mono_add_internal_call("Sand.TransformComponent::SetScale_Native", &TransformComponent_SetScale);
-
 		mono_add_internal_call("Sand.TransformComponent::GetPosition_Native", &TransformComponent_GetPosition);
 		mono_add_internal_call("Sand.TransformComponent::GetRotation_Native", &TransformComponent_GetRotation);
 		mono_add_internal_call("Sand.TransformComponent::GetScale_Native", &TransformComponent_GetScale);

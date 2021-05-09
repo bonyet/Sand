@@ -2,7 +2,6 @@
 
 namespace Sand
 {
-	using Math;
 
 	/// <summary>
 	/// Represents an actor's transformation in the scene.

@@ -16,19 +16,17 @@
 namespace Sand
 {
 	template<typename T, typename UIFunction>
-	static void DrawComponent(const std::string& name, Actor Actor, UIFunction uiFunction)
+	static void DrawComponent(const std::string& name, Actor actor, UIFunction uiFunction)
 	{
 		constexpr ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_FramePadding;
 		
-		if (!Actor.HasComponent<T>())
+		if (!actor.HasComponent<T>())
 			return;
 
-		auto& component = Actor.GetComponent<T>();
+		auto& component = actor.GetComponent<T>();
 		ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
 		
 		bool open = ImGui::TreeNodeEx(reinterpret_cast<void*>(typeid(T).hash_code()), treeNodeFlags, name.c_str());
-
-		ImGui::Tooltip("Right click for more actions", 1.1f);
 
 		if (ImGui::IsItemClicked(1))
 			ImGui::OpenPopup("Component_Settings");
@@ -53,7 +51,7 @@ namespace Sand
 		}
 
 		if (removeComponent)
-			Actor.RemoveComponent<T>();
+			actor.RemoveComponent<T>();
 
 		ImGui::Separator();
 		ImGui::Spacing();
@@ -154,10 +152,10 @@ namespace Sand
 	}
 
 	template<typename T, typename... Args>
-	static bool DrawComponentMenuItem(const std::string& title, Actor actor, Args&&... args)
+	static bool DrawComponentMenuItem(const char* title, Actor actor, Args&&... args)
 	{
 		bool result = false;
-		if (ImGui::MenuItem(title.c_str()))
+		if (ImGui::MenuItem(title))
 		{
 			if (!actor.HasComponent<T>()) 
 			{
@@ -166,7 +164,7 @@ namespace Sand
 			}
 			else
 			{
-				SAND_CORE_WARN("{0} component already present on '{1}'", title, actor.GetComponent<TagComponent>().Name);
+				SAND_CORE_WARN("{0} component already present on actor '{1}'.", title, actor.GetComponent<TagComponent>().Name);
 			}
 
 			ImGui::CloseCurrentPopup();
@@ -228,7 +226,7 @@ namespace Sand
 			// Scripts / scripting
 			if (ImGui::BeginMenu("Scripts"))
 			{
-				for (std::string& className : ScriptEngine::GetClientScriptNames())
+				for (auto className : ScriptEngine::GetClientScriptNames())
 				{
 					if (DrawComponentMenuItem<ScriptComponent>(className, actor, className))
 					{
