@@ -28,6 +28,10 @@ namespace Sand
 			s_RendererAPI->Clear();
 		}
 
+		static void Draw(const Ref<VertexArray>& vertexArray, uint32_t count)
+		{
+			s_RendererAPI->Draw(vertexArray, count);
+		}
 		static void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t count = 0)
 		{
 			s_RendererAPI->DrawIndexed(vertexArray, count);

@@ -57,12 +57,18 @@ namespace Sand
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
 
+	void OpenGLRendererAPI::Draw(const Ref<VertexArray>& vertexArray, uint32_t count)
+	{
+		glDrawArrays(s_TopologyType == TopologyType::Lines ? GL_LINE_STRIP : GL_TRIANGLES, 0, count);
+
+		glBindTexture(GL_TEXTURE_2D, 0);
+	}
+
 	void OpenGLRendererAPI::DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount)
 	{
 		uint32_t count = indexCount ? indexCount : vertexArray->GetIndexBuffer()->GetCount();
 		
 		glDrawElements(s_TopologyType == TopologyType::Lines ? GL_LINE_STRIP : GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr);
-
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 

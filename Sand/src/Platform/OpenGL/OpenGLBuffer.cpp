@@ -31,6 +31,8 @@ namespace Sand
 
 	void OpenGLVertexBuffer::SetData(const void* data, uint32_t size)
 	{
+		SAND_PROFILE_FUNCTION();
+
 		glNamedBufferSubData(m_RendererID, 0, size, data);
 	}
 

@@ -36,17 +36,17 @@ void Sandbox2D::OnUpdate(Timestep ts)
 
 	Renderer2D::Begin(m_Projection, view);
 
-	for (float y = 0; y < 200.0f; y += 1.0f)
+	for (float y = 0.0f; y < 500.0f; y += 1.0f)
 	{
-		for (float x = 0; x < 200.0f; x += 1.0f)
+		for (float x = 0.0f; x < 500.0f; x += 1.0f)
 		{
-			Renderer2D::DrawQuad({ x, y }, { 0.8f, 0.8f }, checkerboardTexture, 1.0f, { 1.0f, 1.0f, 1.0f, 1.0f });
+			Renderer2D::DrawQuad({ x, y }, { 0.9f, 0.9f }, { 1.0f, 1.0f, 1.0f, 1.0f });
 		}
 	}
 
 	Renderer2D::End();
 
-	float speedMultiplier = Input::IsKeyPressed(Keycode::LeftShift) ? 50.0f : 8.0f;
+	float speedMultiplier = Input::IsKeyPressed(Keycode::LeftShift) ? 75.0f : 25.0f;
 
 	if (Input::IsKeyPressed(Keycode::W))
 		m_Position.y += ts * speedMultiplier;
@@ -65,13 +65,19 @@ void Sandbox2D::OnGuiRender()
 	ImGui::Begin("Stats");
 	
 	ImGui::Text("%.2fms (%.2ffps)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-
+	
 	Renderer2D::Statistics stats = Renderer2D::GetStats();
 	ImGui::Text("Draw calls: %d", stats.DrawCalls);
 	ImGui::Text("Quads: %d", stats.QuadCount);
 	ImGui::Text("Vertices: %d", stats.GetTotalVertexCount());
 	ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
 
+	if (ImGui::SliderFloat("Ortho Size", &m_OrthographicSize, 1.0f, 450.0f, "%.2f"))
+	{
+		const Window& wnd = Application::Get().GetWindow();
+		RecalculateProjection(wnd.GetWidth(), wnd.GetHeight());
+	}
+	
 	ImGui::End();
 }
 
@@ -96,8 +102,8 @@ bool Sandbox2D::OnMouseScrolled(Sand::MouseScrolledEvent& e)
 
 	if (m_OrthographicSize <= 1.0f)
 		m_OrthographicSize = 1.0f;
-	if (m_OrthographicSize >= 250.0f)
-		m_OrthographicSize = 250.0f;
+	if (m_OrthographicSize >= 450.0f)
+		m_OrthographicSize = 450.0f;
 	
 	const Window& wnd = Application::Get().GetWindow();
 	RecalculateProjection(wnd.GetWidth(), wnd.GetHeight());

@@ -9,7 +9,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-namespace Sand 
+namespace Sand
 {
 
 	struct QuadVertex
@@ -68,7 +68,7 @@ namespace Sand
 			{ ShaderDataType::Float, "a_TexIndex" },
 			{ ShaderDataType::Float, "a_TilingFactor" },
 			{ ShaderDataType::Int, "a_ObjectID" },
-		});
+			});
 
 		s_Data.QuadVertexArray->AddVertexBuffer(s_Data.QuadVertexBuffer);
 
@@ -124,8 +124,6 @@ namespace Sand
 		SAND_PROFILE_FUNCTION();
 
 		glm::mat4 viewProj = proj * glm::inverse(transform);
-
-		s_Data.QuadMaterial->GetShader()->Bind();
 		s_Data.QuadMaterial->SetMat4("u_ViewProjection", viewProj);
 
 		s_Data.QuadIndexCount = 0;
@@ -139,8 +137,6 @@ namespace Sand
 		SAND_PROFILE_FUNCTION();
 
 		glm::mat4 viewProj = camera.GetProjection() * glm::inverse(transform);
-
-		s_Data.QuadMaterial->GetShader()->Bind();
 		s_Data.QuadMaterial->SetMat4("u_ViewProjection", viewProj);
 
 		s_Data.QuadIndexCount = 0;
@@ -154,8 +150,6 @@ namespace Sand
 		SAND_PROFILE_FUNCTION();
 
 		glm::mat4 viewProj = camera.GetViewProjection();
-
-		s_Data.QuadMaterial->GetShader()->Bind();
 		s_Data.QuadMaterial->SetMat4("u_ViewProjection", viewProj);
 
 		s_Data.QuadIndexCount = 0;
@@ -168,8 +162,9 @@ namespace Sand
 	{
 		SAND_PROFILE_FUNCTION();
 
-		uint32_t dataSize = static_cast<uint32_t>((reinterpret_cast<uint8_t*>(s_Data.QuadVertexBufferPtr) - 
+		uint32_t dataSize = static_cast<uint32_t>((reinterpret_cast<uint8_t*>(s_Data.QuadVertexBufferPtr) -
 			reinterpret_cast<uint8_t*>(s_Data.QuadVertexBufferBase)));
+
 		s_Data.QuadVertexBuffer->SetData(s_Data.QuadVertexBufferBase, dataSize);
 
 		Flush();
@@ -177,19 +172,24 @@ namespace Sand
 
 	void Renderer2D::Flush()
 	{
+		SAND_PROFILE_FUNCTION();
+
 		if (s_Data.QuadIndexCount == 0)
 			return; // Nothing to draw
-		
+
 		// Bind textures
 		for (uint32_t i = 0; i < s_Data.TextureSlotIndex; i++)
 			s_Data.TextureSlots[i]->Bind(i);
-		
+
 		RenderCommand::DrawIndexed(s_Data.QuadVertexArray, s_Data.QuadIndexCount);
+
 		s_Data.Stats.DrawCalls++;
 	}
 
 	void Renderer2D::FlushAndReset()
 	{
+		SAND_PROFILE_FUNCTION();
+
 		End();
 
 		s_Data.QuadIndexCount = 0;
@@ -225,7 +225,7 @@ namespace Sand
 
 	void Renderer2D::DrawQuad(const glm::mat4& transform, const glm::vec4& color, uint32_t actorID)
 	{
-		SAND_PROFILE_FUNCTION();		
+		SAND_PROFILE_FUNCTION();
 
 		constexpr size_t quadVertexCount = 4;
 		constexpr float textureIndex = 0.0f; // White Texture
@@ -237,7 +237,7 @@ namespace Sand
 
 		for (size_t i = 0; i < quadVertexCount; i++)
 		{
-			s_Data.QuadVertexBufferPtr->Position = transform * s_Data.QuadVertexPositions[i];	
+			s_Data.QuadVertexBufferPtr->Position = transform * s_Data.QuadVertexPositions[i];
 			s_Data.QuadVertexBufferPtr->Color = color;
 			s_Data.QuadVertexBufferPtr->TexCoord = textureCoords[i];
 			s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
@@ -336,7 +336,7 @@ namespace Sand
 	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor)
 	{
 		SAND_PROFILE_FUNCTION();
-		
+
 		constexpr size_t quadVertexCount = 4;
 		constexpr glm::vec2 textureCoords[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
 
