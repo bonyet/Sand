@@ -18,44 +18,44 @@ namespace Sand
 		RecalculateProjection();
 	}
 
-	void SceneCamera::ScreenToWorldPoint(glm::vec2& worldPoint, const glm::mat4& view)
+	glm::vec2 SceneCamera::ScreenToWorldPoint(glm::vec2& screenPoint, const glm::mat4& view)
 	{
 		Window& window = Application::Get().GetWindow();
 		float width = (float)window.GetWidth();
 		float height = (float)window.GetHeight();
 
-		glm::vec4 v4worldPoint = { worldPoint, 1.0f, 1.0f };
+		glm::vec4 v4Point = { screenPoint, 1.0f, 1.0f };
 
 		glm::mat4 invProjView = glm::inverse(m_Projection * view);
-		
+
 		// mouse NDC
-		v4worldPoint.x = (2.0f * ((float)(v4worldPoint.x) / (width))) - 1.0f;
-		v4worldPoint.y = 1.0f - (2.0f * ((float)(v4worldPoint.y) / (height)));
+		v4Point.x = (2.0f * ((float)(v4Point.x) / (width))) - 1.0f;
+		v4Point.y = 1.0f - (2.0f * ((float)(v4Point.y) / (height)));
 
-		v4worldPoint = v4worldPoint * invProjView;
-		v4worldPoint /= v4worldPoint.w;
+		v4Point = v4Point * invProjView;
+		v4Point /= v4Point.w;
 
-		worldPoint = v4worldPoint;
+		return v4Point;
 	}
 
-	void SceneCamera::WorldToScreenPoint(glm::vec2& worldPoint, const glm::mat4& view)
+	glm::vec2 SceneCamera::WorldToScreenPoint(glm::vec2& worldPoint, const glm::mat4& view)
 	{
 		Window& window = Application::Get().GetWindow();
 		float width = (float)window.GetWidth();
 		float height = (float)window.GetHeight();
 
-		glm::vec4 v4worldPoint = { worldPoint, 1.0f, 1.0f };
+		glm::vec4 v4Point = { worldPoint, 1.0f, 1.0f };
 
 		glm::mat4 invProjView = glm::inverse(m_Projection * view);
 
 		// mouse NDC
-		v4worldPoint.x = (2.0f * ((float)(v4worldPoint.x) / (width))) - 1.0f;
-		v4worldPoint.y = 1.0f - (2.0f * ((float)(v4worldPoint.y) / (height)));
+		v4Point.x = (2.0f * ((float)(v4Point.x) / (width))) - 1.0f;
+		v4Point.y = 1.0f - (2.0f * ((float)(v4Point.y) / (height)));
 
-		v4worldPoint = v4worldPoint / invProjView;
-		v4worldPoint /= v4worldPoint.w;
+		v4Point = v4Point / invProjView;
+		v4Point /= v4Point.w;
 
-		worldPoint = v4worldPoint;
+		return v4Point;
 	}
 
 	void SceneCamera::RecalculateProjection()

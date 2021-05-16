@@ -19,7 +19,7 @@ namespace Sand
 		}
 
 		// Greater or equal to min, less than max
-		int RandomInt(int min, int max)
+		int Integer(int min, int max)
 		{
 			if (AutomaticallyReseed)
 			{
@@ -34,7 +34,7 @@ namespace Sand
 		}
 
 		// Greater or equal to min, less than max
-		double RandomDouble(double min, double max)
+		double Double(double min, double max)
 		{
 			if (AutomaticallyReseed)
 			{
@@ -46,6 +46,12 @@ namespace Sand
 			std::uniform_real_distribution<double> unif(min, max);
 
 			return unif(m_Re);
+		}
+
+		// Greater or equal to min, less than max
+		float Float(float min, float max)
+		{
+			return static_cast<float>(Double(min, max));
 		}
 	};
 

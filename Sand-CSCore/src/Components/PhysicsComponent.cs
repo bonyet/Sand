@@ -8,7 +8,7 @@ namespace Sand
 		Static, Kinematic, Dynamic
 	}
 
-	public class PhysicsComponent : Component
+	public sealed class PhysicsComponent : Component
 	{
 		public PhysicsBodyType Type
 		{

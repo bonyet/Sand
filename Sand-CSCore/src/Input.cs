@@ -139,7 +139,7 @@ namespace Sand
         Menu = 348
     };
 
-    public class Input
+    public static class Input
 	{
         /// <param name="code">The key to check</param>
         /// <returns>Whether or not the key <paramref name="code"/> is currently held down.</returns>

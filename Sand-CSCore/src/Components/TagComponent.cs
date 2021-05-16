@@ -3,7 +3,7 @@
 namespace Sand
 {
 
-	public class TagComponent : Component
+	public sealed class TagComponent : Component
 	{
 		/// <summary>
 		/// The name of this actor.

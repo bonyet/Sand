@@ -86,7 +86,9 @@ namespace Sand
 			for (auto& entry : ScriptEngine::GetScriptDatas())
 			{
 				const ScriptData& data = entry.second;
-				ScriptEngine::Invoke(data.OnLoadMethod, data.Object);
+
+				if (data.OnLoadMethod)
+					ScriptEngine::Invoke(data.OnLoadMethod, data.Object);
 			}
 		}
 		// Scripting OnCreate
@@ -94,7 +96,9 @@ namespace Sand
 			for (auto& entry : ScriptEngine::GetScriptDatas())
 			{
 				const ScriptData& data = entry.second;
-				ScriptEngine::Invoke(data.OnCreateMethod, data.Object);
+
+				if (data.OnCreateMethod)
+					ScriptEngine::Invoke(data.OnCreateMethod, data.Object);
 			}
 		}
 	}
@@ -110,7 +114,9 @@ namespace Sand
 			for (auto& entry : ScriptEngine::GetScriptDatas())
 			{
 				const ScriptData& data = entry.second;
-				ScriptEngine::Invoke(data.OnDestroyMethod, data.Object);
+
+				if (data.OnDestroyMethod)
+					ScriptEngine::Invoke(data.OnDestroyMethod, data.Object);
 			}
 		}
 
@@ -132,31 +138,36 @@ namespace Sand
 		Application::Get().OnEvent(SceneEndPlayEvent{ this });
 	}
 
-	void Scene::RenderScene(EditorCamera* camera)
+	void Scene::RenderScene(EditorCamera* editorCamera, Timestep ts)
 	{
 		// Begin renderer
-		if (camera)
+		if (editorCamera)
 		{
-			Renderer2D::Begin(*camera); // Editor Camera
+			Renderer2D::Begin(*editorCamera); // Editor Camera
 		}
 		else
 		{
 			Camera* primaryCamera = nullptr;
 			glm::mat4 camTransform;
 
+			auto group = m_CurrentRegistry->group<TransformComponent, CameraComponent>();
+			for (auto entity : group)
 			{
-				auto group = m_CurrentRegistry->group<TransformComponent, CameraComponent>();
-				for (auto entity : group)
+				auto [transform, camera] = group.get<TransformComponent, CameraComponent>(entity);
+				if (camera.Primary)
 				{
-					auto [transform, camera] = group.get<TransformComponent, CameraComponent>(entity);
-					if (camera.Primary)
-					{
-						primaryCamera = &camera.Camera;
-						camTransform = transform;
-						break;
-					}
+					primaryCamera = &camera.Camera;
+					camTransform = transform;
+					break;
 				}
 			}
+
+			if (!primaryCamera)
+			{
+				SAND_CORE_WARN("No primary camera found in scene. Nothing will be rendered.");
+				return;
+			}
+
 			Renderer2D::Begin(*primaryCamera, camTransform);
 		}
 
@@ -169,7 +180,7 @@ namespace Sand
 			bool hasTextureComponent = m_CurrentRegistry->has<TextureComponent>(entity);
 			if (!hasTextureComponent)
 			{
-				Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color, (uint32_t)entity);
+				Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color, static_cast<uint32_t>(entity));
 			}
 			else
 			{
@@ -177,11 +188,25 @@ namespace Sand
 				auto& texComponent = m_CurrentRegistry->get<TextureComponent>(entity);
 
 				if (texComponent.IsTextured()) {
-					Renderer2D::DrawQuad(transform.GetTransform(), (uint32_t)entity, texComponent.Texture, texComponent.TilingFactor, sprite.Color);
+					Renderer2D::DrawQuad(transform.GetTransform(), texComponent.Texture, texComponent.TilingFactor, sprite.Color, static_cast<uint32_t>(entity));
 				}
 				else {
-					Renderer2D::DrawQuad(transform.GetTransform(), { 1.0f, 0.0f, 1.0f, 1.0f }, (uint32_t)entity);
+					// Texture component, but no texture
+					Renderer2D::DrawQuad(transform.GetTransform(), { 1.0f, 0.0f, 1.0f, 1.0f }, static_cast<uint32_t>(entity));
 				}
+			}
+		}
+
+		// Update particle emitters
+		{
+			auto view = m_CurrentRegistry->view<ParticleEmitterComponent>();
+			for (auto entity : view)
+			{
+				auto& emitter = view.get<ParticleEmitterComponent>(entity).Emitter;
+
+				emitter.GetProperties().Position = m_Registry.get<TransformComponent>(entity).GetPosition();
+				emitter.OnUpdate(ts);
+				emitter.OnRender(ts);
 			}
 		}
 
@@ -193,7 +218,7 @@ namespace Sand
 		SAND_PROFILE_FUNCTION();
 
 		// Render geometry
-		RenderScene(&camera);
+		RenderScene(&camera, ts);
 	}
 
 	void Scene::OnUpdateRuntime(Timestep ts)
@@ -224,12 +249,28 @@ namespace Sand
 			{
 				const ScriptData& data = entry.second;
 
+				if (!data.OnUpdateMethod)
+					continue;
+
 				void* params[1] = { reinterpret_cast<float*>(&ts) }; // The timestep parameter
 				ScriptEngine::Invoke(data.OnUpdateMethod, data.Object, params);
 			}
 		}
+		// Scripting OnLateUpdate
+		{
+			for (auto& entry : ScriptEngine::GetScriptDatas())
+			{
+				const ScriptData& data = entry.second;
 
-		RenderScene(nullptr);
+				if (!data.OnLateUpdateMethod)
+					continue;
+
+				void* params[1] = { reinterpret_cast<float*>(&ts) }; // The timestep parameter
+				ScriptEngine::Invoke(data.OnLateUpdateMethod, data.Object, params);
+			}
+		}
+
+		RenderScene(nullptr, ts);
 	}
 
 	Actor Scene::GetPrimaryCameraActor()
@@ -310,11 +351,12 @@ namespace Sand
 		COPY_COMPONENT(TagComponent);
 		COPY_COMPONENT(TransformComponent);
 		COPY_COMPONENT(SpriteRendererComponent);
+		COPY_COMPONENT(ParticleEmitterComponent);
 		COPY_COMPONENT(CameraComponent);
 		COPY_COMPONENT(PhysicsComponent);
 		COPY_COMPONENT(BoxColliderComponent);
 		COPY_COMPONENT(TextureComponent);
-		//COPY_COMPONENT(AnimatorComponent);
+		COPY_COMPONENT(ScriptComponent);
 		COPY_COMPONENT(AudioSourceComponent);
 
 		return clone;
@@ -333,11 +375,12 @@ namespace Sand
 		COPY_COMPONENT_TO_REGISTRY(TagComponent);
 		COPY_COMPONENT_TO_REGISTRY(TransformComponent);
 		COPY_COMPONENT_TO_REGISTRY(SpriteRendererComponent);
+		COPY_COMPONENT_TO_REGISTRY(ParticleEmitterComponent);
 		COPY_COMPONENT_TO_REGISTRY(CameraComponent);
 		COPY_COMPONENT_TO_REGISTRY(PhysicsComponent);
 		COPY_COMPONENT_TO_REGISTRY(BoxColliderComponent);
 		COPY_COMPONENT_TO_REGISTRY(TextureComponent);
-		//COPY_COMPONENT_TO_REGISTRY(AnimatorComponent);
+		COPY_COMPONENT_TO_REGISTRY(ScriptComponent);
 		COPY_COMPONENT_TO_REGISTRY(AudioSourceComponent);
 
 		m_CurrentRegistry = &m_RuntimeRegistry;
@@ -405,6 +448,11 @@ namespace Sand
 	}
 	template<>
 	void Scene::OnComponentAdded<SpriteRendererComponent>(Actor actor, SpriteRendererComponent& component)
+	{
+		component.owner = actor;
+	}
+	template<>
+	void Scene::OnComponentAdded<ParticleEmitterComponent>(Actor actor, ParticleEmitterComponent& component)
 	{
 		component.owner = actor;
 	}
@@ -489,6 +537,10 @@ namespace Sand
 	}
 	template<>
 	void Scene::OnComponentRemoved<SpriteRendererComponent>(Actor actor, SpriteRendererComponent& component)
+	{
+	}
+	template<>
+	void Scene::OnComponentRemoved<ParticleEmitterComponent>(Actor actor, ParticleEmitterComponent& component)
 	{
 	}
 	template<>

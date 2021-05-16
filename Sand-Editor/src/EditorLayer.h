@@ -2,14 +2,14 @@
 
 #include "Sand.h"
 
-#include "Panels/SceneHierarchyPanel.h"
-#include "Panels/PropertiesPanel.h"
 #include "Panels/ConsolePanel.h"
+#include "Panels/PropertiesPanel.h"
+#include "Panels/SceneLayoutPanel.h"
 #include "Panels/AssetManagerPanel.h"
 
+#include "Sand/Renderer/Texture.h"
 #include "Sand/Renderer/EditorCamera.h"
 
-#include "Sand/Renderer/Texture.h"
 #include "Sand/Events/SceneEvent.h"
 
 namespace Sand
@@ -37,14 +37,12 @@ namespace Sand
 		void NewScene();
 		void SaveSceneAs();
 		void OpenScene();
-
-		void ShowSettingsWindow();
 	private:
 		Ref<Framebuffer> m_ViewportFramebuffer;
 
 		Ref<Scene> m_ActiveScene;
 
-		SceneHierarchyPanel m_SceneHierarchyPanel;
+		SceneLayoutPanel m_SceneLayoutPanel;
 		PropertiesPanel m_PropertiesPanel;
 		ConsolePanel m_ConsolePanel;
 		AssetManagerPanel m_AssetManagerPanel;

@@ -1,12 +1,11 @@
-﻿using System;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 
-namespace Sand.Scene
+namespace Sand
 {
 
-	public class Scene
+	public sealed class Scene
 	{
-		public static Actor FindActorByName(string name)
+		public static Actor FindActor(string name)
 		{
 			int found = FindActorByName_Native(name);
 			if (found >= 0)

@@ -22,8 +22,8 @@ namespace Sand
 
 		float GetAspectRatio() const { return m_AspectRatio; }
 
-		void ScreenToWorldPoint(glm::vec2& worldPoint, const glm::mat4& view);
-		void WorldToScreenPoint(glm::vec2& worldPoint, const glm::mat4& view);
+		glm::vec2 ScreenToWorldPoint(glm::vec2& screenPoint, const glm::mat4& view);
+		glm::vec2 WorldToScreenPoint(glm::vec2& worldPoint, const glm::mat4& view);
 	private:
 		void RecalculateProjection();
 	private:

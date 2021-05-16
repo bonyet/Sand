@@ -24,5 +24,5 @@ private:
 	// Camera stuff
 	glm::mat4 m_Projection = glm::mat4(1.0f);
 	glm::vec2 m_Position = glm::vec2(0.0f);
-	float m_OrthographicSize = 50.0f;
+	float m_OrthographicSize = 2.0f;
 };

@@ -8,6 +8,8 @@
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
+#include "Sand/ImGui/ImGuiColorGradient.h"
+
 #include "Sand/Utils/PlatformUtils.h"
 
 #define SAND_LEFT_LABEL(func, label, code) ImGui::TextUnformatted(label); ImGui::NextColumn(); ImGui::SetNextItemWidth(-1); if(func) { code } ImGui::NextColumn();
@@ -16,7 +18,7 @@
 namespace Sand
 {
 	template<typename T, typename UIFunction>
-	static void DrawComponent(const std::string& name, Actor actor, UIFunction uiFunction)
+	static void DrawComponent(const std::string& name, Actor actor, UIFunction uiFunction, bool defaultColumns = true)
 	{
 		constexpr ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_FramePadding;
 		
@@ -44,7 +46,8 @@ namespace Sand
 
 		if (open)
 		{
-			ImGui::Columns(2);
+			if (defaultColumns)
+				ImGui::Columns(2);
 			uiFunction(component);
 			ImGui::Columns(1);
 			ImGui::TreePop();
@@ -186,6 +189,7 @@ namespace Sand
 			ImGui::OpenPopup("AddComponent");
 		ImGui::PopStyleColor(3);
 
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(6.0f, 6.0f));
 		if (ImGui::BeginPopup("AddComponent", false))
 		{
 			// Common components
@@ -203,6 +207,19 @@ namespace Sand
 				DrawComponentMenuItem<TextureComponent>("Texture", actor);
 				DrawComponentMenuItem<SpriteRendererComponent>("Sprite Renderer", actor);
 				
+				ImGui::EndMenu();
+			}
+
+			// Effects
+			if (ImGui::BeginMenu("Effects"))
+			{
+				if (DrawComponentMenuItem<ParticleEmitterComponent>("Particle Emitter", actor))
+				{
+					auto& gradient = actor.GetComponent<ParticleEmitterComponent>().Emitter.GetProperties().ColorOverLifetime;
+					gradient.AddMark(0.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+					gradient.AddMark(1.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+				}
+
 				ImGui::EndMenu();
 			}
 
@@ -226,7 +243,7 @@ namespace Sand
 			// Scripts / scripting
 			if (ImGui::BeginMenu("Scripts"))
 			{
-				for (auto className : ScriptEngine::GetClientScriptNames())
+				for (const char* className : ScriptEngine::GetClientScriptNames())
 				{
 					if (DrawComponentMenuItem<ScriptComponent>(className, actor, className))
 					{
@@ -248,13 +265,9 @@ namespace Sand
 
 			ImGui::EndPopup();
 		}
+		ImGui::PopStyleVar();
 
 		ImGui::PopItemWidth();
-	}
-
-	inline static void SetColumnsMinSpacing(float spacing) {
-		static ImGuiStyle& style = ImGui::GetStyle();
-		style.ColumnsMinSpacing = spacing;
 	}
 
 	void PropertiesPanel::DrawComponents(Actor actor)
@@ -288,9 +301,6 @@ namespace Sand
 		DrawComponentsMenu(actor);
 		ImGui::Separator();
 
-		float defaultColumnSpacing = ImGui::GetStyle().ColumnsMinSpacing;
-
-		SetColumnsMinSpacing(85.0f);
 		DrawComponent<TransformComponent>("Transform", actor, [](auto& component)
 		{
 			ImGuiIO& io = ImGui::GetIO();
@@ -313,9 +323,7 @@ namespace Sand
 				component.SetRotation(glm::radians(eulerAngles));
 			);
 		});
-		SetColumnsMinSpacing(defaultColumnSpacing);
 		
-		SetColumnsMinSpacing(110.0f);
 		DrawComponent<CameraComponent>("Camera", actor, [](auto& component)
 		{
 			auto& camera = component.Camera;
@@ -339,9 +347,7 @@ namespace Sand
 			
 			SAND_LEFT_LABEL_TOOLTIP(ImGui::Checkbox("##Fixed Aspect Ratio", &component.FixedAspectRatio), "Fixed Aspect Ratio", "If this is true the cameras aspect ratio will not adjust to the window scale", );
 		});
-		SetColumnsMinSpacing(defaultColumnSpacing);
 
-		SetColumnsMinSpacing(100.0f);
 		DrawComponent<TextureComponent>("Texture", actor, [](auto& component)
 		{
 			ImGui::Columns(1);
@@ -371,7 +377,7 @@ namespace Sand
 			{
 				ImGui::TextColored({ 0.9f, 0.3f, 0.2f, 1.0f }, "No Texture Active");
 				ImGui::SameLine();
-				if (ImGui::Button("Load one, then!", { 130, 25 }))
+				if (ImGui::Button("Load one", { 130, 25 }))
 				{
 					std::string chosenFilepath = FileDialogs::OpenFile("Image (*.jpg);(*.png)\0*.png;*.jpg;\0");
 					if (!chosenFilepath.empty())
@@ -379,23 +385,56 @@ namespace Sand
 				}
 			}
 		});
-		SetColumnsMinSpacing(defaultColumnSpacing);
 
-		SetColumnsMinSpacing(80.0f);
 		DrawComponent<SpriteRendererComponent>("Sprite Renderer", actor, [](auto& component)
 		{
 			SAND_LEFT_LABEL(ImGui::ColorEdit4("##Color", glm::value_ptr(component.Color)), "Color", );
 		});
-		SetColumnsMinSpacing(defaultColumnSpacing);
-	
-		DrawComponent<ScriptComponent>("Script", actor, [&](auto& component)
+
+		DrawComponent<ParticleEmitterComponent>("Particle Emitter", actor, [](auto& component)
 		{
-			const ScriptData& scriptData = ScriptEngine::GetScriptDataFromActor(actor);
-			for (auto& scriptField : scriptData.Fields)
+			ParticleEmitter::Properties& props = component.Emitter.GetProperties();
+
+			ImGui::Columns(1);
+			if (ImGui::Button("Play Once"))
+				component.Emitter.Play();
+			ImGui::Columns(2);
+
+			SAND_LEFT_LABEL(ImGui::DragFloat2("##Velocity", &props.Velocity.x), "Velocity", );
+			SAND_LEFT_LABEL(ImGui::DragFloat2("##Velocity Variation", &props.VelocityVariation.x), "Velocity Variation", );
+			ImGui::Separator();
+
+			SAND_LEFT_LABEL(ImGui::DragFloat2("##Scale Begin", &props.ScaleBegin.x, 0.1f), "Scale Begin", );
+			SAND_LEFT_LABEL(ImGui::DragFloat2("##Scale End", &props.ScaleEnd.x, 0.1f), "Scale End", );
+			SAND_LEFT_LABEL(ImGui::DragFloat("##Scale Variation", &props.ScaleVariation), "Scale Variation", );
+			ImGui::Separator();
+			SAND_LEFT_LABEL(ImGui::DragFloat("##Rotation Variation", &props.RotationVariation), "Rotation Variation");
+			ImGui::Separator();
+			SAND_LEFT_LABEL(ImGui::DragFloat("##Lifetime", &props.Lifetime), "Lifetime", );
+
+			ImGui::Separator();
+			SAND_LEFT_LABEL(ImGui::InputFloat("##Max Emission Time", &props.MaxEmissionTime), "Max Emission Time", );
+			ImGui::NextColumn(); 
+			ImGui::SetNextItemWidth(-1); 
+			ImGui::Text("Time: %.2f", props.EmissionTime);
+			ImGui::NextColumn();
+
 			{
-				RenderScriptField(scriptField, scriptData);
+				ColorGradient& gradient = props.ColorOverLifetime;
+
+				SAND_LEFT_LABEL(ImGui::GradientButton(&gradient), "Color",
+					ImGui::OpenPopup("GradientEditorPopup");
+				);
+
+				if (ImGui::BeginPopup("GradientEditorPopup", ImGuiWindowFlags_AlwaysAutoResize))
+				{
+					static GradientMark* draggingMark = nullptr, *selectedMark = nullptr;
+					ImGui::GradientEditor(&gradient, draggingMark, selectedMark);
+
+					ImGui::EndPopup();
+				}
 			}
-		});
+		}, false);
 
 		DrawComponent<BoxColliderComponent>("Box Collider", actor, [](auto& component)
 		{
@@ -497,6 +536,16 @@ namespace Sand
 			if (!component.Clip.Filepath.empty())
 			{
 				ImGui::Text("Current Filepath: '%s'", component.Clip.Filepath.c_str());
+			}
+		});
+	
+		DrawComponent<ScriptComponent>("Script", actor, [&](auto& component)
+		{
+			const ScriptData& scriptData = ScriptEngine::GetScriptDataFromActor(actor);
+			for (auto& scriptField : scriptData.Fields)
+			{
+				if (scriptField.HasFlag(FieldFlag::Public) && !scriptField.HasFlag(FieldFlag::Static))
+					RenderScriptField(scriptField, scriptData);
 			}
 		});
 	}

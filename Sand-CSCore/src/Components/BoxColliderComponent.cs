@@ -3,7 +3,7 @@
 namespace Sand
 {
 
-	public class BoxColliderComponent : Component
+	public sealed class BoxColliderComponent : Component
 	{
 		public Vector2 Scale
 		{

@@ -2,10 +2,10 @@
 
 #include "Sand/Renderer/Texture.h"
 #include "Sand/Renderer/Camera.h"
-#include "Sand/Renderer/Material.h"
+#include "Sand/Renderer/Shader.h"
 #include "Sand/Renderer/EditorCamera.h"
 
-namespace Sand 
+namespace Sand
 {
 
 	class Renderer2D
@@ -20,23 +20,15 @@ namespace Sand
 		static void End();
 		static void Flush();
 
-		// Primitives
-		static void DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color);
-		static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color);
-		// Texture
-		static void DrawQuad(const glm::vec2& position, const glm::vec2& size, const Ref<Texture2D>& texture, float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4(1.0f));
-		static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<Texture2D>& texture, float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4(1.0f));
+		// Primitive quads
+		static void DrawQuad(const glm::mat4& transform, const glm::vec4& color);
 		static void DrawQuad(const glm::mat4& transform, const glm::vec4& color, uint32_t actorID);
-		static void DrawQuad(const glm::mat4& transform, uint32_t actorID, const Ref<Texture2D>& texture, float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4(1.0f));
-		// Rotated
-		static void DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color);
-		static void DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color);
-		// Texture + Rotated
-		static void DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const Ref<Texture2D>& texture, float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4(1.0f));
-		static void DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<Texture2D>& texture, float tilingFactor = 1.0f, const glm::vec4& tintColor = glm::vec4(1.0f));
+		// Textured quads
+		static void DrawQuad(const glm::mat4& transform, const Ref<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor);
+		static void DrawQuad(const glm::mat4& transform, const Ref<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor, uint32_t actorID);
 
-		static Ref<Texture2D> GetWhiteTexture();
-		static Ref<Material> GetMaterial();
+		static Ref<Shader> GetShader();
+		static void SetShader(const Ref<Shader>& shader);
 
 		// Stats
 		struct Statistics
@@ -47,6 +39,7 @@ namespace Sand
 			uint32_t GetTotalVertexCount() const { return QuadCount * 4; }
 			uint32_t GetTotalIndexCount() const { return QuadCount * 6; }
 		};
+
 		static void ResetStats();
 		static Statistics GetStats();
 	private:

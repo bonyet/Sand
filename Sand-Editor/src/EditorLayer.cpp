@@ -7,11 +7,11 @@
 #include "Sand/Debug/Debug.h"
 #include "Sand/Math/Math.h"
 
-#include <imgui/imgui.h>
-#include <imgui/imgui_internal.h>
-#include "ImGuizmo.h"
-
 #include <glm/glm/gtc/type_ptr.hpp>
+
+#include <imgui/imgui.h>
+#include "ImGuizmo.h"
+#include <imgui/imgui_internal.h>
 
 #include <filesystem>
 
@@ -35,6 +35,7 @@ namespace Sand
 			FramebufferTextureFormat::RED_INTEGER, 
 			FramebufferTextureFormat::Depth 
 		};
+
 		fbSpec.Width = 1280;
 		fbSpec.Height = 720;
 		m_ViewportFramebuffer = Framebuffer::Create(fbSpec);
@@ -56,8 +57,17 @@ namespace Sand
 	void EditorLayer::SetupGUITheme()
 	{
 		auto& style = ImGui::GetStyle();
-		style.FrameRounding = 10.0f;
+		style.FrameRounding = 6.0f;
+		style.PopupRounding = 10.0f;
+		style.TabRounding = 0.0f;
+		style.IndentSpacing = 20.0f;
+		style.PopupBorderSize = 1.0f;
+
+		style.ColorButtonPosition = ImGuiDir_Left;
+
+		style.WindowPadding = { 4.0f, 4.0f };
 		style.WindowMenuButtonPosition = ImGuiDir_None;
+
 		style.ScrollbarSize -= 2;
 
 		auto& colors = style.Colors;
@@ -158,7 +168,7 @@ namespace Sand
 	{
 		SAND_PROFILE_FUNCTION();
 
-		// dockspace nonsense
+		// Dockspace nonsense
 		{
 			static ImGuiDockNodeFlags dockspaceFlags = ImGuiDockNodeFlags_NoWindowMenuButton | ImGuiDockNodeFlags_NoCloseButton;
 
@@ -181,6 +191,7 @@ namespace Sand
 				ImGuiID dockspaceID = ImGui::GetID("Dockspace");
 				ImGui::DockSpace(dockspaceID, ImVec2(0.0f, 0.0f), dockspaceFlags);
 			}
+
 			style.WindowMinSize.x = minWinSizeX;
 		}
 
@@ -206,7 +217,7 @@ namespace Sand
 			if (ImGui::BeginMenu("Tabs"))
 			{
 				if (ImGui::MenuItem("Hierarchy")) {
-					m_SceneHierarchyPanel.Show();
+					m_SceneLayoutPanel.Show();
 				}
 				if (ImGui::MenuItem("Properties")) {
 					m_PropertiesPanel.Show();
@@ -230,17 +241,12 @@ namespace Sand
 		font->Scale = 1.0f;
 		ImGui::PopFont();
 
-		static bool vsync = true;
-		if (ImGui::Checkbox("VSync", &vsync)) {
-			Application::Get().GetWindow().SetVSync(vsync);
-		}
-
 		ImGui::Separator();
 		if (ImGui::TreeNodeEx("Rendering")) 
 		{
 			auto stats = Renderer2D::GetStats();
 			ImGui::Text("Renderer2D:");
-			ImGui::Text("Draw Calls: %d", stats.DrawCalls);
+			//ImGui::Text("Draw Calls: %d", stats.DrawCalls);
 			ImGui::Text("Quads: %d", stats.QuadCount);
 			ImGui::Text("Vertices: %d", stats.GetTotalVertexCount());
 			ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
@@ -251,11 +257,11 @@ namespace Sand
 		ImGui::End();
 
 		// Render editor panels
-		m_SceneHierarchyPanel.OnGuiRender();
+		m_SceneLayoutPanel.OnGuiRender();
 		m_AssetManagerPanel.OnGuiRender();
 		
 		{
-			Actor selected = m_SceneHierarchyPanel.GetSelectedActor();
+			Actor selected = m_SceneLayoutPanel.GetSelectedActor();
 
 			if (!m_ActiveScene->ContainsActor(selected))
 				selected = {};
@@ -286,7 +292,7 @@ namespace Sand
 		ImGui::Image(reinterpret_cast<void*>(textureID), viewportPanelSize, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 
 		// GIZMO STUFF
-		Actor selectedActor = m_SceneHierarchyPanel.GetSelectedActor();
+		Actor selectedActor = m_SceneLayoutPanel.GetSelectedActor();
 
 		bool shouldShowGizmos = selectedActor && m_GizmoType != -1 && !m_ActiveScene->IsPlaying();
 		if (shouldShowGizmos)
@@ -391,13 +397,14 @@ namespace Sand
 			if (pixelData < 0 || !m_ActiveScene->IsActorIDValid(pixelData))
 			{
 				pixelData = -1;
-				m_SceneHierarchyPanel.SetSelectedActor({});
+				m_SceneLayoutPanel.SetSelectedActor({});
 			}
 
+			SAND_CORE_TRACE(pixelData);
 			if (pixelData != -1)
 			{
 				Actor clickedActor = Actor{ (entt::entity)pixelData, m_ActiveScene.get() };
-				m_SceneHierarchyPanel.SetSelectedActor(clickedActor);
+				m_SceneLayoutPanel.SetSelectedActor(clickedActor);
 			}
 		}
 	}
@@ -479,8 +486,8 @@ namespace Sand
 			// Focusing on actors
 			case Keycode::F:
 			{
-				Actor focused = m_SceneHierarchyPanel.GetSelectedActor();
-				if (!m_SceneHierarchyPanel.GetSelectedActor())
+				Actor focused = m_SceneLayoutPanel.GetSelectedActor();
+				if (!m_SceneLayoutPanel.GetSelectedActor())
 					break;
 
 				const auto& tc = focused.GetComponent<TransformComponent>();
@@ -496,20 +503,20 @@ namespace Sand
 			// Duplicating actors
 			case Keycode::D:
 			{
-				if (!controlPressed || !m_SceneHierarchyPanel.GetSelectedActor())
+				if (!controlPressed || !m_SceneLayoutPanel.GetSelectedActor())
 					break;
 
-				m_SceneHierarchyPanel.SetSelectedActor(m_ActiveScene->DuplicateActor(m_SceneHierarchyPanel.GetSelectedActor()));
+				m_SceneLayoutPanel.SetSelectedActor(m_ActiveScene->DuplicateActor(m_SceneLayoutPanel.GetSelectedActor()));
 
 				break;
 			}
 			case Keycode::Delete:
 			{
-				if (!m_SceneHierarchyPanel.GetSelectedActor())
+				if (!m_SceneLayoutPanel.GetSelectedActor())
 					break;
 
-				m_ActiveScene->DestroyActor(m_SceneHierarchyPanel.GetSelectedActor());
-				m_SceneHierarchyPanel.SetSelectedActor({});
+				m_ActiveScene->DestroyActor(m_SceneLayoutPanel.GetSelectedActor());
+				m_SceneLayoutPanel.SetSelectedActor({});
 
 				break;
 			}
@@ -529,9 +536,9 @@ namespace Sand
 	{
 		m_ActiveScene = CreateRef<Scene>();
 		m_ActiveScene->OnViewportResize(m_ViewportSize.x, m_ViewportSize.y);
-		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+		m_SceneLayoutPanel.SetContext(m_ActiveScene);
 
-		// Create a camera actor
+		// Create default actors
 		auto cameraActor = m_ActiveScene->CreateActor("Camera");
 		cameraActor.AddComponent<CameraComponent>(15.0f);
 	}
@@ -553,7 +560,7 @@ namespace Sand
 		{
 			m_ActiveScene = CreateRef<Scene>();
 			m_ActiveScene->OnViewportResize(m_ViewportSize.x, m_ViewportSize.y);
-			m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+			m_SceneLayoutPanel.SetContext(m_ActiveScene);
 
 			SceneSerializer serializer(m_ActiveScene);
 			serializer.Deserialize(filepath);

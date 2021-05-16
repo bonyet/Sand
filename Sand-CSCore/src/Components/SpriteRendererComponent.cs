@@ -3,7 +3,7 @@
 namespace Sand
 {
 
-	public class SpriteRendererComponent : Component
+	public sealed class SpriteRendererComponent : Component
 	{
 		public void SetColor(Color color)
 		{

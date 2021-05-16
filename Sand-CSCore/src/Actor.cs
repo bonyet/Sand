@@ -3,7 +3,7 @@
 namespace Sand
 {
 
-	public class Actor
+	public sealed class Actor
 	{
 		public uint ID { get; }
 

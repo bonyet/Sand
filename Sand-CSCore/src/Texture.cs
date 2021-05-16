@@ -3,7 +3,7 @@
 namespace Sand
 {
 
-	public class Texture
+	public sealed class Texture
 	{
 		uint Width
 		{

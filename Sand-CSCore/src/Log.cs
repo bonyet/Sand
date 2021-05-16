@@ -3,7 +3,7 @@
 namespace Sand
 {
 
-	public class Log
+	public static class Log
 	{
 		/// <summary>
 		/// Logs <paramref name="message"/> to the editor console as info.

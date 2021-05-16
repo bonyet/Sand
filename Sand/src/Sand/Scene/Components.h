@@ -3,6 +3,8 @@
 #include "Sand/Debug/Profiler.h"
 #include "Sand/Renderer/Texture.h"
 #include "Sand/Physics/PhysicsBody.h"
+#include "Sand/Audio/Audio.h"
+#include "Sand/ParticleSystems/ParticleEmitter.h"
 
 #include "SceneCamera.h"
 #include "ScriptableActor.h"
@@ -10,7 +12,6 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtc/type_ptr.hpp>
 
-#include "Sand/Audio/Audio.h"
 #include <vector>
 
 namespace Sand
@@ -63,9 +64,9 @@ namespace Sand
 		std::vector<Actor>& GetChildren() { return m_Children; }
 		bool HasChildren() const { return m_Children.size() != 0; }
 		void RemoveChild(Actor child) { m_Children.erase(std::find(m_Children.begin(), m_Children.end(), child)); }
-		bool HasChild(Actor child) { return std::find(m_Children.begin(), m_Children.end(), child) != m_Children.end(); }
-		void AddChild(Actor child) 
-		{ 
+		bool HasChild(Actor child) const { return std::find(m_Children.begin(), m_Children.end(), child) != m_Children.end(); }
+		void AddChild(Actor child)
+		{
 			if (HasChild(child))
 				return; 
 
@@ -83,6 +84,14 @@ namespace Sand
 		TransformComponent& GetParentTransform() { return m_Parent.GetComponent<TransformComponent>(); }
 		void SetParent(Actor parent) 
 		{ 
+			if (HasChild(parent))
+			{
+				SAND_CORE_TRACE("Cannot child a parent ('{0}') to a child ('{1}'). Orphan the child first.", 
+					owner.GetComponent<TagComponent>().Name, parent.GetComponent<TagComponent>().Name);
+
+				return;
+			}
+
 			// Remove us from the existing parents children if we reset the parent
 			if (!parent && m_Parent)
 				m_Parent.GetComponent<TransformComponent>().RemoveChild(owner);
@@ -94,7 +103,7 @@ namespace Sand
 				parent.GetComponent<TransformComponent>().AddChild(owner); 
 		}
 
-		glm::mat4 GetGlobalTransform()
+		glm::mat4 GetGlobalTransform() const
 		{
 			SAND_PROFILE_FUNCTION();
 
@@ -103,7 +112,7 @@ namespace Sand
 				* glm::scale(glm::mat4(1.0f), glm::vec3(m_Scale, 1.0f));
 		}
 
-		glm::mat4 GetTransform() 
+		glm::mat4 GetTransform()
 		{
 			SAND_PROFILE_FUNCTION();
 			
@@ -239,13 +248,6 @@ namespace Sand
 		void Reset() {}
 	};
 
-	struct AnimatorComponent
-	{
-		Actor owner;
-	public:
-		void Reset() {}
-	};
-
 	struct AudioSourceComponent
 	{
 		Actor owner;
@@ -282,6 +284,20 @@ namespace Sand
 		void Reset()
 		{
 			ModuleName.clear();
+		}
+	};
+
+	struct ParticleEmitterComponent
+	{
+		Actor owner{};
+	public:
+		ParticleEmitter Emitter;
+
+		ParticleEmitterComponent() = default;
+
+		void Reset()
+		{
+			Emitter.ResetProperties();
 		}
 	};
 

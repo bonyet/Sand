@@ -6,7 +6,7 @@ namespace Sand
 	/// <summary>
 	/// Represents an orthographic camera.
 	/// </summary>
-	public class CameraComponent : Component
+	public sealed class CameraComponent : Component
 	{
 		/// <summary>
 		/// The size of this camera. Higher values will 'zoom out' the camera, and lower values will 'zoom in'.

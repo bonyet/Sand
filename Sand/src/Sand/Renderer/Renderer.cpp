@@ -5,22 +5,6 @@
 namespace Sand 
 {
 
-	struct RendererData
-	{
-		Ref<VertexArray> CubeVertexArray;
-		Ref<VertexBuffer> CubeVertexBuffer;
-		Ref<Shader> CubeShader;
-	};
-
-	static RendererData s_Data;
-
-	struct CubeVertex
-	{
-		glm::vec3 Position;
-		glm::vec4 Color;
-		int ObjectID;
-	};
-
 	void Renderer::Init()
 	{
 		SAND_PROFILE_FUNCTION();
@@ -77,39 +61,6 @@ namespace Sand
 	void Renderer::OnWindowResize(uint32_t width, uint32_t height)
 	{
 		RenderCommand::SetViewport(0, 0, width, height);
-	}
-
-	void Renderer::BeginScene(EditorCamera& camera)
-	{
-		s_Data.CubeShader->Bind();
-		s_Data.CubeShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
-	}
-
-	void Renderer::BeginScene(const Camera& camera, const glm::mat4& transform)
-	{
-		glm::mat4 viewProj = camera.GetProjection() * glm::inverse(transform);
-
-		s_Data.CubeShader->Bind();
-		s_Data.CubeShader->SetMat4("u_ViewProjection", viewProj);
-	}
-
-	void Renderer::BeginScene(const glm::mat4& projection, const glm::mat4& transform)
-	{
-		glm::mat4 viewProj = projection * glm::inverse(transform);
-
-		s_Data.CubeShader->Bind();
-		s_Data.CubeShader->SetMat4("u_ViewProjection", viewProj);
-	}
-
-	void Renderer::EndScene()
-	{
-	}
-
-	void Renderer::DrawCube(const glm::vec3& position, const glm::vec3& scale, const glm::vec4& color)
-	{
-		s_Data.CubeShader->Bind();
-
-		RenderCommand::DrawIndexed(s_Data.CubeVertexArray, 6 * 6);
 	}
 
 }

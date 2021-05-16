@@ -46,7 +46,7 @@ namespace Sand
 
 		static Scene* const GetActiveScene();
 	private:
-		void RenderScene(EditorCamera* camera);
+		void RenderScene(EditorCamera* camera, Timestep ts);
 
 		template<typename T>
 		void OnComponentAdded(Actor actor, T& component);
@@ -68,7 +68,7 @@ namespace Sand
 		float m_ViewportWidth = 5, m_ViewportHeight = 5;
 
 		friend class Actor;
-		friend class SceneHierarchyPanel;
+		friend class SceneLayoutPanel;
 		friend class SceneSerializer;
 		friend class PhysicsWorld;
 	};

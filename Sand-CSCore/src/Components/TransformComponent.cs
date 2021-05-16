@@ -6,7 +6,7 @@ namespace Sand
 	/// <summary>
 	/// Represents an actor's transformation in the scene.
 	/// </summary>
-	public class TransformComponent : Component
+	public sealed class TransformComponent : Component
 	{
 		public void SetPosition(Vector2 position)
 		{

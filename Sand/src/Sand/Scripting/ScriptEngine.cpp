@@ -19,8 +19,6 @@ namespace Sand
 	static MonoAssembly* s_ClientMonoAssembly = nullptr;
 	static MonoImage* s_ClientMonoImage = nullptr;
 
-	static const std::string CLIENT_NAMESPACE = "Client";
-
 	static std::unordered_map<uint32_t, ScriptData> s_ScriptDataMap;
 	static std::vector<const char*> s_CachedClientScriptNames;
 
@@ -28,7 +26,7 @@ namespace Sand
 	{\
 		MonoType* monoType = mono_reflection_type_from_name("Sand." #Type, s_MonoImage);\
 		if (!monoType) {\
-			SAND_CORE_ERROR("No C# component class found for " #Type ".");\
+			SAND_CORE_ERROR("No C# class found for " #Type ".");\
 		}\
 		else if (monoType) {\
 			s_HasComponentFuncs.emplace(monoType, [](Actor& actor) { return actor.HasComponent<Type>(); });\
@@ -47,10 +45,16 @@ namespace Sand
 
 		s_MonoDomain = mono_domain_create_appdomain((char*)"Sand-Runtime", nullptr);
 
-		// Core
+		// Loading core assembly and stuff
+#ifdef SAND_DEBUG
 		const char* path = "D:\\dev\\Sand\\bin\\Debug-windows-x86_64\\Sand-CSCore\\Sand-CSCore.dll";
+#elif SAND_RELEASE
+		const char* path = "D:\\dev\\Sand\\bin\\Release-windows-x86_64\\Sand-CSCore\\Sand-CSCore.dll";
+#elif SAND_DIST
+		const char* path = "D:\\dev\\Sand\\bin\\Dist-windows-x86_64\\Sand-CSCore\\Sand-CSCore.dll";
+#endif
 		s_MonoAssembly = mono_domain_assembly_open(s_MonoDomain, path);
-		SAND_CORE_ASSERT(s_MonoAssembly, "Failed to load core MonoAssembly");
+		SAND_CORE_ASSERT(s_MonoAssembly, "Failed to load core assembly");
 		mono_assembly_set_main(s_MonoAssembly);
 
 		s_MonoImage = mono_assembly_get_image(s_MonoAssembly);
@@ -80,9 +84,7 @@ namespace Sand
 		return s_MonoImage;
 	}
 
-	// Forward decl for LoadClientAssembly
 	static std::vector<MonoClass*> FindAllClasses(MonoImage* image);
-
 	void ScriptEngine::LoadClientAssembly()
 	{
 		SAND_PROFILE_FUNCTION();
@@ -96,9 +98,15 @@ namespace Sand
 
 		// Client
 		// TODO: get correct client dll path (set on project create)
-		const char* path = "D:\\dev\\SandApp\\SandApp\\bin\\x64\\Debug\\SandApp.dll";
+#ifdef SAND_DEBUG
+		//const char* path = "D:\\dev\\SandApp\\SandApp\\bin\\Debug\\SandApp.dll";
+#elif SAND_RELEASE
+		//const char* path = "D:\\dev\\SandApp\\SandApp\\bin\\Release\\SandApp.dll";
+#endif
+		const char* path = "D:\\dev\\SandApp\\SandApp\\bin\\Debug\\SandApp.dll";
+
 		s_ClientMonoAssembly = mono_domain_assembly_open(s_MonoDomain, path);
-		SAND_CORE_ASSERT(s_ClientMonoAssembly, "Failed to load client MonoAssembly");
+		SAND_CORE_ASSERT(s_ClientMonoAssembly, "Failed to load client assembly");
 		s_ClientMonoImage = mono_assembly_get_image(s_ClientMonoAssembly);
 
 		// Get the names of all the classes and cache them in a vector
@@ -110,32 +118,43 @@ namespace Sand
 				s_CachedClientScriptNames.push_back(mono_class_get_name(klass));
 			}
 		}
-
 	}
+
 	bool ScriptEngine::IsModuleRegistered(uint32_t actorID)
 	{
 		return s_ScriptDataMap.count(actorID);
 	}
 
-	// == Module things ==
 	void ScriptEngine::RegisterModule(uint32_t actorID, const std::string& moduleName)
 	{
 		SAND_PROFILE_FUNCTION();
 
-		MonoClass* klass = mono_class_from_name(s_ClientMonoImage, CLIENT_NAMESPACE.c_str(), moduleName.c_str());
+		static const char* const clientNamespace = "Client";
+		MonoClass* klass = mono_class_from_name(s_ClientMonoImage, clientNamespace, moduleName.c_str());
 		if (!klass)
-			return; // Class doesn't exist
+			return; // Couldn't find class
 
-		// Get all the engine-specific methods we need
-		// mono_class_get_method_from_name() will just return NULL if it couldn't find it (instead of crashing), so it works out fine.
-		MonoMethod* onLoadMethod = mono_class_get_method_from_name(klass, "OnLoad", 0);
-		MonoMethod* onCreateMethod = mono_class_get_method_from_name(klass, "OnCreate", 0);
-		MonoMethod* onUpdateMethod = mono_class_get_method_from_name(klass, "OnUpdate", 1);
+		// Get all the methods we need
+		// mono_class_get_method_from_name() will just return NULL if it couldn't find it instead of crashing, so it works out fine.
+		MonoMethod* onLoadMethod       = mono_class_get_method_from_name(klass, "OnLoad", 0);
+		MonoMethod* onCreateMethod     = mono_class_get_method_from_name(klass, "OnCreate", 0);
+		MonoMethod* onUpdateMethod     = mono_class_get_method_from_name(klass, "OnUpdate", 1);
 		MonoMethod* onLateUpdateMethod = mono_class_get_method_from_name(klass, "OnLateUpdate", 1);
-		MonoMethod* onDestroyMethod = mono_class_get_method_from_name(klass, "OnDestroy", 0);
+		MonoMethod* onDestroyMethod    = mono_class_get_method_from_name(klass, "OnDestroy", 0);
 
 		// Create an instance of the script object
 		MonoObject* object = mono_object_new(s_MonoDomain, klass);
+		mono_runtime_object_init(object); // Call default constructor
+		
+		// ScriptableActor initialization
+		{
+
+			static MonoMethod* initializeMethod = mono_class_get_method_from_name(
+				mono_class_from_name(s_MonoImage, "Sand", "ScriptableActor"), "Initialize", 1
+			);
+			void* params[1] = { &actorID };
+			Invoke(initializeMethod, object, params, true);
+		}
 
 		ScriptData data = {
 			object, klass, onLoadMethod, onCreateMethod, onUpdateMethod, onLateUpdateMethod, onDestroyMethod
@@ -143,32 +162,33 @@ namespace Sand
 
 		// Get all the fields in the MonoClass
 		{
-			SAND_PROFILE_SCOPE("Getting script fields - ScriptEngine::RegisterModule(actorID, moduleName)");
+			SAND_PROFILE_SCOPE("ScriptEngine::RegisterModule() - Getting module fields");
 
 			MonoClassField* field;
 			void* iterator = NULL;
 			while (field = mono_class_get_fields(klass, &iterator))
 			{
-				data.Fields.emplace_back(ScriptField{ MonoTypeToScriptDataType(mono_field_get_type(field)), field });
+				data.Fields.push_back({ MonoTypeToScriptDataType(mono_field_get_type(field)), field });
 			}
 		}
 
 		s_ScriptDataMap.emplace(actorID, data);
 	}
+
 	void ScriptEngine::UnregisterModule(uint32_t actorID)
 	{
+		SAND_PROFILE_FUNCTION();
+		
 		if (!s_ScriptDataMap.count(actorID))
 			return; // Early exit if the actor doesn't have a script associated with it
 
 		const ScriptData& scriptData = s_ScriptDataMap[actorID];
 		
 		// Call appropriate destruction function(s)
-		if (scriptData.OnDestroyMethod)
-			mono_runtime_invoke(scriptData.OnDestroyMethod, scriptData.Object, nullptr, nullptr);
+		Invoke(scriptData.OnDestroyMethod, scriptData.Object, nullptr);
 
 		s_ScriptDataMap.erase(actorID);
 	}
-	// == End module things ==
 
 	// Returns all the MonoClasses in a MonoImage
 	static std::vector<MonoClass*> FindAllClasses(MonoImage* image)
@@ -193,7 +213,7 @@ namespace Sand
 			klass = mono_class_from_name(image, nameSpace, name);
 
 			if (strcmp(name, "<Module>") == 0)
-				continue; // for some reason <Module> always shows up as a class... idk, it just works.
+				continue; // <Module> always shows up as a class... idk, it just works.
 			
 			classes.push_back(klass);
 		}
@@ -201,13 +221,32 @@ namespace Sand
 		return classes;
 	}
 
-	MonoObject* ScriptEngine::Invoke(MonoMethod* method, MonoObject* object)
+	MonoObject* ScriptEngine::Invoke(MonoMethod* method, MonoObject* object, void** params, bool errorIfNull)
 	{
-		return mono_runtime_invoke(method, object, NULL, NULL);
-	}
-	MonoObject* ScriptEngine::Invoke(MonoMethod* method, MonoObject* object, void** params)
-	{
-		return mono_runtime_invoke(method, object, params, NULL);
+		SAND_PROFILE_FUNCTION();
+
+		if (!method) {
+			if (errorIfNull)
+				SAND_CORE_ERROR("C# method invocation failed: Method pointer was null.");
+
+			return nullptr;
+		}
+
+		MonoObject* exception = nullptr;
+		MonoObject* invocationResult = mono_runtime_invoke(method, object, params, &exception);
+
+		// Handle exceptions from C#
+		if (exception)
+		{
+			MonoString* errorMessage = mono_object_to_string(exception, NULL); // Let's really hope ToString doesn't throw an error
+			char* chars = mono_string_to_utf8(errorMessage);
+			SAND_CORE_ERROR(chars);
+			mono_free(chars);
+
+			return nullptr;
+		}
+
+		return invocationResult;
 	}
 
 	std::vector<const char*>& ScriptEngine::GetClientScriptNames()
@@ -226,6 +265,8 @@ namespace Sand
 
 	ScriptFieldType ScriptEngine::MonoTypeToScriptDataType(MonoType* monoType)
 	{
+		SAND_PROFILE_FUNCTION();
+
 		int type = mono_type_get_type(monoType);
 		switch (type)
 		{
@@ -259,19 +300,6 @@ namespace Sand
 		}
 		
 		return ScriptFieldType::Unknown;
-	}
-
-	bool ScriptEngine::IsMonoFieldPublic(MonoClassField* field)
-	{
-		return (mono_field_get_flags(field) & MONO_FIELD_ATTR_PUBLIC) != 0;
-	}
-	bool ScriptEngine::IsMonoFieldPrivate(MonoClassField* field)
-	{
-		return (mono_field_get_flags(field) & MONO_FIELD_ATTR_PRIVATE) != 0;
-	}
-	bool ScriptEngine::IsMonoFieldStatic(MonoClassField* field)
-	{
-		return (mono_field_get_flags(field) & MONO_FIELD_ATTR_STATIC) != 0;
 	}
 
 	void ScriptEngine::RegisterInternalCalls()

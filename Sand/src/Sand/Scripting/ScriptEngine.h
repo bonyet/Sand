@@ -29,12 +29,7 @@ namespace Sand
 
 		static ScriptFieldType MonoTypeToScriptDataType(MonoType* type);
 
-		static bool IsMonoFieldPublic(MonoClassField* field);
-		static bool IsMonoFieldPrivate(MonoClassField* field);
-		static bool IsMonoFieldStatic(MonoClassField* field);
-
-		static MonoObject* Invoke(MonoMethod* method, MonoObject* object);
-		static MonoObject* Invoke(MonoMethod* method, MonoObject* object, void** params);
+		static MonoObject* Invoke(MonoMethod* method, MonoObject* object, void** params = nullptr, bool errorIfNull = false);
 
 		// Getters
 		static MonoImage* GetMonoImage();
