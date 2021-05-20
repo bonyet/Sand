@@ -23,16 +23,16 @@ namespace Sand
 		virtual void Bind(uint32_t slot = 0) const override;
 
 		virtual bool operator==(const Texture& other) const override {
-			return m_RendererID == ((OpenGLTexture2D&)other).m_RendererID;
+			return m_Handle == ((OpenGLTexture2D&)other).m_Handle;
 		}
 
-		virtual uint32_t GetID() const override { return m_RendererID; }
+		virtual uint32_t GetID() const override { return m_Handle; }
 
 		virtual const std::string GetPath() const override { return m_Path; }
 	private:
 		std::string m_Path;
 		uint32_t m_Width, m_Height;
-		uint32_t m_RendererID;
+		uint32_t m_Handle;
 		GLenum m_InternalFormat, m_DataFormat;
 	};
 

@@ -96,16 +96,16 @@ namespace Sand
 
 	OpenGLFramebuffer::~OpenGLFramebuffer()
 	{
-		glDeleteFramebuffers(1, &m_RendererID);
+		glDeleteFramebuffers(1, &m_Handle);
 		glDeleteTextures(m_ColorAttachments.size(), m_ColorAttachments.data());
 		glDeleteTextures(1, &m_DepthAttachment);
 	}
 
 	void OpenGLFramebuffer::Invalidate()
 	{
-		if (m_RendererID)
+		if (m_Handle)
 		{
-			glDeleteFramebuffers(1, &m_RendererID);
+			glDeleteFramebuffers(1, &m_Handle);
 			glDeleteTextures(m_ColorAttachments.size(), m_ColorAttachments.data());
 			glDeleteTextures(1, &m_DepthAttachment);
 
@@ -113,8 +113,8 @@ namespace Sand
 			m_DepthAttachment = 0;
 		}
 
-		glCreateFramebuffers(1, &m_RendererID);
-		glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
+		glCreateFramebuffers(1, &m_Handle);
+		glBindFramebuffer(GL_FRAMEBUFFER, m_Handle);
 
 		bool multiSample = m_Specification.Samples > 1;
 		// Attachments
@@ -170,7 +170,7 @@ namespace Sand
 
 	void OpenGLFramebuffer::Bind()
 	{
-		glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
+		glBindFramebuffer(GL_FRAMEBUFFER, m_Handle);
 		glViewport(0, 0, m_Specification.Width, m_Specification.Height);
 	}
 
@@ -196,7 +196,7 @@ namespace Sand
 	{
 		SAND_CORE_ASSERT(attachmentIndex < m_ColorAttachments.size(), "Incorrect attachment index");
 
-		glNamedFramebufferReadBuffer(m_RendererID, GL_COLOR_ATTACHMENT0 + attachmentIndex);
+		glNamedFramebufferReadBuffer(m_Handle, GL_COLOR_ATTACHMENT0 + attachmentIndex);
 		
 		int pixelData;
 		glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_INT, &pixelData);

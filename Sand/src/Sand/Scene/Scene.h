@@ -27,6 +27,14 @@ namespace Sand
 
 		void BeginPlay();
 		void EndPlay();
+		void TogglePlay() 
+		{
+			if (IsPlaying())
+				EndPlay();
+			else
+				BeginPlay();
+		}
+
 		bool IsPlaying() const { return m_Playmode; }
 
 		void OnUpdateEditor(Timestep ts, EditorCamera& camera);

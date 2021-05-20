@@ -30,7 +30,7 @@ namespace Sand
 		// TODO: move out of editor
 		// Framebuffers 
 		FramebufferSpecification fbSpec;
-		fbSpec.Attachments = { 
+		fbSpec.Attachments = {
 			FramebufferTextureFormat::RGBA8, 
 			FramebufferTextureFormat::RED_INTEGER, 
 			FramebufferTextureFormat::Depth 
@@ -44,11 +44,10 @@ namespace Sand
 		m_EditorCamera.Use2DControls = false;
 
 		NewScene();
+		SetupGUITheme();
 
 		std::string assetsPath = std::filesystem::current_path().string() + "\\assets";
 		m_AssetManagerPanel.SetPath(assetsPath);
-
-		SetupGUITheme();
 
 		// Make sure our engine logs go to the editor console as well
 		Log::GetCoreLogger()->sinks().push_back(CreateRef<ConsolePanel>());
@@ -138,7 +137,7 @@ namespace Sand
 		Renderer2D::ResetStats();
 
 		// TODO: move out of editor
-		if (FramebufferSpecification spec = m_ViewportFramebuffer->GetSpecification();
+		if (const FramebufferSpecification& spec = m_ViewportFramebuffer->GetSpecification();
 			m_ViewportSize.x > 0 && m_ViewportSize.y > 0 && // zero sized framebuffer is invalid
 			(spec.Width != m_ViewportSize.x || spec.Height != m_ViewportSize.y))
 		{
@@ -153,6 +152,7 @@ namespace Sand
 		RenderCommand::SetClearColor({ 0.12f, 0.12f, 0.12f, 1.0f });
 		RenderCommand::Clear();
 
+		// Update scene
 		if (!m_ActiveScene->IsPlaying())
 			m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);
 		else
@@ -234,24 +234,36 @@ namespace Sand
 
 		ImGui::Begin("Stats");
 
-		auto font = ImGui::GetFont();
-		font->Scale = 1.1f;
-		ImGui::PushFont(font);
 		ImGui::Text("%.3fms (%.1ffps)", 1000 / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-		font->Scale = 1.0f;
-		ImGui::PopFont();
 
 		ImGui::Separator();
-		if (ImGui::TreeNodeEx("Rendering")) 
+		ImGui::Text("Renderer");
 		{
 			auto stats = Renderer2D::GetStats();
-			ImGui::Text("Renderer2D:");
-			//ImGui::Text("Draw Calls: %d", stats.DrawCalls);
+			ImGui::Text("Renderer2D Statistics:");
+			ImGui::Indent();
+			ImGui::Text("Draw Calls: %d", stats.DrawCalls);
 			ImGui::Text("Quads: %d", stats.QuadCount);
 			ImGui::Text("Vertices: %d", stats.GetTotalVertexCount());
 			ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
+			ImGui::Unindent();
 
-			ImGui::TreePop();
+			ImGui::Separator();
+			ImGui::Text("Shaders");
+
+			// Display shaders
+			for (auto& pair : Renderer2D::GetShaderLibrary().GetMap())
+			{
+				if (ImGui::TreeNodeEx(pair.first.c_str(), ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_SpanFullWidth))
+				{
+					if (ImGui::Button("Reload"))
+						Renderer2D::ReloadShader(pair.first);
+
+					ImGui::TreePop();
+				}
+			}
+		
+			ImGui::Separator();
 		}
 
 		ImGui::End();
@@ -522,10 +534,7 @@ namespace Sand
 			}
 			case Keycode::F5:
 			{
-				if (m_ActiveScene->IsPlaying())
-					m_ActiveScene->EndPlay();
-				else 
-					m_ActiveScene->BeginPlay();
+				m_ActiveScene->TogglePlay();
 			}
 		}
 

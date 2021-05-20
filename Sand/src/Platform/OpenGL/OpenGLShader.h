@@ -41,15 +41,16 @@ namespace Sand
 		void UploadUniformMat3(const std::string& name, const glm::mat3& matrix);
 		void UploadUniformMat4(const std::string& name, const glm::mat4& matrix);
 
-		virtual uint32_t GetHandle() override { return m_RendererID; }
+		virtual uint32_t GetHandle() override { return m_Handle; }
 	private:
 		std::string ReadFile(const std::string& filepath);
 		std::unordered_map<GLenum, std::string> PreProcess(const std::string& source);
 		void Compile(const std::unordered_map<GLenum, std::string>& shaderSources);
-		void InitUniformCache();
+		
+		void CacheUniforms();
 		GLint GetUniformLocation(const std::string& name) const;
 	private:
-		uint32_t m_RendererID;
+		uint32_t m_Handle;
 		std::string m_Name;
 		mutable std::unordered_map<std::string, GLint> m_UniformLocationCache;
 	};

@@ -26,7 +26,7 @@ namespace Sand
 			return m_ColorAttachments[index]; 
 		}
 	private:
-		uint32_t m_RendererID;
+		uint32_t m_Handle;
 		FramebufferSpecification m_Specification;
 
 		std::vector<FramebufferTextureSpecification> m_ColorAttachmentSpecs;

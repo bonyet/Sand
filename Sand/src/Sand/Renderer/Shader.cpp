@@ -31,9 +31,11 @@ namespace Sand
 		return nullptr;
 	}
 
+	// == Shader library stuff ==
+
 	void ShaderLibrary::Add(const std::string& name, const Ref<Shader>& shader)
 	{
-		SAND_CORE_ASSERT(!Exists(name), "Shader already exists!");
+		SAND_CORE_ASSERT(!Exists(name), "Shader already exists in shader library.");
 		m_Shaders[name] = shader;
 	}
 
@@ -59,7 +61,7 @@ namespace Sand
 
 	Ref<Shader> ShaderLibrary::Get(const std::string& name)
 	{
-		SAND_CORE_ASSERT(Exists(name), "Shader not found!");
+		SAND_CORE_ASSERT(Exists(name), "Shader not found in shader library.");
 		return m_Shaders[name];
 	}
 

@@ -50,28 +50,32 @@ void Sandbox2D::OnUpdate(Timestep ts)
 	SAND_PROFILE_FUNCTION();
 	
 	glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(m_Position, 0.0f));
+	glm::vec2 worldSpaceMouse = ScreenToWorldPoint(Input::GetMousePosition(), m_Projection, view);
+	static float time = 0.0f;
+	time += ts;
 
 	Renderer2D::ResetStats();
-
+	
 	RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
 	RenderCommand::Clear();
-
-	glm::vec2 worldSpaceMouse = ScreenToWorldPoint(Input::GetMousePosition(), m_Projection, view);
-	Renderer2D::GetShader()->SetFloat3("u_LightPosition", { worldSpaceMouse, 0.0f });
-
+	
+	// Set uniforms
+	//shader->SetFloat3("u_LightPosition", { worldSpaceMouse, 0.0f });
+	
 	Renderer2D::Begin(m_Projection, view);
-
+	
+	// Render quads
 	for (float y = 0.0f; y < 10.0f; y++)
 	{
 		for (float x = 0.0f; x < 10.0f; x++)
 		{
 			glm::mat4 transform = glm::translate(glm::mat4(1.0f), { x, y, 0.0f }) *
 				glm::scale(glm::mat4(1.0f), { 0.8f, 0.8f, 0.0f });
-
+	
 			Renderer2D::DrawQuad(transform, { 1.0f, 1.0f, 1.0f, 1.0f });
 		}
 	}
-
+	
 	Renderer2D::End();
 
 	float speedMultiplier = Input::IsKeyPressed(Keycode::LeftShift) ? 25.0f : 10.0f;
@@ -93,15 +97,15 @@ void Sandbox2D::OnGuiRender()
 	ImGui::Begin("Lighting");
 
 	static glm::vec3 lightColor{ 1.0f };
-	if (ImGui::SliderFloat3("Color", &lightColor.x, 0.0f, 1.0f, "%.2f"))
-	{
-		Renderer2D::GetShader()->SetFloat3("u_LightColor", lightColor);
-	}
-	static float intensity = 1.0f;
-	if (ImGui::SliderFloat("Intensity", &intensity, 0.0f, 25.0f, "%.2f"))
-	{
-		Renderer2D::GetShader()->SetFloat("u_LightIntensity", intensity);
-	}
+	//if (ImGui::SliderFloat3("Color", &lightColor.x, 0.0f, 1.0f, "%.2f"))
+	//{
+	//	Renderer2D::GetShader()->SetFloat3("u_LightColor", lightColor);
+	//}
+	//static float intensity = 1.0f;
+	//if (ImGui::SliderFloat("Intensity", &intensity, 0.0f, 25.0f, "%.2f"))
+	//{
+	//	Renderer2D::GetShader()->SetFloat("u_LightIntensity", intensity);
+	//}
 
 	ImGui::End();
 

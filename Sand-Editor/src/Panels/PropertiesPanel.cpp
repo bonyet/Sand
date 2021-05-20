@@ -414,15 +414,16 @@ namespace Sand
 
 			ImGui::Separator();
 			SAND_LEFT_LABEL(ImGui::InputFloat("##Max Emission Time", &props.MaxEmissionTime), "Max Emission Time", );
-			ImGui::NextColumn(); 
+			ImGui::NextColumn();
 			ImGui::SetNextItemWidth(-1); 
+
 			ImGui::Text("Time: %.2f", props.EmissionTime);
 			ImGui::NextColumn();
 
 			{
 				ColorGradient& gradient = props.ColorOverLifetime;
 
-				SAND_LEFT_LABEL(ImGui::GradientButton(&gradient), "Color",
+				SAND_LEFT_LABEL(ImGui::GradientButton(&gradient), "Color over Lifetime",
 					ImGui::OpenPopup("GradientEditorPopup");
 				);
 

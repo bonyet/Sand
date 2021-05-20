@@ -28,24 +28,23 @@ namespace Sand
 
 		virtual const std::string& GetName() const = 0;
 
-		const std::string& GetFilepath() const { return m_Filepath; }
-
 		static Ref<Shader> Create(const std::string& filepath);
 		static Ref<Shader> Create(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc);
-	protected:
-		std::string m_Filepath;
 	};
 
 	class ShaderLibrary
 	{
 	public:
-		void Add(const std::string& name, const Ref<Shader>& shader);
 		void Add(const Ref<Shader>& shader);
+		void Add(const std::string& name, const Ref<Shader>& shader);
+
 		Ref<Shader> Get(const std::string& name);
 		bool Exists(const std::string& name) const;
 
 		Ref<Shader> Load(const std::string& filepath);
 		Ref<Shader> Load(const std::string& name, const std::string& filepath);
+
+		const std::unordered_map<std::string, Ref<Shader>>& GetMap() const { return m_Shaders; }
 	private:
 		std::unordered_map<std::string, Ref<Shader>> m_Shaders;
 	};

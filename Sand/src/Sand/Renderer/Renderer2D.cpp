@@ -31,8 +31,9 @@ namespace Sand
 
 		Ref<VertexArray> QuadVertexArray;
 		Ref<VertexBuffer> QuadVertexBuffer;
-		Ref<Shader> QuadShader;
 		Ref<Texture2D> WhiteTexture;
+
+		ShaderLibrary ShaderLibrary;
 
 		uint32_t QuadIndexCount = 0;
 		QuadVertex* QuadVertexBufferBase = nullptr;
@@ -103,9 +104,11 @@ namespace Sand
 		for (uint32_t i = 0; i < s_Data.MaxTextureSlots; i++)
 			samplers[i] = i;
 
-		s_Data.QuadShader = Shader::Create("assets/shaders/SandboxShader.glsl");
-		s_Data.QuadShader->Bind();
-		s_Data.QuadShader->SetIntArray("u_Textures", samplers, s_Data.MaxTextureSlots);
+
+
+		auto shader = s_Data.ShaderLibrary.Load("assets/shaders/Texture.glsl");
+		shader->Bind();
+		shader->SetIntArray("u_Textures", samplers, s_Data.MaxTextureSlots);
 
 		// Set all texture slots to 0
 		s_Data.TextureSlots[0] = s_Data.WhiteTexture;
@@ -123,7 +126,7 @@ namespace Sand
 		SAND_PROFILE_FUNCTION();
 
 		glm::mat4 viewProj = proj * glm::inverse(transform);
-		s_Data.QuadShader->SetMat4("u_ViewProjection", viewProj);
+		s_Data.ShaderLibrary.Get("Texture")->SetMat4("u_ViewProjection", viewProj);
 
 		s_Data.QuadIndexCount = 0;
 		s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
@@ -136,7 +139,7 @@ namespace Sand
 		SAND_PROFILE_FUNCTION();
 
 		glm::mat4 viewProj = camera.GetProjection() * glm::inverse(transform);
-		s_Data.QuadShader->SetMat4("u_ViewProjection", viewProj);
+		s_Data.ShaderLibrary.Get("Texture")->SetMat4("u_ViewProjection", viewProj);
 
 		s_Data.QuadIndexCount = 0;
 		s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
@@ -149,7 +152,7 @@ namespace Sand
 		SAND_PROFILE_FUNCTION();
 
 		glm::mat4 viewProj = camera.GetViewProjection();
-		s_Data.QuadShader->SetMat4("u_ViewProjection", viewProj);
+		s_Data.ShaderLibrary.Get("Texture")->SetMat4("u_ViewProjection", viewProj);
 
 		s_Data.QuadIndexCount = 0;
 		s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
@@ -161,8 +164,7 @@ namespace Sand
 	{
 		SAND_PROFILE_FUNCTION();
 
-		uint32_t dataSize = static_cast<uint32_t>((reinterpret_cast<uint8_t*>(s_Data.QuadVertexBufferPtr) -
-			reinterpret_cast<uint8_t*>(s_Data.QuadVertexBufferBase)));
+		uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.QuadVertexBufferPtr - (uint8_t*)s_Data.QuadVertexBufferBase);
 
 		s_Data.QuadVertexBuffer->SetData(s_Data.QuadVertexBufferBase, dataSize);
 
@@ -244,7 +246,7 @@ namespace Sand
 			s_Data.QuadVertexBufferPtr->TexCoord = textureCoords[i];
 			s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
 			s_Data.QuadVertexBufferPtr->TilingFactor = tilingFactor;
-			s_Data.QuadVertexBufferPtr->ObjectID = static_cast<float>(actorID);
+			s_Data.QuadVertexBufferPtr->ObjectID = (float)actorID;
 			s_Data.QuadVertexBufferPtr++;
 		}
 
@@ -336,7 +338,7 @@ namespace Sand
 			s_Data.QuadVertexBufferPtr->TexCoord = textureCoords[i];
 			s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
 			s_Data.QuadVertexBufferPtr->TilingFactor = tilingFactor;
-			s_Data.QuadVertexBufferPtr->ObjectID = static_cast<float>(actorID);
+			s_Data.QuadVertexBufferPtr->ObjectID = (float)actorID;
 			s_Data.QuadVertexBufferPtr++;
 		}
 
@@ -345,14 +347,15 @@ namespace Sand
 		s_Data.Stats.QuadCount++;
 	}
 
-	Ref<Shader> Renderer2D::GetShader()
+	ShaderLibrary& Renderer2D::GetShaderLibrary()
 	{
-		return s_Data.QuadShader;
+		return s_Data.ShaderLibrary;
 	}
 
-	void Renderer2D::SetShader(const Ref<Shader>& shader)
+	void Renderer2D::ReloadShader(const std::string& shaderName)
 	{
-		s_Data.QuadShader = shader;
+		s_Data.ShaderLibrary.Get(shaderName) = Shader::Create("assets/shaders/" + shaderName + ".glsl");
+		s_Data.ShaderLibrary.Get(shaderName)->Bind();
 	}
 
 	void Renderer2D::ResetStats()

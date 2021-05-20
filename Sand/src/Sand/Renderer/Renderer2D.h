@@ -27,8 +27,8 @@ namespace Sand
 		static void DrawQuad(const glm::mat4& transform, const Ref<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor);
 		static void DrawQuad(const glm::mat4& transform, const Ref<Texture2D>& texture, float tilingFactor, const glm::vec4& tintColor, uint32_t actorID);
 
-		static Ref<Shader> GetShader();
-		static void SetShader(const Ref<Shader>& shader);
+		static ShaderLibrary& GetShaderLibrary();
+		static void ReloadShader(const std::string& shaderName);
 
 		// Stats
 		struct Statistics

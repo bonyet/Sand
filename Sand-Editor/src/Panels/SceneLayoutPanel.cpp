@@ -38,8 +38,9 @@ namespace Sand
 		});
 		ImGui::SetWindowFontScale(1.0f);
 
-		// Add Actor button
+#if 0
 		{
+			// Add Actor button
 			const float frameSizeY = 35.0f;
 			ImGui::SetCursorPosY((ImGui::GetCursorPosY() + ImGui::GetContentRegionAvail().y) - frameSizeY);
 			ImGui::BeginChild("SceneLayoutPanel_ChildAddActorButton", { ImGui::GetWindowContentRegionWidth(), frameSizeY }, true);
@@ -48,7 +49,7 @@ namespace Sand
 			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, { 0.35f, 0.35f, 0.35f, 1.0f });
 			ImGui::PushStyleColor(ImGuiCol_ButtonActive, { 0.25f, 0.25f, 0.25f, 1.0f });
 
-			const float buttonWidth = 15.0f; // Not actually 15 pixels wide, it's weird
+			const float buttonWidth = 15.0f; // Not actually 15 pixels wide
 			ImGui::SetCursorPosX(ImGui::GetCursorPosX() + buttonWidth);
 			if (ImGui::Button("Create Actor", ImVec2(ImGui::GetContentRegionMax().x - buttonWidth * 2.0f, 25.0f)))
 			{
@@ -58,6 +59,7 @@ namespace Sand
 
 			ImGui::EndChild();
 		}
+#endif
 
 		// Tooltip for drag and drop actors
 		if (m_SelectionContext && ImGui::IsMouseDown(0) && ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem)) 

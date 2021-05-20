@@ -24,13 +24,11 @@ namespace Sand
 	{
 		SAND_PROFILE_FUNCTION();
 
-		m_Filepath = filepath;
-
 		std::string source = ReadFile(filepath);
 		auto shaderSources = PreProcess(source);
 		Compile(shaderSources);
 
-		InitUniformCache();
+		CacheUniforms();
 
 		// Extract name from filepath
 		auto lastSlash = filepath.find_last_of("/\\");
@@ -55,7 +53,7 @@ namespace Sand
 	{
 		SAND_PROFILE_FUNCTION();
 
-		glDeleteProgram(m_RendererID);
+		glDeleteProgram(m_Handle);
 	}
 
 	std::string OpenGLShader::ReadFile(const std::string& filepath)
@@ -113,7 +111,7 @@ namespace Sand
 		}
 
 		if (!shaderSources.size())
-			SAND_CORE_CRITICAL("Shader '{0}' preprocessing failed.", m_Filepath);
+			SAND_CORE_CRITICAL("Shader preprocessing failed.");
 
 		return shaderSources;
 	}
@@ -159,7 +157,7 @@ namespace Sand
 			glShaderIDs[glShaderIDIndex++] = shader;
 		}
 		
-		m_RendererID = program;
+		m_Handle = program;
 
 		// Link our program
 		glLinkProgram(program);
@@ -194,10 +192,10 @@ namespace Sand
 		}
 	}
 
-	void OpenGLShader::InitUniformCache()
+	void OpenGLShader::CacheUniforms()
 	{
 		int uniformAmount;
-		glGetProgramiv(m_RendererID, GL_ACTIVE_UNIFORMS, &uniformAmount);
+		glGetProgramiv(m_Handle, GL_ACTIVE_UNIFORMS, &uniformAmount);
 
 		for (int i = 0; i < uniformAmount; i++)
 		{
@@ -206,10 +204,10 @@ namespace Sand
 			char name[nameLength];
 			GLint size;
 			GLenum type;
-			glGetActiveUniform(m_RendererID, (GLuint)i, nameLength, &length, &size, &type, name);
+			glGetActiveUniform(m_Handle, (GLuint)i, nameLength, &length, &size, &type, name);
 
 			int location;
-			location = glGetUniformLocation(m_RendererID, name);
+			location = glGetUniformLocation(m_Handle, name);
 			m_UniformLocationCache[std::string(name)] = location;
 		}
 	}
@@ -222,7 +220,7 @@ namespace Sand
 		if (cachedLocation != m_UniformLocationCache.end())
 			return cachedLocation->second;
 
-		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+		GLint location = glGetUniformLocation(m_Handle, name.c_str());
 		if (location == -1) {
 			SAND_CORE_ERROR("Uniform '{0}' does not exist", name);
 		}
@@ -235,7 +233,7 @@ namespace Sand
 	{
 		SAND_PROFILE_FUNCTION();
 
-		glUseProgram(m_RendererID);
+		glUseProgram(m_Handle);
 	}
 
 	void OpenGLShader::Unbind() const
@@ -293,49 +291,49 @@ namespace Sand
 	void OpenGLShader::UploadUniformInt(const std::string& name, int value)
 	{
 		GLint location = GetUniformLocation(name);
-		glProgramUniform1i(m_RendererID, location, value);
+		glProgramUniform1i(m_Handle, location, value);
 	}
 
 	void OpenGLShader::UploadUniformIntArray(const std::string& name, int* values, uint32_t count)
 	{
 		GLint location = GetUniformLocation(name);
-		glProgramUniform1iv(m_RendererID, location, count, values);
+		glProgramUniform1iv(m_Handle, location, count, values);
 	}
 
 	void OpenGLShader::UploadUniformFloat(const std::string& name, float value)
 	{
 		GLint location = GetUniformLocation(name);
-		glProgramUniform1f(m_RendererID, location, value);
+		glProgramUniform1f(m_Handle, location, value);
 	}
 
 	void OpenGLShader::UploadUniformFloat2(const std::string& name, const glm::vec2& value)
 	{
 		GLint location = GetUniformLocation(name);
-		glProgramUniform2f(m_RendererID, location, value.x, value.y);
+		glProgramUniform2f(m_Handle, location, value.x, value.y);
 	}
 
 	void OpenGLShader::UploadUniformFloat3(const std::string& name, const glm::vec3& value)
 	{
 		GLint location = GetUniformLocation(name);
-		glProgramUniform3f(m_RendererID, location, value.x, value.y, value.z);
+		glProgramUniform3f(m_Handle, location, value.x, value.y, value.z);
 	}
 
 	void OpenGLShader::UploadUniformFloat4(const std::string& name, const glm::vec4& value)
 	{
 		GLint location = GetUniformLocation(name);
-		glProgramUniform4f(m_RendererID, location, value.x, value.y, value.z, value.w);
+		glProgramUniform4f(m_Handle, location, value.x, value.y, value.z, value.w);
 	}
 
 	void OpenGLShader::UploadUniformMat3(const std::string& name, const glm::mat3& matrix)
 	{
 		GLint location = GetUniformLocation(name);
-		glProgramUniformMatrix3fv(m_RendererID, location, 1, GL_FALSE, glm::value_ptr(matrix));
+		glProgramUniformMatrix3fv(m_Handle, location, 1, GL_FALSE, glm::value_ptr(matrix));
 	}
 
 	void OpenGLShader::UploadUniformMat4(const std::string& name, const glm::mat4& matrix)
 	{
 		GLint location = GetUniformLocation(name);
-		glProgramUniformMatrix4fv(m_RendererID, location, 1, GL_FALSE, glm::value_ptr(matrix));
+		glProgramUniformMatrix4fv(m_Handle, location, 1, GL_FALSE, glm::value_ptr(matrix));
 	}
 
 }

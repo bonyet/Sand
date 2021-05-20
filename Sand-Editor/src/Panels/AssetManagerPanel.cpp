@@ -18,8 +18,6 @@ namespace Sand
 
 	static std::array<FileIcon, 7> s_FileIcons;
 
-
-
 	AssetManagerPanel::AssetManagerPanel()
 	{
 		// LOAD ICONS
@@ -44,13 +42,13 @@ namespace Sand
 
 	static AssetFileType GetFileType(const std::filesystem::directory_entry& entry)
 	{
-		// Is it a folder? (handle now cause folders don't have an extension)
+		// Is it a folder?
 		if (entry.is_directory())
 			return AssetFileType::Folder;
 
 		std::string string = entry.path().extension().string();
 
-		// Is it an image? (handle now cause there are multiple possible extensions)
+		// Is it an image?
 		{
 			constexpr size_t numImageFileExtensions = 2;
 			const char* imageFileTypesString[numImageFileExtensions] = {
@@ -127,7 +125,7 @@ namespace Sand
 				auto& icon = GetFileIcon(entry);
 				if (icon.Texture)
 				{
-					ImGui::Image((ImTextureID)icon.Texture->GetID(), icon.PreferredSize, { 0, 1 }, { 1, 0 });
+					ImGui::Image(reinterpret_cast<ImTextureID>(icon.Texture->GetID()), icon.PreferredSize, { 0, 1 }, { 1, 0 });
 					ImGui::SameLine();
 					ImGui::Text("%s", entry.path().filename().string().c_str());
 				} else 

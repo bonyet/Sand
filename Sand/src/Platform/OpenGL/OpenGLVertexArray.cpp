@@ -31,14 +31,14 @@ namespace Sand
 	{
 		SAND_PROFILE_FUNCTION();
 
-		glCreateVertexArrays(1, &m_RendererID);
+		glCreateVertexArrays(1, &m_Handle);
 	}
 
 	OpenGLVertexArray::~OpenGLVertexArray()
 	{
 		SAND_PROFILE_FUNCTION();
 
-		glDeleteVertexArrays(1, &m_RendererID);
+		glDeleteVertexArrays(1, &m_Handle);
 	}
 
 	void OpenGLVertexArray::AddVertexBuffer(const Ref<VertexBuffer>& vertexBuffer)
@@ -47,7 +47,7 @@ namespace Sand
 
 		SAND_CORE_ASSERT(vertexBuffer->GetLayout().GetElements().size(), "Vertex Buffer has no layout!");
 
-		glBindVertexArray(m_RendererID);
+		glBindVertexArray(m_Handle);
 
 		const auto& layout = vertexBuffer->GetLayout();
 		for (const auto& element : layout)
@@ -108,9 +108,9 @@ namespace Sand
 			}
 #endif
 
-			glEnableVertexArrayAttrib(m_RendererID, m_VertexBufferIndex);
-			glVertexArrayVertexBuffer(m_RendererID, m_VertexBufferIndex, vertexBuffer->GetHandle(), element.Offset, layout.GetStride());
-			glVertexArrayAttribFormat(m_RendererID, m_VertexBufferIndex, element.GetComponentCount(), ShaderDataTypeToOpenGLBaseType(element.Type),
+			glEnableVertexArrayAttrib(m_Handle, m_VertexBufferIndex);
+			glVertexArrayVertexBuffer(m_Handle, m_VertexBufferIndex, vertexBuffer->GetHandle(), element.Offset, layout.GetStride());
+			glVertexArrayAttribFormat(m_Handle, m_VertexBufferIndex, element.GetComponentCount(), ShaderDataTypeToOpenGLBaseType(element.Type),
 				element.Normalized ? GL_TRUE : GL_FALSE, 0);
 			m_VertexBufferIndex++;
 		}
@@ -122,7 +122,7 @@ namespace Sand
 	{
 		SAND_PROFILE_FUNCTION();
 
-		glVertexArrayElementBuffer(m_RendererID, indexBuffer->GetHandle());
+		glVertexArrayElementBuffer(m_Handle, indexBuffer->GetHandle());
 		m_IndexBuffer = indexBuffer;
 	}
 

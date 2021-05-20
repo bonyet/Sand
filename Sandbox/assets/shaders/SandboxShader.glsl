@@ -50,6 +50,7 @@ void main()
 {
 	vec4 texColor = v_Color;
 
+	// Looks ugly but without it, shader won't work on some AMD cards
 	switch(int(v_TexIndex))
 	{
 		case 0:  texColor *= texture(u_Textures[0],  v_TexCoord * v_TilingFactor); break;
@@ -87,8 +88,8 @@ void main()
 	}
 
 	// Lighting
-	float distanceToLight = distance(v_VertexPos, u_LightPosition);
-	texColor.xyz *= (1.0f / distanceToLight) * u_LightColor * u_LightIntensity;
+	float lightCloseness = 1.0f / distance(v_VertexPos, u_LightPosition);
+	texColor.xyz *= lightCloseness * u_LightColor * u_LightIntensity;
 
 	color = texColor;
 }
