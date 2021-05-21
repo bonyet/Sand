@@ -20,15 +20,18 @@ namespace Sand
 	template<typename T, typename UIFunction>
 	static void DrawComponent(const std::string& name, Actor actor, UIFunction uiFunction, bool defaultColumns = true)
 	{
-		constexpr ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_FramePadding;
-		
 		if (!actor.HasComponent<T>())
 			return;
+
+		constexpr ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed 
+			| ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_Bullet;
 
 		auto& component = actor.GetComponent<T>();
 		ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
 		
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
 		bool open = ImGui::TreeNodeEx(reinterpret_cast<void*>(typeid(T).hash_code()), treeNodeFlags, name.c_str());
+		ImGui::PopStyleVar();
 
 		if (ImGui::IsItemClicked(1))
 			ImGui::OpenPopup("Component_Settings");

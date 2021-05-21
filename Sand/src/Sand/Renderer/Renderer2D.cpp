@@ -75,6 +75,7 @@ namespace Sand
 
 		s_Data.QuadVertexBufferBase = new QuadVertex[s_Data.MaxVertices];
 
+		// Index buffer
 		uint32_t* quadIndices = new uint32_t[s_Data.MaxIndices];
 
 		uint32_t offset = 0;
@@ -104,8 +105,6 @@ namespace Sand
 		for (uint32_t i = 0; i < s_Data.MaxTextureSlots; i++)
 			samplers[i] = i;
 
-
-
 		auto shader = s_Data.ShaderLibrary.Load("assets/shaders/Texture.glsl");
 		shader->Bind();
 		shader->SetIntArray("u_Textures", samplers, s_Data.MaxTextureSlots);
@@ -121,12 +120,11 @@ namespace Sand
 		delete[] s_Data.QuadVertexBufferBase;
 	}
 
-	void Renderer2D::Begin(const glm::mat4& proj, const glm::mat4& transform)
+	void Renderer2D::Begin(const glm::mat4& viewProjection)
 	{
 		SAND_PROFILE_FUNCTION();
 
-		glm::mat4 viewProj = proj * glm::inverse(transform);
-		s_Data.ShaderLibrary.Get("Texture")->SetMat4("u_ViewProjection", viewProj);
+		s_Data.ShaderLibrary.Get("Texture")->SetMat4("u_ViewProjection", viewProjection);
 
 		s_Data.QuadIndexCount = 0;
 		s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
@@ -139,19 +137,6 @@ namespace Sand
 		SAND_PROFILE_FUNCTION();
 
 		glm::mat4 viewProj = camera.GetProjection() * glm::inverse(transform);
-		s_Data.ShaderLibrary.Get("Texture")->SetMat4("u_ViewProjection", viewProj);
-
-		s_Data.QuadIndexCount = 0;
-		s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
-
-		s_Data.TextureSlotIndex = 1;
-	}
-
-	void Renderer2D::Begin(const EditorCamera& camera)
-	{
-		SAND_PROFILE_FUNCTION();
-
-		glm::mat4 viewProj = camera.GetViewProjection();
 		s_Data.ShaderLibrary.Get("Texture")->SetMat4("u_ViewProjection", viewProj);
 
 		s_Data.QuadIndexCount = 0;

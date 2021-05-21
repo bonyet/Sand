@@ -254,7 +254,7 @@ namespace Sand
 			// Display shaders
 			for (auto& pair : Renderer2D::GetShaderLibrary().GetMap())
 			{
-				if (ImGui::TreeNodeEx(pair.first.c_str(), ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_SpanFullWidth))
+				if (ImGui::TreeNodeEx(pair.first.c_str(), ImGuiTreeNodeFlags_SpanFullWidth))
 				{
 					if (ImGui::Button("Reload"))
 						Renderer2D::ReloadShader(pair.first);
@@ -303,10 +303,11 @@ namespace Sand
 		uint32_t textureID = m_ViewportFramebuffer->GetColorAttachmentRendererID();
 		ImGui::Image(reinterpret_cast<void*>(textureID), viewportPanelSize, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 
-		// GIZMO STUFF
-		Actor selectedActor = m_SceneLayoutPanel.GetSelectedActor();
+		// Gizmos
 
+		Actor selectedActor = m_SceneLayoutPanel.GetSelectedActor();
 		bool shouldShowGizmos = selectedActor && m_GizmoType != -1 && !m_ActiveScene->IsPlaying();
+
 		if (shouldShowGizmos)
 		{
 			ImGuizmo::SetDrawlist();

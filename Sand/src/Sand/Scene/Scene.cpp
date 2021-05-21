@@ -140,12 +140,7 @@ namespace Sand
 
 	void Scene::RenderScene(EditorCamera* editorCamera, Timestep ts)
 	{
-		// Begin renderer
-		if (editorCamera)
-		{
-			Renderer2D::Begin(*editorCamera); // Editor Camera
-		}
-		else
+		if (!editorCamera)
 		{
 			Camera* primaryCamera = nullptr;
 			glm::mat4 camTransform;
@@ -168,7 +163,13 @@ namespace Sand
 				return;
 			}
 
+			// Begin with camera actor
 			Renderer2D::Begin(*primaryCamera, camTransform);
+		}
+		else
+		{
+			// Begin with editor camera
+			Renderer2D::Begin(editorCamera->GetViewProjection());
 		}
 
 		auto group = m_CurrentRegistry->group<SpriteRendererComponent>(entt::get<TransformComponent>);
@@ -180,7 +181,7 @@ namespace Sand
 			bool hasTextureComponent = m_CurrentRegistry->has<TextureComponent>(entity);
 			if (!hasTextureComponent)
 			{
-				Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color, static_cast<uint32_t>(entity));
+				Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color, (uint32_t)entity);
 			}
 			else
 			{
@@ -188,11 +189,11 @@ namespace Sand
 				auto& texComponent = m_CurrentRegistry->get<TextureComponent>(entity);
 
 				if (texComponent.IsTextured()) {
-					Renderer2D::DrawQuad(transform.GetTransform(), texComponent.Texture, texComponent.TilingFactor, sprite.Color, static_cast<uint32_t>(entity));
+					Renderer2D::DrawQuad(transform.GetTransform(), texComponent.Texture, texComponent.TilingFactor, sprite.Color, (uint32_t)entity);
 				}
 				else {
 					// Texture component, but no texture
-					Renderer2D::DrawQuad(transform.GetTransform(), { 1.0f, 0.0f, 1.0f, 1.0f }, static_cast<uint32_t>(entity));
+					Renderer2D::DrawQuad(transform.GetTransform(), { 1.0f, 0.0f, 1.0f, 1.0f }, (uint32_t)entity);
 				}
 			}
 		}
@@ -301,7 +302,7 @@ namespace Sand
 
 	bool Scene::IsActorIDValid(uint32_t id)
 	{
-		return m_Registry.valid(static_cast<entt::entity>(id));
+		return m_Registry.valid((entt::entity)id);
 	}
 
 	Scene* const Scene::GetActiveScene()
@@ -335,7 +336,7 @@ namespace Sand
 			auto& tag = view.get<TagComponent>(entity);
 
 			if (tag.Name == name)
-				return static_cast<int>(entity);
+				return (int)entity;
 		}
 
 		return -1; // Not found
@@ -348,6 +349,7 @@ namespace Sand
 
 		Actor clone = { m_CurrentRegistry->create(), this };
 
+		// Copy components to new actor
 		COPY_COMPONENT(TagComponent);
 		COPY_COMPONENT(TransformComponent);
 		COPY_COMPONENT(SpriteRendererComponent);
@@ -372,6 +374,7 @@ namespace Sand
 		// Copy all entities
 		m_RuntimeRegistry.assign(m_Registry.data(), m_Registry.data() + m_Registry.size(), m_Registry.destroyed());
 
+		// Copy components to registry
 		COPY_COMPONENT_TO_REGISTRY(TagComponent);
 		COPY_COMPONENT_TO_REGISTRY(TransformComponent);
 		COPY_COMPONENT_TO_REGISTRY(SpriteRendererComponent);
@@ -422,7 +425,7 @@ namespace Sand
 		if (transform.HasParent())
 			transform.GetParentTransform().RemoveChild(actor);
 		
-		for (auto& child : transform.GetChildren())
+		for (Actor child : transform.GetChildren())
 			DestroyActor(child); // Calls OnActorDestroy too
 	}
 

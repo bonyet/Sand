@@ -70,7 +70,7 @@ namespace Sand
 		PhysicsWorld m_PhysicsWorld;
 		entt::registry m_Registry;
 		entt::registry m_RuntimeRegistry;
-		entt::registry* m_CurrentRegistry = nullptr;
+		entt::registry* m_CurrentRegistry;
 		
 		bool m_Playmode = false;
 		float m_ViewportWidth = 5, m_ViewportHeight = 5;
